@@ -129,10 +129,10 @@ namespace Ezenity_Backend.Services
             //sendVerificationEmail(account, origin);
             var verifyEmail = new EmailMessage
             {
-                To = model.Email,
+                To = model?.Email,
                 TemplateName = "verification"
             };
-            _emailService.SendEmailAsync(verifyEmail);
+            _emailService.SendEmailAsync(verifyEmail).Wait();
         }
 
         public void VerifyEmail(string token)
@@ -164,7 +164,13 @@ namespace Ezenity_Backend.Services
 
             // Send email
             // TODO: Conver to 'SendEmailAsync()' method
-            sendPasswordResetEmail(account, origin);
+            var resetEmail = new EmailMessage
+            {
+                To = model?.Email,
+                TemplateName = "passwordReset"
+            };
+            _emailService.SendEmailAsync(resetEmail).Wait();
+            //sendPasswordResetEmail(account, origin);
         }
 
         public void ValidateResetToken(ValidateResetTokenRequest model)
@@ -325,28 +331,5 @@ namespace Ezenity_Backend.Services
             _emailService.SendEmailAsync(emailMessage).Wait();
         }
 
-        private void sendPasswordResetEmail(Account account, string origin)
-        {
-            string templateName = "passwordReset"; // Set the template name for password reset email
-
-            // Construct dynamic values for the email template
-            var dynamicValues = new Dictionary<string, string>
-            {
-                { "FirstName", account.FirstName },
-                { "ResetUrl", $"{origin}/account/reset-password?token={account.ResetToken}" }
-            };
-
-            // Create an EmailMessage object
-            var emailMessage = new EmailMessage
-            {
-                To = account.Email,
-                Subject = "Sign-up Verification API - Reset Password",
-                TemplateName = templateName,
-                DynamicValues = dynamicValues
-            };
-
-            // Send the email
-            SendEmail(emailMessage);
-        }
     }
 }
