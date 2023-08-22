@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Ezenity_Backend.Entities
+namespace Ezenity_Backend.Entities.Accounts
 {
     public class Account
     {

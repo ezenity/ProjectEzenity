@@ -1,14 +1,13 @@
 ﻿using AutoMapper;
-using Ezenity_Backend.Entities;
+using Ezenity_Backend.Entities.Accounts;
 using Ezenity_Backend.Helpers;
 using Ezenity_Backend.Models.Accounts;
 using Ezenity_Backend.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Controllers
 {
@@ -18,11 +17,13 @@ namespace Ezenity_Backend.Controllers
     {
         private readonly IAccountService _accountService;
         private readonly IMapper _mapper;
+        private readonly ILogger<AccountsController> _logger;
 
-        public AccountsController(IAccountService accountService, IMapper mapper)
+        public AccountsController(IAccountService accountService, IMapper mapper, ILogger<AccountsController> logger)
         {
             _accountService = accountService;
             _mapper = mapper;
+            _logger = logger;
         }
 
         [HttpPost("authenticate")]
@@ -42,12 +43,15 @@ namespace Ezenity_Backend.Controllers
             return Ok(response);
         }
 
-        [Authorize]
+        [Authorize(Role.Admin)]
         [HttpPost("revoke-token")]
         public IActionResult RevokeToken(RevokeTokenRequest model)
         {
             // Accept token from body or cookie
             var token = model.Token ?? Request.Cookies["refreshToken"];
+
+            // Log the received token
+            _logger.LogInformation("received token: {Token}", token);
 
             if (string.IsNullOrEmpty(token))
                 return BadRequest(new { message = "Token is required" });
@@ -103,7 +107,7 @@ namespace Ezenity_Backend.Controllers
             return Ok(accounts);
         }
 
-        [Authorize]
+        [Authorize(Role.Admin)]
         [HttpGet("{id:int}")]
         public ActionResult<AccountResponse> GetById(int id)
         {
@@ -122,8 +126,9 @@ namespace Ezenity_Backend.Controllers
             return Ok(account);
         }
 
-        [Authorize]
+        [Authorize(Role.Admin)]
         [HttpPost("{id:int}")]
+        //[HttpPut("{id:int}")]
         public ActionResult<AccountResponse> Update(int id, UpdateRequest model)
         {
             // Users can update their own account and admins can update any account
@@ -138,7 +143,7 @@ namespace Ezenity_Backend.Controllers
             return Ok(account);
         }
 
-        [Authorize]
+        [Authorize(Role.Admin)]
         [HttpDelete("{id:int}")]
         public IActionResult Delete(int id)
         {
@@ -159,7 +164,10 @@ namespace Ezenity_Backend.Controllers
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Expires = DateTime.UtcNow.AddDays(7)
+                Expires = DateTime.UtcNow.AddDays(7),
+                //Expires = DateTime.UtcNow.AddSeconds(15),
+                SameSite = SameSiteMode.None, // Set SameSite attribute to "None"
+                Secure = true // Set the Secure attribute to true for secure (HTTPS) contexts
             };
 
             Response.Cookies.Append("refreshToken", token, cookieOptions);

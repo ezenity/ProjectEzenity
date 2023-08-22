@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
-using Ezenity_Backend.Entities;
+using Ezenity_Backend.Entities.Accounts;
 using Ezenity_Backend.Helpers;
 using Ezenity_Backend.Models.Accounts;
+using Ezenity_Backend.Services.Emails;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -97,7 +98,14 @@ namespace Ezenity_Backend.Services
             if(_context.Accounts.Any(x => x.Email == model.Email))
             {
                 // Send already registered error in email to prevent account enumeration
-                sendAlreadyRegisteredEmail(model.Email, origin);
+                //sendAlreadyRegisteredEmail(model.Email, origin);
+                var alreadyRegisteredEmail = new EmailMessage
+                {
+                    To = model.Email,
+                    TemplateName = "alreadyRegistered"
+                };
+
+                _emailService.SendEmailAsync(alreadyRegisteredEmail);
                 return;
             }
 
@@ -118,7 +126,13 @@ namespace Ezenity_Backend.Services
             _context.SaveChanges();
 
             // Send email
-            sendVerificationEmail(account, origin);
+            //sendVerificationEmail(account, origin);
+            var verifyEmail = new EmailMessage
+            {
+                To = model.Email,
+                TemplateName = "verification"
+            };
+            _emailService.SendEmailAsync(verifyEmail);
         }
 
         public void VerifyEmail(string token)
@@ -149,6 +163,7 @@ namespace Ezenity_Backend.Services
             _context.SaveChanges();
 
             // Send email
+            // TODO: Conver to 'SendEmailAsync()' method
             sendPasswordResetEmail(account, origin);
         }
 
@@ -284,6 +299,7 @@ namespace Ezenity_Backend.Services
             {
                 Token = randomTokenString(),
                 Expires = DateTime.UtcNow.AddDays(7),
+                //Expires = DateTime.UtcNow.AddSeconds(15),
                 Created = DateTime.UtcNow,
                 CreatedByIp = ipAddress
             };
@@ -303,68 +319,34 @@ namespace Ezenity_Backend.Services
             return BitConverter.ToString(randomBytes).Replace("-", "");
         }
 
-        private void sendVerificationEmail(Account account, string origin)
+        private void SendEmail(EmailMessage emailMessage)
         {
-            string message;
-            if (!string.IsNullOrEmpty(origin))
-            {
-                var verifyUrl = $"{origin}/account/verify-email?token={account.VerificationToken}";
-                message = $@"<p>Please click the below link to verify your email address:</p>
-                             <p><a href=""{verifyUrl}"">{verifyUrl}</a></p>";
-            }
-            else
-            {
-                message = $@"<p>Please use the below token to verfiy your email address with the <code>/accounts/verify-email</code> api route:</p>
-                             <p><code>{account.VerificationToken}</code></p>";
-            }
-
-            _emailService.Send(
-                to: account.Email,
-                subject: "Sign-up Verification API - Verify Email",
-                html: $@"<h4>Verify Email</h4>
-                         <p>Thanks for registering!</p>
-                         {message}"
-            );
-        }
-
-        private void sendAlreadyRegisteredEmail(string email, string origin)
-        {
-            string message;
-            if (!string.IsNullOrEmpty(origin))
-                message = $@"<p>If you don't know oyur password please visit the <a href=""{origin}/account/forgot-password"">forgotpassword</a> page.";
-            else
-                message = "<p>If you don't know your password you can reset it via the <code>/accounts/forgot-password</code> api route.</p>";
-
-            _emailService.Send(
-                to: email,
-                subject: "Sign-up Verification API - Email Already Registered",
-                html: $@"<h4>Email Already Registered</h4>
-                         <p>Your email <strong>{email}</strong> is already registered.</p>
-                         {message}"
-            );
+            // Send the email using the IEmailService implementation
+            _emailService.SendEmailAsync(emailMessage).Wait();
         }
 
         private void sendPasswordResetEmail(Account account, string origin)
         {
-            string message;
-            if (!string.IsNullOrEmpty(origin))
-            {
-                var resetUrl = $"{origin}/account/reset-password?token={account.ResetToken}";
-                message = $@"<p>Please click the link to reset your password, the link will be valid for 1 day:</p>
-                             <p><a href=""{resetUrl}"">{resetUrl}</a></p>";
-            }
-            else
-            {
-                message = $@"<p>Please use the below token to reset your password with the <code>/accounts/reset-password</code> api route:</p>
-                             <p><code>{account.ResetToken}</code></p>";
-            }
+            string templateName = "passwordReset"; // Set the template name for password reset email
 
-            _emailService.Send(
-                to: account.Email,
-                subject: "Sign-up Verification API - Reset Password",
-                html: $@"<h4>Reset Password Email</h4>
-                         {message}"
-            );
+            // Construct dynamic values for the email template
+            var dynamicValues = new Dictionary<string, string>
+            {
+                { "FirstName", account.FirstName },
+                { "ResetUrl", $"{origin}/account/reset-password?token={account.ResetToken}" }
+            };
+
+            // Create an EmailMessage object
+            var emailMessage = new EmailMessage
+            {
+                To = account.Email,
+                Subject = "Sign-up Verification API - Reset Password",
+                TemplateName = templateName,
+                DynamicValues = dynamicValues
+            };
+
+            // Send the email
+            SendEmail(emailMessage);
         }
     }
 }

@@ -19,7 +19,7 @@ namespace Ezenity_Backend.Migrations
                 .HasAnnotation("ProductVersion", "5.0.14")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("Ezenity_Backend.Entities.Account", b =>
+            modelBuilder.Entity("Ezenity_Backend.Entities.Accounts.Account", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -73,6 +73,82 @@ namespace Ezenity_Backend.Migrations
                     b.ToTable("Accounts");
                 });
 
+            modelBuilder.Entity("Ezenity_Backend.Entities.EmailTemplates.EmailTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDynamic")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PlaceholderValuesJson")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Subject")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TemplateName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EmailTemplates");
+                });
+
+            modelBuilder.Entity("Ezenity_Backend.Entities.Sections.Section", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Layout")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("Updated")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Sections");
+                });
+
             modelBuilder.Entity("Ezenity_Backend.Entities.Skill", b =>
                 {
                     b.Property<int>("Id")
@@ -92,25 +168,46 @@ namespace Ezenity_Backend.Migrations
                     b.Property<DateTime?>("Updated")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("Verified")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("Id");
 
                     b.ToTable("Skills");
                 });
 
-            modelBuilder.Entity("Ezenity_Backend.Entities.Account", b =>
+            modelBuilder.Entity("Ezenity_Backend.Models.ExpertiseCompentencies.EC", b =>
                 {
-                    b.OwnsMany("Ezenity_Backend.Entities.RefreshToken", "RefreshTokens", b1 =>
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("Updated")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ECs");
+                });
+
+            modelBuilder.Entity("Ezenity_Backend.Entities.Accounts.Account", b =>
+                {
+                    b.OwnsMany("Ezenity_Backend.Entities.Accounts.RefreshToken", "RefreshTokens", b1 =>
                         {
+                            b1.Property<int>("AccountId")
+                                .HasColumnType("int");
+
                             b1.Property<int>("Id")
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("int")
                                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                            b1.Property<int>("AccountId")
-                                .HasColumnType("int");
 
                             b1.Property<DateTime>("Created")
                                 .HasColumnType("datetime2");
@@ -131,11 +228,10 @@ namespace Ezenity_Backend.Migrations
                                 .HasColumnType("nvarchar(max)");
 
                             b1.Property<string>("Token")
+                                .IsRequired()
                                 .HasColumnType("nvarchar(max)");
 
-                            b1.HasKey("Id");
-
-                            b1.HasIndex("AccountId");
+                            b1.HasKey("AccountId", "Id");
 
                             b1.ToTable("RefreshToken");
 

@@ -1,4 +1,5 @@
 ﻿using Ezenity_Backend.Entities;
+using Ezenity_Backend.Entities.Accounts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -21,6 +22,7 @@ namespace Ezenity_Backend.Helpers
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
+            //var account = (Account)context.HttpContext.Items["Accounts"];
             var account = (Account)context.HttpContext.Items["Account"];
             if (account == null || (_roles.Any() && !_roles.Contains(account.Role)))
             {

@@ -1,9 +1,5 @@
-﻿using Ezenity_Backend.Entities;
-using System;
-using System.Collections.Generic;
+﻿using Ezenity_Backend.Entities.Accounts;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Models.Accounts
 {
