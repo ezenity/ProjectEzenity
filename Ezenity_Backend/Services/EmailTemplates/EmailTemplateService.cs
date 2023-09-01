@@ -1,29 +1,46 @@
 ﻿using AutoMapper;
-using Ezenity_Backend.Entities.EmailTemplates;
 using Ezenity_Backend.Helpers;
-using Ezenity_Backend.Models.Emails;
+using Ezenity_Backend.Models.Common.EmailTemplates;
+using Ezenity_Backend.Services.Common;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Ezenity_Backend.Services.Emails
+namespace Ezenity_Backend.Services.EmailTemplates
 {
-    public class EmailTemplateService : BaseService<EmailTemplate, EmailTemplateResponse, CreateEmailTemplateRequest, UpdateEmailTemplateRequest>, IEmailTemplateService
+    public class EmailTemplateService : IEmailTemplateService
     {
-        public EmailTemplateService(DataContext context, IMapper mapper, IOptions<AppSettings> appSettings)
-            : base(context, mapper, appSettings)
+        private readonly DataContext _context;
+        private readonly IMapper _mapper;
+        private readonly AppSettings _appSettings;
+        private readonly ILogger<EmailTemplateService> _logger;
+        private readonly TokenHelper _tokenHelper;
+
+        public EmailTemplateService(DataContext context, IMapper mapper, IOptions<AppSettings> appSettings, ILogger<EmailTemplateService> logger, TokenHelper tokenHelper)
         {
+            _context = context;
+            _mapper = mapper;
+            _appSettings = appSettings.Value;
+            _logger = logger;
+            _tokenHelper = tokenHelper;
         }
 
-        public override EmailTemplateResponse Create(CreateEmailTemplateRequest model)
+        public IEmailTemplateResponse GetById(int id)
+        {
+            var emailTemplate = GetEmailTemplate(id);
+            return _mapper.Map<IEmailTemplateResponse>(emailTemplate);
+        }
+
+        public IEmailTemplateResponse Create(ICreateEmailTemplateRequest model)
         {
             // Validate
             if (_context.EmailTemplates.Any(x => x.TemplateName == model.TemplateName))
                 throw new AppException($"The Email Template name, '{model.TemplateName}', already exist. Please try a different Template Name.");
 
             // Map model to new email template object
-            var emailTemplate = _mapper.Map<EmailTemplate>(model);
+            var emailTemplate = _mapper.Map<IEmailTemplate>(model);
 
             emailTemplate.CreatedAt = DateTime.UtcNow;
 
@@ -31,29 +48,23 @@ namespace Ezenity_Backend.Services.Emails
             _context.EmailTemplates.Add(emailTemplate);
             _context.SaveChanges();
 
-            return _mapper.Map<EmailTemplateResponse>(emailTemplate);
+            return _mapper.Map<IEmailTemplateResponse>(emailTemplate);
         }
 
-        public override void Delete(int id)
+        public void Delete(int id)
         {
             var emailTemplate = GetEmailTemplate(id);
             _context.EmailTemplates.Remove(emailTemplate);
             _context.SaveChanges();
         }
 
-        public override IEnumerable<EmailTemplateResponse> GetAll()
+        public IEnumerable<IEmailTemplateResponse> GetAll()
         {
             var emailTemplate = _context.EmailTemplates.ToList();
-            return _mapper.Map<IList<EmailTemplateResponse>>(emailTemplate);
+            return _mapper.Map<IList<IEmailTemplateResponse>>(emailTemplate);
         }
 
-        public override EmailTemplateResponse GetById(int id)
-        {
-            var emailTemplate = GetEmailTemplate(id);
-            return _mapper.Map<EmailTemplateResponse>(emailTemplate);
-        }
-
-        public override EmailTemplateResponse Update(int id, UpdateEmailTemplateRequest model)
+        public IEmailTemplateResponse Update(int id, IUpdateEmailTemplateRequest model)
         {
             var emailTemplate = GetEmailTemplate(id);
 
@@ -69,11 +80,16 @@ namespace Ezenity_Backend.Services.Emails
             _context.EmailTemplates.Update(emailTemplate);
             _context.SaveChanges();
 
-            return _mapper.Map<EmailTemplateResponse>(emailTemplate);
+            return _mapper.Map<IEmailTemplateResponse>(emailTemplate);
         }
 
+
+        /// //////////////////
+        /// Helper Methods ///
+        /// //////////////////
+
         // Helper method to get a section by its ID
-        private EmailTemplate GetEmailTemplate(int id)
+        private IEmailTemplate GetEmailTemplate(int id)
         {
             var emailTemplate = _context.EmailTemplates.Find(id);
 

@@ -1,5 +1,5 @@
 ﻿using Ezenity_Backend.Helpers;
-using Ezenity_Backend.Services.Emails;
+using Ezenity_Backend.Services.Common;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Hosting;
@@ -10,7 +10,7 @@ using MimeKit.Text;
 using System;
 using System.Threading.Tasks;
 
-namespace Ezenity_Backend.Services
+namespace Ezenity_Backend.Services.Emails
 {
     public class EmailService : IEmailService
     {
@@ -25,13 +25,13 @@ namespace Ezenity_Backend.Services
             _env = env;
         }
 
-        public async Task SendEmailAsync(EmailMessage message)
+        public async Task SendEmailAsync(IEmailMessage message)
         {
             try
             {
 
                 // Get the email template from the database based on the provided template name
-                var emailTemplate = EmailHelpers.GetEmailTemplateByName(message.TemplateName, _context);
+                var emailTemplate = EmailHelpers.GetEmailTemplateByName(message.TemplateName, _context, "v1");
 
                 // Check if the template exists
                 if (emailTemplate == null)
@@ -40,7 +40,7 @@ namespace Ezenity_Backend.Services
                 //Console.WriteLine($"Dynamic Values: {string.Join(", ", message.DynamicValues.Select(kv => $"{kv.Key}: {kv.Value}"))}");
 
                 // Set the placeholders for dynamic content
-                //emailTemplate.PlaceholderValues = message.DynamicValues;
+                emailTemplate.PlaceholderValues = message.DynamicValues;
                 //message.DynamicValues = (Dictionary<string, string>) emailTemplate.PlaceholderValues;
 
                 // Replace placeholders in the template with dynamic values

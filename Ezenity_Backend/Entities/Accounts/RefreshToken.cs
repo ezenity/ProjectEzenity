@@ -1,18 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Ezenity_Backend.Entities.Common;
+using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Entities.Accounts
 {
     [Owned]
-    public class RefreshToken
+    public class RefreshToken : IRefreshToken
     {
         public int Id { get; set; }
 
-        public Account Account { get; set; }
+        public IAccount Account { get; set; }
 
         public string Token { get; set; }
 

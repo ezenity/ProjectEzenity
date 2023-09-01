@@ -1,9 +1,10 @@
-﻿using Ezenity_Backend.Entities.Accounts;
+﻿using Ezenity_Backend.Entities.Accounts.v2;
+using Ezenity_Backend.Models.Common.Accounts;
 using System.ComponentModel.DataAnnotations;
 
 namespace Ezenity_Backend.Models.Accounts
 {
-    public class CreateRequest
+    public class CreateAccountRequest : ICreateAccountRequest
     {
         [Required]
         public string Title { get; set; }

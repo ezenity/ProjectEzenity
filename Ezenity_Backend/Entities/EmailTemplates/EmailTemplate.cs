@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Ezenity_Backend.Entities.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Ezenity_Backend.Entities.EmailTemplates
 {
-    public class EmailTemplate
+    public class EmailTemplate : IEmailTemplate
     {
         public int Id { get; set; }
         public string TemplateName { get; set; }
@@ -39,7 +40,7 @@ namespace Ezenity_Backend.Entities.EmailTemplates
         // Apply dynamic content to the template
         public string ApplyDynamicContent()
         {
-            if (!IsDynamic || string.IsNullOrEmpty(Content) || PlaceholderValues == null || PlaceholderValues.Count == 0)
+            if (!IsDynamic || string.IsNullOrEmpty(Content) || PlaceholderValues.Values == null || PlaceholderValues.Count == 0 || PlaceholderValues.Values.Count == 0)
                 return Content;
 
             // Replace placeholders with their corresponding values

@@ -1,4 +1,6 @@
-﻿using Ezenity_Backend.Entities.Accounts;
+﻿using Ezenity_Backend.Entities;
+using Ezenity_Backend.Entities.Accounts;
+using Ezenity_Backend.Entities.Common;
 using Ezenity_Backend.Entities.EmailTemplates;
 using Ezenity_Backend.Entities.Sections;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +38,22 @@ namespace Ezenity_Backend.Helpers
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Account>(entity =>
+            // Configurations
+            ConfigureAccounts(modelBuilder);
+            ConfigureEmailTemplates(modelBuilder);
+            ConfigureSections(modelBuilder);
+
+            // Add any relationships between entities if necessary
+            // For example, if Section has a one-to-many relationship with another entity called OtherEntity
+            // modelBuilder.Entity<Section>()
+            //     .HasMany(x => x.OtherEntities)
+            //     .WithOne(o => o.Section)
+            //     .HasForeignKey(o => o.SectionId);
+        }
+
+        private void ConfigureAccounts(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<IAccount>(entity =>
             {
                 entity.ToTable("Accounts");
                 entity.HasKey(x => x.Id);
@@ -53,30 +70,26 @@ namespace Ezenity_Backend.Helpers
                     refreshToken.Property(rt => rt.RevokedByIp).IsRequired(false);
                     refreshToken.Property(rt => rt.ReplacedByToken).IsRequired(false);
                 });
-                
-
             });
+        }
 
-            modelBuilder.Entity<EmailTemplate>(entity =>
+        private void ConfigureEmailTemplates(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<IEmailTemplate>(entity =>
             {
                 entity.ToTable("EmailTemplates");
                 entity.HasKey(x => x.Id);
             });
+        }
 
-            modelBuilder.Entity<Section>(entity =>
+        private void ConfigureSections(ModelBuilder modelBuilder)
+        {
+
+            modelBuilder.Entity<ISection>(entity =>
             {
                 entity.ToTable("Sections");
                 entity.HasKey(x => x.Id);
             });
-
-
-
-            // Add any relationships between entities if necessary
-            // For example, if Section has a one-to-many relationship with another entity called OtherEntity
-            // modelBuilder.Entity<Section>()
-            //     .HasMany(x => x.OtherEntities)
-            //     .WithOne(o => o.Section)
-            //     .HasForeignKey(o => o.SectionId);
         }
     }
 }

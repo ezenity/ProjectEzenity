@@ -3,7 +3,7 @@ using Ezenity_Backend.Entities.Accounts;
 using Ezenity_Backend.Entities.EmailTemplates;
 using Ezenity_Backend.Entities.Sections;
 using Ezenity_Backend.Models.Accounts;
-using Ezenity_Backend.Models.Emails;
+using Ezenity_Backend.Models.EmailTemplates;
 using Ezenity_Backend.Models.Sections;
 
 namespace Ezenity_Backend.Helpers
@@ -17,8 +17,8 @@ namespace Ezenity_Backend.Helpers
             CreateMap<Account, AccountResponse>();
             CreateMap<Account, AuthenticateResponse>();
             CreateMap<RegisterRequest, Account>();
-            CreateMap<CreateRequest, Account>();
-            CreateMap<UpdateRequest, Account>()
+            CreateMap<CreateAccountRequest, Account>();
+            CreateMap<UpdateAccountRequest, Account>()
                 .ForAllMembers(x => x.Condition(
                     (src, dest, prop) =>
                     {

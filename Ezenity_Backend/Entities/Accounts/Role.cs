@@ -1,8 +1,10 @@
-﻿namespace Ezenity_Backend.Entities.Accounts
+﻿using Ezenity_Backend.Entities.Common;
+
+namespace Ezenity_Backend.Entities.Accounts
 {
-    public enum Role
+    public class Role : IRole
     {
-        Admin = 1,
-        User = 2
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 }

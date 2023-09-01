@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Ezenity_Backend.Models.Common.EmailTemplates;
+using System;
 using System.Collections.Generic;
 
-namespace Ezenity_Backend.Models.Emails
+namespace Ezenity_Backend.Models.EmailTemplates
 {
-    public class UpdateEmailTemplateRequest
+    public class UpdateEmailTemplateRequest : IUpdateEmailTemplateRequest
     {
         public string TemplateName { get; set; }
         public string Subject { get; set; }

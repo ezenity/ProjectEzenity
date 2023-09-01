@@ -49,9 +49,9 @@ namespace Ezenity_Backend.Middleware
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
                 var accountId = int.Parse(jwtToken.Claims.First(x => x.Type == "id").Value);
+                var account = await dataContext.Accounts.FindAsync(accountId);
 
-                // Attach account to context on successful jwt validation
-                context.Items["Account"] = await dataContext.Accounts.FindAsync(accountId);
+                context.Items["Account"] = account;
             }
             catch
             {

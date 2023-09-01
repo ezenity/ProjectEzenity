@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Ezenity_Backend.Models.Common.Accounts;
+using System.ComponentModel.DataAnnotations;
 
 namespace Ezenity_Backend.Models.Accounts
 {
-    public class ValidateResetTokenRequest
+    public class ValidateResetTokenRequest : IValidateResetTokenRequest
     {
         [Required]
         public string Token { get; set; }

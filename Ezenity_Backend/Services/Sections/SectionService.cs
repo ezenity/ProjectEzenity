@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
 using Ezenity_Backend.Entities.Sections;
 using Ezenity_Backend.Helpers;
+using Ezenity_Backend.Models.Common.Accounts;
+using Ezenity_Backend.Models.Common.Sections;
 using Ezenity_Backend.Models.Sections;
+using Ezenity_Backend.Services.Common;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -89,6 +92,26 @@ namespace Ezenity_Backend.Services.Sections
             if (section == null)
                 throw new KeyNotFoundException("Section not found");
             return section;
+        }
+
+        ISectionResponse IBaseService<ISection, ISectionResponse, ICreateSectionRequest, IUpdateAccountRequest>.GetById(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ISectionResponse Create(ICreateSectionRequest model)
+        {
+            throw new NotImplementedException();
+        }
+
+        IEnumerable<ISectionResponse> IBaseService<ISection, ISectionResponse, ICreateSectionRequest, IUpdateAccountRequest>.GetAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ISectionResponse Update(int id, IUpdateAccountRequest model)
+        {
+            throw new NotImplementedException();
         }
     }
 }

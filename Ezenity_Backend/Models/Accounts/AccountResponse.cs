@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Ezenity_Backend.Models.Common.Accounts;
+using System;
 
 namespace Ezenity_Backend.Models.Accounts
 {
-    public class AccountResponse
+    public class AccountResponse : IAccountResponse
     {
 
         public int Id { get; set; }

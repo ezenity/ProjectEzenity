@@ -2,14 +2,14 @@
 using Ezenity_Backend.Entities.Sections;
 using Ezenity_Backend.Helpers;
 using Ezenity_Backend.Models.Sections;
-using Ezenity_Backend.Services.Sections;
+using Ezenity_Backend.Services.Common;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
 namespace Ezenity_Backend.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/sections")]
     public class SectionsController : BaseController<Section, SectionResponse, CreateSectionRequest, UpdateSectionRequest>
     {
         private readonly ISectionService _sectionService;

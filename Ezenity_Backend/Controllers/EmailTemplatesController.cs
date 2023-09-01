@@ -1,13 +1,12 @@
 ﻿using Ezenity_Backend.Entities.EmailTemplates;
-using Ezenity_Backend.Models.Emails;
-using Ezenity_Backend.Services.Emails;
+using Ezenity_Backend.Models.EmailTemplates;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
 namespace Ezenity_Backend.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/emailtemplates")]
     public class EmailTemplatesController : BaseController<EmailTemplate, EmailTemplateResponse, CreateEmailTemplateRequest, UpdateEmailTemplateRequest>
     {
         private readonly IEmailTemplateService _emailTemplateService;
@@ -17,7 +16,7 @@ namespace Ezenity_Backend.Controllers
             _emailTemplateService = emailTemplateService;
         }
 
-        public override ActionResult<EmailTemplateResponse> Create(CreateEmailTemplateRequest model)
+        public override ActionResult<EmailTemplateResponse> CreateAsync(CreateEmailTemplateRequest model)
         {
             var emailTemplate = _emailTemplateService.Create(model);
             return Ok(emailTemplate);

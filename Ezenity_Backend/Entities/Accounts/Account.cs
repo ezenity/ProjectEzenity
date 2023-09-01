@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Ezenity_Backend.Entities.Common;
+using System;
 using System.Collections.Generic;
 
 namespace Ezenity_Backend.Entities.Accounts
 {
-    public class Account
+    public class Account : IAccount
     {
         public int Id { get; set; }
         public string Title { get; set; }
@@ -12,7 +13,8 @@ namespace Ezenity_Backend.Entities.Accounts
         public string Email { get; set; }
         public string PasswordHash { get; set; }
         public bool AcceptTerms { get; set; }
-        public Role Role { get; set; }
+        public IRole DynamicRole { get; set; }
+        public Enums.Role Role { get; set; }
         public string VerificationToken { get; set; }
         public DateTime? Verified { get; set; }
         public bool IsVerified => Verified.HasValue || PasswordReset.HasValue;
@@ -21,7 +23,7 @@ namespace Ezenity_Backend.Entities.Accounts
         public DateTime? PasswordReset { get; set; }
         public DateTime? Created { get; set; }
         public DateTime? Updated { get; set; }
-        public List<RefreshToken> RefreshTokens { get; set; }
+        public List<IRefreshToken> RefreshTokens { get; set; }
 
         public bool OwnsToken(string token)
         {

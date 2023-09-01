@@ -1,6 +1,8 @@
-﻿namespace Ezenity_Backend.Models.Sections
+﻿using Ezenity_Backend.Models.Common.Sections;
+
+namespace Ezenity_Backend.Models.Sections
 {
-    public class SectionResponse
+    public class SectionResponse : ISectionResponse
     {
         public int Id { get; set; }
         public string Title { get; set; }

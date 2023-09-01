@@ -1,15 +1,17 @@
 using Ezenity_Backend.Helpers;
 using Ezenity_Backend.Middleware;
-using Ezenity_Backend.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Ezenity_Backend.Services.Sections;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Ezenity_Backend.Services.Emails;
+using System;
+using Microsoft.AspNetCore.Http.Json;
+using Ezenity_Backend.Services.Common;
+using Ezenity_Backend.Services.Accounts;
+using Ezenity_Backend.Services.EmailTemplates;
 
 namespace Ezenity_Backend
 {
@@ -39,20 +41,22 @@ namespace Ezenity_Backend
                 });
             });
 
-            services.AddControllers()
-                .AddJsonOptions(options =>
-                {
-                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                    options.JsonSerializerOptions.WriteIndented = true;
-                    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-                });
-                    
+            services.AddControllers(options =>
+            {
+                options.Filters.Add<ApiExceptionFilter>();
+            });
+
+            services.Configure<JsonOptions>(options =>
+            {
+                AppConfiguration.ConfigureJsonOptions(options);
+            });
+
             services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ezenity_Backend", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Project Ezenity API", Version = "v1" });
             });
 
             // Configure stringly typed settings objects
@@ -72,6 +76,16 @@ namespace Ezenity_Backend
 
             // Add IConfiguration to the service container
             //services.AddSingleton(_configuration); // Not necessary, as the 'IConfiguration' instance is added to the services container by default by the host.
+
+            string secretKey;
+
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
+                secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? System.IO.File.ReadAllText("secrete/file/location").Trim(); // TODO: Insert correct location once on server
+            else
+                secretKey = _configuration.GetSection("AppSettings")["Secret"];
+            
+            services.AddSingleton(sp =>
+                    new TokenHelper(secretKey));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -81,11 +95,12 @@ namespace Ezenity_Backend
             // Migrate any database changes on startup (includes initial db creation)
             // Ensure to be used only for development. For production, run migrations 
             // manually incase of breaking changes in the database schema.
-            dataContext.Database.Migrate();
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production")
+                dataContext.Database.Migrate();
 
             // Generate swagger json and swagger ui middleware
             app.UseSwagger();
-            app.UseSwaggerUI(x => x.SwaggerEndpoint("/swagger/v1/swagger.json", "Ezenity_Backend v1"));
+            app.UseSwaggerUI(x => x.SwaggerEndpoint("/swagger/v1/swagger.json", "Project Ezenity API v1"));
 
             /*app.UseRouting();*/
 
