@@ -1,17 +1,29 @@
 ﻿using Ezenity_Backend.Entities;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Controllers
 {
-    [Controller]
-    public class BaseController : ControllerBase
+    public abstract class BaseController<TEntity, TResponse, TCreateRequest, TUpdateRequest> : ControllerBase
     {
-        // Returns the current authenticated account (null if not logged in)
-        public Account Account => (Account)HttpContext.Items["Account"];
-        public Skill Skill => (Skill)HttpContext.Items["Skill"];
+        protected TEntity Entity => (TEntity)HttpContext.Items["Entity"];
+
+        // Common CRUD methods
+        [HttpGet("{id:int}")]
+        public abstract Task<ActionResult<TResponse>> GetByIdAsync(int id);
+
+        [HttpGet]
+        public abstract Task<ActionResult<IEnumerable<TResponse>>> GetAllAsync();
+
+        [HttpPost]
+        public abstract Task<ActionResult<TResponse>> CreateAsync(TCreateRequest model);
+
+        [HttpPut("{id:int}")]
+        public abstract Task<ActionResult<TResponse>> UpdateAsync(int id, TUpdateRequest model);
+
+        [HttpDelete("{id:int}")]
+        public abstract Task<IActionResult> DeleteAsync(int id);
     }
+
 }

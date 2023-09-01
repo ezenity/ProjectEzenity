@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Ezenity_Backend.Models.Common.Accounts;
+using System;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Models.Accounts
 {
-    public class AuthenticateResponse
+    public class AuthenticateResponse : IAuthenticateResponse
     {
         public int Id { get; set; }
         public string Title { get; set; }
