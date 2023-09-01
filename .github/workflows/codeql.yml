@@ -78,12 +78,12 @@ jobs:
 
     - run: |
         echo "Run, Build Backend using script"
-        ./backendBuildscript.sh
+        /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/backendBuildscript.sh
       if: matrix.language == 'csharp'
     
     - run: |
         echo "Run, Build Frontend using script"
-        ./frontendBuildscript.sh
+        /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/frontendBuildscript.sh
       if: matrix.language == 'javascript'
 
 
