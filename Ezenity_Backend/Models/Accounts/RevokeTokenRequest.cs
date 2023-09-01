@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Ezenity_Backend.Models.Common.Accounts;
 
 namespace Ezenity_Backend.Models.Accounts
 {
-    public class RevokeTokenRequest
+    public class RevokeTokenRequest : IRevokeTokenRequest
     {
         public string Token { get; set; }
     }

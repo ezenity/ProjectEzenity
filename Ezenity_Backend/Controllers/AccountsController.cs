@@ -1,153 +1,183 @@
-﻿using AutoMapper;
-using Ezenity_Backend.Entities;
+﻿using Ezenity_Backend.Entities.Accounts;
+using Ezenity_Backend.Entities.Common;
 using Ezenity_Backend.Helpers;
-using Ezenity_Backend.Models.Accounts;
-using Ezenity_Backend.Services;
+using Ezenity_Backend.Models;
+using Ezenity_Backend.Models.Common.Accounts;
+using Ezenity_Backend.Services.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    public class AccountsController : BaseController
+    [Route("api/accounts")]
+    public class AccountsController : BaseController<IAccount, IAccountResponse, ICreateAccountRequest, IUpdateAccountRequest>
     {
         private readonly IAccountService _accountService;
-        private readonly IMapper _mapper;
+        private readonly ILogger<AccountsController> _logger;
 
-        public AccountsController(IAccountService accountService, IMapper mapper)
+        // Property for the current authenticated account
+        public IAccount CurrentAccount => (IAccount)HttpContext.Items["Account"];
+
+        public AccountsController(IAccountService accountService, ILogger<AccountsController> logger)
         {
             _accountService = accountService;
-            _mapper = mapper;
+            _logger = logger;
         }
 
-        [HttpPost("authenticate")]
-        public ActionResult<AuthenticateResponse> Authenticate(AuthenticateRequest model)
+        // Common CRUD methods
+        [HttpGet("{id:int}")]
+        public override async Task<ActionResult<IAccountResponse>> GetByIdAsync(int id)
         {
-            var response = _accountService.Authenticate(model, ipAddress());
+            try
+            {
+                var account = await _accountService.GetByIdAsync(id);
+
+                if (account == null)
+                {
+                    return NotFound(new ApiResponse<IAccountResponse>
+                    {
+                        StatusCode = 404,
+                        IsSuccess = false,
+                        Message = "User not found."
+                    });
+                }
+
+                return Ok(new ApiResponse<IAccountResponse>
+                {
+                    StatusCode = 200,
+                    IsSuccess = true,
+                    Message = "User fetched successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Error] User fetched unsuccessfully: {0}", ex);
+
+                return StatusCode(500, new ApiResponse<IAccountResponse>
+                {
+                    StatusCode = 500,
+                    IsSuccess = false,
+                    Message = "An error occurred while fetching the user."
+                });
+            }
+        }
+
+        [Authorize("Admin")]
+        [HttpGet]
+        public override async Task<ActionResult<IEnumerable<IAccountResponse>>> GetAllAsync()
+        {
+            var accounts = await _accountService.GetAllAsync();
+            return Ok(accounts);
+        }
+
+        [Authorize("Admin")]
+        [HttpPost]
+        public override async Task<ActionResult<IAccountResponse>> CreateAsync(ICreateAccountRequest model)
+        {
+            var account = await _accountService.CreateAsync(model);
+            return Ok(account);
+        }
+
+        [Authorize("Admin")]
+        [HttpPut("{id:int}")]
+        public override async Task<ActionResult<IAccountResponse>> UpdateAsync(int id, IUpdateAccountRequest model)
+        {
+            // Users can update their own account and admins can update any account
+            if (!IsAccountId(id))
+                return Unauthorized(new { message = "Unauthorized" });
+            var account = await _accountService.UpdateAsync(id, model);
+            return Ok(account);
+        }
+
+        [Authorize("Admin")]
+        [HttpDelete("{id:int}")]
+        public override async Task<IActionResult> DeleteAsync(int id)
+        {
+            // Users can delete their own account and admins can delete any account
+            if (!IsAccountId(id))
+                return Unauthorized(new { message = "Unauthorized" });
+            await _accountService.DeleteAsync(id);
+            return Ok(new { message = "Account deleted seuccessfully." });
+        }
+
+        // Uncommon Methods
+
+        [HttpPost("authenticate")]
+        public async Task<ActionResult<IAuthenticateResponse>> AuthenticateAsync(IAuthenticateRequest model)
+        {
+            var response = await _accountService.AuthenticateAsync(model, ipAddress());
             setTokenCookie(response.RefreshToken);
             return Ok(response);
         }
 
         [HttpPost("refresh-token")]
-        public ActionResult<AuthenticateResponse> RefreshToken()
+        public async Task<ActionResult<IAuthenticateResponse>> RefreshTokenAsync()
         {
             var refreshToken = Request.Cookies["refreshToken"];
-            var response = _accountService.RefreshToken(refreshToken, ipAddress());
+            var response = await _accountService.RefreshTokenAsync(refreshToken, ipAddress());
             setTokenCookie(response.RefreshToken);
             return Ok(response);
         }
 
-        [Authorize]
+        [Authorize("Admin")]
         [HttpPost("revoke-token")]
-        public IActionResult RevokeToken(RevokeTokenRequest model)
+        public async Task<IActionResult> RevokeTokenAsync(IRevokeTokenRequest model)
         {
+            // Validate model first
+            if (model == null || (string.IsNullOrEmpty(model.Token) && !Request.Cookies.ContainsKey("refreshToken")))
+                return BadRequest(new { message = "Token is required" });
+
             // Accept token from body or cookie
             var token = model.Token ?? Request.Cookies["refreshToken"];
 
-            if (string.IsNullOrEmpty(token))
-                return BadRequest(new { message = "Token is required" });
+            // Log the received token (Using for debugging)
+            //_logger.LogInformation("received token: {Token}", token);
 
-            // Users can revoke their own tokens and admins can revoke any tokens
-            if (!Account.OwnsToken(token) && Account.Role != Role.Admin)
+            if(!IsTokenOwner(token))
                 return Unauthorized(new { message = "Unauthorized" });
 
-            _accountService.RevokeToken(token, ipAddress());
+            await _accountService.RevokeTokenAsync(token, ipAddress());
             return Ok(new { message = "Token revoked." });
         }
 
         [HttpPost("register")]
-        public IActionResult Register(RegisterRequest model)
+        public async Task<IActionResult> RegisterAsync(IRegisterRequest model)
         {
-            _accountService.Register(model, Request.Headers["origin"]);
+            await _accountService.RegisterAsync(model, Request.Headers["origin"]);
             return Ok(new { message = "Registration successful, please check your email for verification instructions." });
         }
 
         [HttpPost("verify-email")]
-        public IActionResult VerfiyEmail(VerifyEmailRequest model)
+        public async Task<IActionResult> VerfiyEmailAsync(IVerifyEmailRequest model)
         {
-            _accountService.VerifyEmail(model.Token);
+            await _accountService.VerifyEmailAsync(model.Token);
             return Ok(new { message = "Verification successful, you can now login." });
         }
 
         [HttpPost("forgot-password")]
-        public IActionResult ForgotPassword(ForgotPasswordRequest model)
+        public async Task<IActionResult> ForgotPasswordAsync(IForgotPasswordRequest model)
         {
-            _accountService.ForgotPassword(model, Request.Headers["origin"]);
+            await _accountService.ForgotPasswordAsync(model, Request.Headers["origin"]);
             return Ok(new { message = "Please check your meail for password reset instructions." });
         }
 
         [HttpPost("validate-reset-token")]
-        public IActionResult ValidateResetToken(ValidateResetTokenRequest model)
+        public async Task<IActionResult> ValidateResetTokenAsync(IValidateResetTokenRequest model)
         {
-            _accountService.ValidateResetToken(model);
+            await _accountService.ValidateResetTokenAsync(model);
             return Ok(new { message = "Token is valid." });
         }
 
         [HttpPost("reset-password")]
-        public IActionResult ResetPassword(ResetPasswordRequest model)
+        public async Task<IActionResult> ResetPasswordAsync(IResetPasswordRequest model)
         {
-            _accountService.ResetPassword(model);
+            await _accountService.ResetPasswordAsync(model);
             return Ok(new { message = "Password reset successful, you can now login." });
-        }
-
-        [Authorize(Role.Admin)]
-        [HttpGet]
-        public ActionResult<IEnumerable<AccountResponse>> GetAll()
-        {
-            var accounts = _accountService.GetAll();
-            return Ok(accounts);
-        }
-
-        [Authorize]
-        [HttpGet("{id:int}")]
-        public ActionResult<AccountResponse> GetById(int id)
-        {
-            // Users can get their own account and admins can get any account
-            if (id != Account.Id && Account.Role != Role.Admin)
-                return Unauthorized(new { message = "Unauthorized" });
-            var account = _accountService.GetById(id);
-            return Ok(account);
-        }
-
-        [Authorize(Role.Admin)]
-        [HttpPost]
-        public ActionResult<AccountResponse> Create(CreateRequest model)
-        {
-            var account = _accountService.Create(model);
-            return Ok(account);
-        }
-
-        [Authorize]
-        [HttpPost("{id:int}")]
-        public ActionResult<AccountResponse> Update(int id, UpdateRequest model)
-        {
-            // Users can update their own account and admins can update any account
-            if (id != Account.Id && Account.Role != Role.Admin)
-                return Unauthorized(new { message = "Unauthorized" });
-
-            // Only admins can update role
-            if (Account.Role != Role.Admin)
-                model.Role = null;
-
-            var account = _accountService.Update(id, model);
-            return Ok(account);
-        }
-
-        [Authorize]
-        [HttpDelete("{id:int}")]
-        public IActionResult Delete(int id)
-        {
-            // Users can delete their own account and admins can delete any account
-            if (id != Account.Id && Account.Role != Role.Admin)
-                return Unauthorized(new { message = "Unauthorized" });
-
-            _accountService.Delete(id);
-            return Ok(new { message = "Account deleted seuccessfully." });
         }
 
         /// //////////////////
@@ -159,7 +189,10 @@ namespace Ezenity_Backend.Controllers
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Expires = DateTime.UtcNow.AddDays(7)
+                Expires = DateTime.UtcNow.AddDays(7),
+                //Expires = DateTime.UtcNow.AddSeconds(15),
+                SameSite = SameSiteMode.None, // Set SameSite attribute to "None"
+                Secure = true // Set the Secure attribute to true for secure (HTTPS) contexts
             };
 
             Response.Cookies.Append("refreshToken", token, cookieOptions);
@@ -171,6 +204,22 @@ namespace Ezenity_Backend.Controllers
                 return Request.Headers["X-Forwarded-For"];
             else
                 return HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+        }
+
+        private bool IsAccountId(int id)
+        {
+            if (CurrentAccount is Account accountV2)
+                return id == accountV2.Id;
+
+            return false;
+        }
+
+        private bool IsTokenOwner(string token)
+        {
+            if (CurrentAccount is Account account)
+                return account.OwnsToken(token);
+
+            return false;
         }
     }
 }

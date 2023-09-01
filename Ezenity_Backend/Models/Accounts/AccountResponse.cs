@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Ezenity_Backend.Models.Common.Accounts;
+using System;
 
 namespace Ezenity_Backend.Models.Accounts
 {
-    public class AccountResponse
+    public class AccountResponse : IAccountResponse
     {
 
         public int Id { get; set; }
