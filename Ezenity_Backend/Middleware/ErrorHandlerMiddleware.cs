@@ -1,4 +1,4 @@
-﻿using Ezenity_Backend.Helpers;
+﻿using Ezenity_Backend.Helpers.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;

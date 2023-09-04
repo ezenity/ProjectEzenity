@@ -2,6 +2,7 @@
 using Ezenity_Backend.Helpers;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Services
 {
@@ -20,10 +21,10 @@ namespace Ezenity_Backend.Services
             _appSettings = appSettings.Value;
         }
 
-        public abstract TResponse GetById(int id);
-        public abstract TResponse Create(TCreateRequest model);
-        public abstract void Delete(int id);
-        public abstract IEnumerable<TResponse> GetAll();
-        public abstract TResponse Update(int id, TUpdateRequest model);
+        public abstract Task<IEnumerable<TResponse>> GetAllAsync();
+        public abstract Task<TResponse> GetByIdAsync(int id);
+        public abstract Task<TResponse> CreateAsync(TCreateRequest model);
+        public abstract Task<TResponse> UpdateAsync(int id, TUpdateRequest model);
+        public abstract Task<TResponse> DeleteAsync(int id);
     }
 }
