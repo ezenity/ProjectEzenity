@@ -31,9 +31,9 @@ namespace Ezenity_Backend.Helpers
             }
         }
 
-        public DbSet<Account> Accounts { get; set; }
-        public DbSet<EmailTemplate> EmailTemplates { get; set; }
-        public DbSet<Section> Sections { get; set; }
+        public DbSet<IAccount> Accounts { get; set; }
+        public DbSet<IEmailTemplate> EmailTemplates { get; set; }
+        public DbSet<ISection> Sections { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

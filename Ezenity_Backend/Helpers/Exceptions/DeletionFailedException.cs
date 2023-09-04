@@ -3,6 +3,9 @@ using System.Globalization;
 
 namespace Ezenity_Backend.Helpers.Exceptions
 {
+    /// <summary>
+    /// Exception for indicating that a deletion operation has failed.
+    /// </summary>
     public class DeletionFailedException : AppException
     {
         public DeletionFailedException() : base() { }
