@@ -13,8 +13,7 @@ namespace Ezenity_Backend.Entities.Accounts
         public string Email { get; set; }
         public string PasswordHash { get; set; }
         public bool AcceptTerms { get; set; }
-        public IRole DynamicRole { get; set; }
-        public Enums.Role Role { get; set; }
+        public IRole Role { get; set; }
         public string VerificationToken { get; set; }
         public DateTime? Verified { get; set; }
         public bool IsVerified => Verified.HasValue || PasswordReset.HasValue;

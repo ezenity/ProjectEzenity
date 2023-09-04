@@ -43,7 +43,7 @@ namespace Ezenity_Backend.Controllers
                     {
                         StatusCode = 404,
                         IsSuccess = false,
-                        Message = "User not found."
+                        Message = "Account not found."
                     });
                 }
 
@@ -51,18 +51,18 @@ namespace Ezenity_Backend.Controllers
                 {
                     StatusCode = 200,
                     IsSuccess = true,
-                    Message = "User fetched successfully"
+                    Message = "Account fetched successfully"
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError("[Error] User fetched unsuccessfully: {0}", ex);
+                _logger.LogError("[Error] Account fetched unsuccessfully: {0}", ex);
 
                 return StatusCode(500, new ApiResponse<IAccountResponse>
                 {
                     StatusCode = 500,
                     IsSuccess = false,
-                    Message = "An error occurred while fetching the user."
+                    Message = "An error occurred while fetching the Account."
                 });
             }
         }
@@ -71,27 +71,118 @@ namespace Ezenity_Backend.Controllers
         [HttpGet]
         public override async Task<ActionResult<IEnumerable<IAccountResponse>>> GetAllAsync()
         {
-            var accounts = await _accountService.GetAllAsync();
-            return Ok(accounts);
+            try
+            {
+                var accounts = await _accountService.GetAllAsync();
+
+                if (accounts == null)
+                {
+                    return NotFound(new ApiResponse<IAccountResponse>
+                    {
+                        StatusCode = 404,
+                        IsSuccess = false,
+                        Message = "Accounts not found."
+                    });
+                }
+
+                return Ok(new ApiResponse<IAccountResponse>
+                {
+                    StatusCode = 200,
+                    IsSuccess = true,
+                    Message = "Accounts fetched successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Error] Accounts fetched unsuccessfully: {0}", ex);
+
+                return StatusCode(500, new ApiResponse<IAccountResponse>
+                {
+                    StatusCode = 500,
+                    IsSuccess = false,
+                    Message = "An error occurred while fetching the Accounts."
+                });
+            }
         }
 
         [Authorize("Admin")]
         [HttpPost]
         public override async Task<ActionResult<IAccountResponse>> CreateAsync(ICreateAccountRequest model)
         {
-            var account = await _accountService.CreateAsync(model);
-            return Ok(account);
+            try
+            {
+                var account = await _accountService.CreateAsync(model);
+
+                if (account.Email == model.Email)
+                {
+                    return Conflict(new ApiResponse<IAccountResponse>
+                    {
+                        StatusCode = 409,
+                        IsSuccess = false,
+                        Message = "An Account with this email already exists."
+                    });
+                }
+
+                return Created(""/* TODO: input API endpoint to get account details (URL) */, new ApiResponse<IAccountResponse>
+                {
+                    StatusCode = 201,
+                    IsSuccess = true,
+                    Message = "Account created successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Error] Accounts created unsuccessfully: {0}", ex);
+
+                return StatusCode(500, new ApiResponse<IAccountResponse>
+                {
+                    StatusCode = 500,
+                    IsSuccess = false,
+                    Message = "An error occurred while creating the Account."
+                });
+            }
         }
 
         [Authorize("Admin")]
         [HttpPut("{id:int}")]
         public override async Task<ActionResult<IAccountResponse>> UpdateAsync(int id, IUpdateAccountRequest model)
         {
-            // Users can update their own account and admins can update any account
-            if (!IsAccountId(id))
-                return Unauthorized(new { message = "Unauthorized" });
-            var account = await _accountService.UpdateAsync(id, model);
-            return Ok(account);
+            try
+            {
+                // Users can update their own account and admins can update any account
+                if (!IsAccountId(id))
+                    return Unauthorized(new { message = "Unauthorized" });
+
+                var account = await _accountService.UpdateAsync(id, model);
+
+                if (account.Email == model.Email)
+                {
+                    return Conflict(new ApiResponse<IAccountResponse>
+                    {
+                        StatusCode = 409,
+                        IsSuccess = false,
+                        Message = "An Account with this email already exists."
+                    });
+                }
+
+                return Ok(new ApiResponse<IAccountResponse>
+                {
+                    StatusCode = 200,
+                    IsSuccess = true,
+                    Message = "Account created successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Error] Accounts created unsuccessfully: {0}", ex);
+
+                return StatusCode(500, new ApiResponse<IAccountResponse>
+                {
+                    StatusCode = 500,
+                    IsSuccess = false,
+                    Message = "An error occurred while creating the Account."
+                });
+            }
         }
 
         [Authorize("Admin")]

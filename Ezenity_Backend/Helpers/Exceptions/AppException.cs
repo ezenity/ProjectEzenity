@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
-namespace Ezenity_Backend.Helpers
+namespace Ezenity_Backend.Helpers.Exceptions
 {
     /// <summary>
     /// Custom exception class for throwing application specific exceptions (e.g. for validation)

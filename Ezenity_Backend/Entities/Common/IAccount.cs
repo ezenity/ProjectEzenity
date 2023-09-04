@@ -1,5 +1,4 @@
-﻿using Ezenity_Backend.Entities.Accounts.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Ezenity_Backend.Entities.Common
@@ -13,8 +12,7 @@ namespace Ezenity_Backend.Entities.Common
         string Email { get; set; }
         string PasswordHash { get; set; }
         bool AcceptTerms { get; set; }
-        IRole DynamicRole { get; set; }
-        Role Role { get; set; }
+        IRole Role { get; set; }
         string VerificationToken { get; set; }
         DateTime? Verified { get; set; }
         bool IsVerified { get; }
