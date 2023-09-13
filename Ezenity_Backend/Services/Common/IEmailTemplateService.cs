@@ -1,9 +1,10 @@
-﻿using Ezenity_Backend.Entities;
-using Ezenity_Backend.Models.Common.EmailTemplates;
+﻿using Ezenity_Backend.Entities.EmailTemplates;
+using Ezenity_Backend.Models;
+using Ezenity_Backend.Models.EmailTemplates;
 
 namespace Ezenity_Backend.Services.Common
 {
-    public interface IEmailTemplateService : IBaseService<IEmailTemplate, IEmailTemplateResponse, ICreateEmailTemplateRequest, IUpdateEmailTemplateRequest>
+    public interface IEmailTemplateService : IBaseService<EmailTemplate, EmailTemplateResponse, CreateEmailTemplateRequest, UpdateEmailTemplateRequest, DeleteResponse>
     {
     }
 }

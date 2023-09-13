@@ -1,34 +1,45 @@
 ﻿using AutoMapper;
 using Ezenity_Backend.Entities.Sections;
 using Ezenity_Backend.Helpers;
-using Ezenity_Backend.Models.Common.Accounts;
-using Ezenity_Backend.Models.Common.Sections;
+using Ezenity_Backend.Helpers.Exceptions;
+using Ezenity_Backend.Models;
 using Ezenity_Backend.Models.Sections;
 using Ezenity_Backend.Services.Common;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Services.Sections
 {
-    public class SectionService : BaseService<Section, SectionResponse, CreateSectionRequest, UpdateSectionRequest>, ISectionService
+    public class SectionService : ISectionService
     {
-        public SectionService(DataContext context, IMapper mapper, IOptions<AppSettings> appSettings)
-            : base(context, mapper, appSettings)
+        private readonly DataContext _context;
+        private readonly IMapper _mapper;
+        private readonly AppSettings _appSettings;
+        private readonly ILogger<ISectionService> _logger;
+
+        public SectionService(DataContext context, IMapper mapper, IOptions<AppSettings> appSettings, ILogger<ISectionService> logger)
         {
+            _context = context;
+            _mapper = mapper;
+            _appSettings = appSettings.Value;
+            _logger = logger;
         }
 
-        public override SectionResponse GetById(int id)
+        public async Task<SectionResponse> GetByIdAsync(int id)
         {
-            var section = GetSection(id);
+            var section = await GetSection(id);
             return _mapper.Map<SectionResponse>(section);
         }
 
-        public override SectionResponse Create(CreateSectionRequest model)
+        public async Task<SectionResponse> CreateAsync(CreateSectionRequest model)
         {
             // Validate
-            if (_context.Sections.Any(x => x.Title == model.Title))
+            if (await _context.Sections.AnyAsync(x => x.Title == model.Title))
                 throw new AppException($"The Section Title, '{model.Title}', already exist. Please try a different title.");
 
             /*var section = new Section
@@ -47,27 +58,29 @@ namespace Ezenity_Backend.Services.Sections
 
             // Save the section to the database
             _context.Sections.Add(section);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return _mapper.Map<SectionResponse>(section);
         }
 
-        public override void Delete(int id)
+        public async Task<DeleteResponse> DeleteAsync(int id)
         {
-            var section = GetSection(id);
+            var section = await GetSection(id);
             _context.Sections.Remove(section);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<DeleteResponse>(section);
         }
 
-        public override IEnumerable<SectionResponse> GetAll()
+        public async Task<IEnumerable<SectionResponse>> GetAllAsync()
         {
-            var sections = _context.Sections.ToList();
+            var sections = await _context.Sections.ToListAsync();
             return _mapper.Map<IList<SectionResponse>>(sections);
         }
 
-        public override SectionResponse Update(int id, UpdateSectionRequest model)
+        public async Task<SectionResponse> UpdateAsync(int id, UpdateSectionRequest model)
         {
-            var section = GetSection(id);
+            var section = await GetSection(id);
 
             // Validate
             if (section.Title != model.Title && _context.Sections.Any(x => x.Title == model.Title))
@@ -79,39 +92,20 @@ namespace Ezenity_Backend.Services.Sections
             section.Updated = DateTime.UtcNow;
 
             _context.Sections.Update(section);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return _mapper.Map<SectionResponse>(section);
         }
 
         // Helper method to get a section by its ID
-        private Section GetSection(int id)
+        private async Task<Section> GetSection(int id)
         {
             /*var section = _context.Sections.Include(s => s.Content).SingleOrDefault(s => s.Id == id);*/
-            var section = _context.Sections.Find(id);
+            var section = await _context.Sections.FindAsync(id);
             if (section == null)
                 throw new KeyNotFoundException("Section not found");
             return section;
         }
 
-        ISectionResponse IBaseService<ISection, ISectionResponse, ICreateSectionRequest, IUpdateAccountRequest>.GetById(int id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public ISectionResponse Create(ICreateSectionRequest model)
-        {
-            throw new NotImplementedException();
-        }
-
-        IEnumerable<ISectionResponse> IBaseService<ISection, ISectionResponse, ICreateSectionRequest, IUpdateAccountRequest>.GetAll()
-        {
-            throw new NotImplementedException();
-        }
-
-        public ISectionResponse Update(int id, IUpdateAccountRequest model)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

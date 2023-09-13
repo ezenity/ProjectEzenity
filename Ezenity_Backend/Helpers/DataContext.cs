@@ -1,6 +1,4 @@
-﻿using Ezenity_Backend.Entities;
-using Ezenity_Backend.Entities.Accounts;
-using Ezenity_Backend.Entities.Common;
+﻿using Ezenity_Backend.Entities.Accounts;
 using Ezenity_Backend.Entities.EmailTemplates;
 using Ezenity_Backend.Entities.Sections;
 using Microsoft.EntityFrameworkCore;
@@ -31,15 +29,17 @@ namespace Ezenity_Backend.Helpers
             }
         }
 
-        public DbSet<IAccount> Accounts { get; set; }
-        public DbSet<IEmailTemplate> EmailTemplates { get; set; }
-        public DbSet<ISection> Sections { get; set; }
+        public DbSet<Account> Accounts { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<EmailTemplate> EmailTemplates { get; set; }
+        public DbSet<Section> Sections { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configurations
             ConfigureAccounts(modelBuilder);
+            ConfigureRoles(modelBuilder);
             ConfigureEmailTemplates(modelBuilder);
             ConfigureSections(modelBuilder);
 
@@ -53,7 +53,7 @@ namespace Ezenity_Backend.Helpers
 
         private void ConfigureAccounts(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<IAccount>(entity =>
+            modelBuilder.Entity<Account>(entity =>
             {
                 entity.ToTable("Accounts");
                 entity.HasKey(x => x.Id);
@@ -73,9 +73,18 @@ namespace Ezenity_Backend.Helpers
             });
         }
 
+        private void ConfigureRoles(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Role>(entity =>
+            {
+                entity.ToTable("Roles");
+                entity.HasKey(x => x.Id);
+            });
+        }
+
         private void ConfigureEmailTemplates(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<IEmailTemplate>(entity =>
+            modelBuilder.Entity<EmailTemplate>(entity =>
             {
                 entity.ToTable("EmailTemplates");
                 entity.HasKey(x => x.Id);
@@ -85,7 +94,7 @@ namespace Ezenity_Backend.Helpers
         private void ConfigureSections(ModelBuilder modelBuilder)
         {
 
-            modelBuilder.Entity<ISection>(entity =>
+            modelBuilder.Entity<Section>(entity =>
             {
                 entity.ToTable("Sections");
                 entity.HasKey(x => x.Id);

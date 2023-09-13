@@ -1,11 +1,10 @@
-﻿using Ezenity_Backend.Entities.Common;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Ezenity_Backend.Entities.EmailTemplates
 {
-    public class EmailTemplate : IEmailTemplate
+    public class EmailTemplate
     {
         public int Id { get; set; }
         public string TemplateName { get; set; }
@@ -25,7 +24,7 @@ namespace Ezenity_Backend.Entities.EmailTemplates
 
         // Placeholder values and their corresponding replacements
         [NotMapped] // this property will not be mapped to the database
-        public IDictionary<string, string> PlaceholderValues { get; set; }
+        public Dictionary<string, string> PlaceholderValues { get; set; }
 
         // This property will be persisted as JSON string in the database
         [Column(TypeName = "text")]

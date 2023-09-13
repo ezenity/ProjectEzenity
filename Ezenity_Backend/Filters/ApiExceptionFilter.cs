@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Collections.Generic;
 
-namespace Ezenity_Backend.Helpers
+namespace Ezenity_Backend.Filters
 {
     //
     // Summary:

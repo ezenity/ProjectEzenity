@@ -1,10 +1,9 @@
 ﻿using Ezenity_Backend.Entities.Accounts;
-using Ezenity_Backend.Models.Common.Accounts;
 using System.ComponentModel.DataAnnotations;
 
 namespace Ezenity_Backend.Models.Accounts
 {
-    public class UpdateAccountRequest : IUpdateAccountRequest
+    public class UpdateAccountRequest
     {
         private string _password;
         private string _confirmPassword;

@@ -1,10 +1,10 @@
-﻿using Ezenity_Backend.Entities;
-using Ezenity_Backend.Models.Common.Accounts;
-using Ezenity_Backend.Models.Common.Sections;
+﻿using Ezenity_Backend.Entities.Sections;
+using Ezenity_Backend.Models;
+using Ezenity_Backend.Models.Sections;
 
 namespace Ezenity_Backend.Services.Common
 {
-    public interface ISectionService : IBaseService<ISection, ISectionResponse, ICreateSectionRequest, IUpdateAccountRequest>
+    public interface ISectionService : IBaseService<Section, SectionResponse, CreateSectionRequest, UpdateSectionRequest, DeleteResponse>
     {
     }
 }

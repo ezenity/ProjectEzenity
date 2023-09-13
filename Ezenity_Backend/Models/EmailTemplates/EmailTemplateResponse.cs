@@ -1,9 +1,8 @@
-﻿using Ezenity_Backend.Models.Common.EmailTemplates;
-using System;
+﻿using System;
 
 namespace Ezenity_Backend.Models.EmailTemplates
 {
-    public class EmailTemplateResponse : IEmailTemplateResponse
+    public class EmailTemplateResponse
     {
         public int Id { get; set; }
         public string TemplateName { get; set; }

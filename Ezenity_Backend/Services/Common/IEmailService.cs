@@ -1,10 +1,10 @@
-﻿using Ezenity_Backend.Entities;
+﻿using Ezenity_Backend.Entities.Emails;
 using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Services.Common
 {
     public interface IEmailService
     {
-        Task SendEmailAsync(IEmailMessage message);
+        Task SendEmailAsync(EmailMessage message);
     }
 }

@@ -1,9 +1,8 @@
-﻿using Ezenity_Backend.Models.Common.Accounts;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Ezenity_Backend.Models.Accounts
 {
-    public class ResetPasswordRequest : IResetPasswordRequest
+    public class ResetPasswordRequest
     {
         [Required]
         public string Token { get; set; }
