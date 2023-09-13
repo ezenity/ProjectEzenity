@@ -1,9 +1,8 @@
-﻿using Ezenity_Backend.Models.Common.Accounts;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Ezenity_Backend.Models.Accounts
 {
-    public class AuthenticateRequest : IAuthenticateRequest
+    public class AuthenticateRequest
     {
         [Required]
         [EmailAddress]

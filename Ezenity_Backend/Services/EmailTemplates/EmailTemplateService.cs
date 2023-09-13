@@ -1,12 +1,18 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Ezenity_Backend.Entities.EmailTemplates;
 using Ezenity_Backend.Helpers;
-using Ezenity_Backend.Models.Common.EmailTemplates;
+using Ezenity_Backend.Helpers.Exceptions;
+using Ezenity_Backend.Models;
+using Ezenity_Backend.Models.EmailTemplates;
 using Ezenity_Backend.Services.Common;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Services.EmailTemplates
 {
@@ -15,62 +21,78 @@ namespace Ezenity_Backend.Services.EmailTemplates
         private readonly DataContext _context;
         private readonly IMapper _mapper;
         private readonly AppSettings _appSettings;
-        private readonly ILogger<EmailTemplateService> _logger;
+        private readonly ILogger<IEmailTemplateService> _logger;
         private readonly TokenHelper _tokenHelper;
+        private readonly IAuthService _authService;
 
-        public EmailTemplateService(DataContext context, IMapper mapper, IOptions<AppSettings> appSettings, ILogger<EmailTemplateService> logger, TokenHelper tokenHelper)
+        public EmailTemplateService(DataContext context, IMapper mapper, IOptions<AppSettings> appSettings, ILogger<IEmailTemplateService> logger, TokenHelper tokenHelper, IAuthService authService)
         {
             _context = context;
             _mapper = mapper;
             _appSettings = appSettings.Value;
             _logger = logger;
             _tokenHelper = tokenHelper;
+            _authService = authService;
         }
 
-        public IEmailTemplateResponse GetById(int id)
+        public async Task<EmailTemplateResponse> GetByIdAsync(int id)
         {
-            var emailTemplate = GetEmailTemplate(id);
-            return _mapper.Map<IEmailTemplateResponse>(emailTemplate);
+            //var emailTemplate = await GetEmailTemplate(id);
+            var emailTemplate = await _context.EmailTemplates
+                                    .Where(x => x.Id == id)
+                                    .ProjectTo<EmailTemplateResponse>(_mapper.ConfigurationProvider)
+                                    .SingleOrDefaultAsync();
+
+            if (emailTemplate == null)
+                throw new ResourceNotFoundException($"Email Template ID, {id}, was not found.");
+
+            return _mapper.Map<EmailTemplateResponse>(emailTemplate);
         }
 
-        public IEmailTemplateResponse Create(ICreateEmailTemplateRequest model)
+        public async Task<EmailTemplateResponse> CreateAsync(CreateEmailTemplateRequest model)
         {
             // Validate
-            if (_context.EmailTemplates.Any(x => x.TemplateName == model.TemplateName))
-                throw new AppException($"The Email Template name, '{model.TemplateName}', already exist. Please try a different Template Name.");
+            if (await _context.EmailTemplates.AnyAsync(x => x.TemplateName == model.TemplateName))
+                throw new ResourceAlreadyExistsException($"The Email Template name, '{model.TemplateName}', already exist. Please try a different Template Name.");
 
             // Map model to new email template object
-            var emailTemplate = _mapper.Map<IEmailTemplate>(model);
+            var emailTemplate = _mapper.Map<EmailTemplate>(model);
 
             emailTemplate.CreatedAt = DateTime.UtcNow;
 
             // save to database
             _context.EmailTemplates.Add(emailTemplate);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            return _mapper.Map<IEmailTemplateResponse>(emailTemplate);
+            return _mapper.Map<EmailTemplateResponse>(emailTemplate);
         }
 
-        public void Delete(int id)
+        public async Task<DeleteResponse> DeleteAsync(int id)
         {
-            var emailTemplate = GetEmailTemplate(id);
+            var emailTemplate = await GetEmailTemplate(id);
+
             _context.EmailTemplates.Remove(emailTemplate);
             _context.SaveChanges();
+
+            return _mapper.Map<DeleteResponse>(emailTemplate);
         }
 
-        public IEnumerable<IEmailTemplateResponse> GetAll()
+        public async Task<IEnumerable<EmailTemplateResponse>> GetAllAsync()
         {
-            var emailTemplate = _context.EmailTemplates.ToList();
-            return _mapper.Map<IList<IEmailTemplateResponse>>(emailTemplate);
+            var emailTemplate = await _context.EmailTemplates
+                                    .ProjectTo<EmailTemplateResponse>(_mapper.ConfigurationProvider)
+                                    .ToListAsync();
+
+            return _mapper.Map<IList<EmailTemplateResponse>>(emailTemplate);
         }
 
-        public IEmailTemplateResponse Update(int id, IUpdateEmailTemplateRequest model)
+        public async Task<EmailTemplateResponse> UpdateAsync(int id, UpdateEmailTemplateRequest model)
         {
-            var emailTemplate = GetEmailTemplate(id);
+            var emailTemplate = await GetEmailTemplate(id);
 
             // Validate
             if (emailTemplate.TemplateName != model.TemplateName && _context.EmailTemplates.Any(x => x.TemplateName == model.TemplateName))
-                throw new AppException($"The Template name, '{model.TemplateName}', already exist, please try a different template name.");
+                throw new ResourceAlreadyExistsException($"The Template name, '{model.TemplateName}', already exist, please try a different template name.");
 
             // update commin props
             _mapper.Map(model, emailTemplate);
@@ -78,9 +100,9 @@ namespace Ezenity_Backend.Services.EmailTemplates
             emailTemplate.UpdatedAt = DateTime.UtcNow;
 
             _context.EmailTemplates.Update(emailTemplate);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            return _mapper.Map<IEmailTemplateResponse>(emailTemplate);
+            return _mapper.Map<EmailTemplateResponse>(emailTemplate);
         }
 
 
@@ -89,12 +111,11 @@ namespace Ezenity_Backend.Services.EmailTemplates
         /// //////////////////
 
         // Helper method to get a section by its ID
-        private IEmailTemplate GetEmailTemplate(int id)
+        private async Task<EmailTemplate> GetEmailTemplate(int id)
         {
-            var emailTemplate = _context.EmailTemplates.Find(id);
+            var emailTemplate = await _context.EmailTemplates.FindAsync(id);
 
-            if (emailTemplate == null)
-                throw new KeyNotFoundException("Email Template not found");
+            if (emailTemplate == null) throw new ResourceNotFoundException($"Email Template ID, {id}, not found");
 
             return emailTemplate;
         }

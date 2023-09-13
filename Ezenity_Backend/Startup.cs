@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Http.Json;
 using Ezenity_Backend.Services.Common;
 using Ezenity_Backend.Services.Accounts;
 using Ezenity_Backend.Services.EmailTemplates;
+using Ezenity_Backend.Filters;
+using Microsoft.AspNetCore.Http;
 
 namespace Ezenity_Backend
 {
@@ -44,6 +46,7 @@ namespace Ezenity_Backend
             services.AddControllers(options =>
             {
                 options.Filters.Add<ApiExceptionFilter>();
+                // options.Filters.Add(typeof(LoadAccountFilter)); // Registers this filter globally
             });
 
             services.Configure<JsonOptions>(options =>
@@ -73,6 +76,7 @@ namespace Ezenity_Backend
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IEmailTemplateService, EmailTemplateService>();
             services.AddScoped<ISectionService, SectionService>();
+            services.AddScoped<IAuthService, AuthService>();
 
             // Add IConfiguration to the service container
             //services.AddSingleton(_configuration); // Not necessary, as the 'IConfiguration' instance is added to the services container by default by the host.
@@ -86,6 +90,10 @@ namespace Ezenity_Backend
             
             services.AddSingleton(sp =>
                     new TokenHelper(secretKey));
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+            // Filter DI
+            services.AddScoped<LoadAccountFilter>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

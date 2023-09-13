@@ -1,8 +1,9 @@
 ﻿using Ezenity_Backend.Entities.Accounts;
-using Ezenity_Backend.Entities.Common;
+using Ezenity_Backend.Filters;
 using Ezenity_Backend.Helpers;
+using Ezenity_Backend.Helpers.Exceptions;
 using Ezenity_Backend.Models;
-using Ezenity_Backend.Models.Common.Accounts;
+using Ezenity_Backend.Models.Accounts;
 using Ezenity_Backend.Services.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,13 +16,13 @@ namespace Ezenity_Backend.Controllers
 {
     [ApiController]
     [Route("api/accounts")]
-    public class AccountsController : BaseController<IAccount, IAccountResponse, ICreateAccountRequest, IUpdateAccountRequest>
+    public class AccountsController : BaseController<Account, AccountResponse, CreateAccountRequest, UpdateAccountRequest, DeleteResponse>
     {
         private readonly IAccountService _accountService;
         private readonly ILogger<AccountsController> _logger;
 
         // Property for the current authenticated account
-        public IAccount CurrentAccount => (IAccount)HttpContext.Items["Account"];
+        public Account CurrentAccount => (Account)HttpContext.Items["Account"];
 
         public AccountsController(IAccountService accountService, ILogger<AccountsController> logger)
         {
@@ -30,8 +31,7 @@ namespace Ezenity_Backend.Controllers
         }
 
         // Common CRUD methods
-        [HttpGet("{id:int}")]
-        public override async Task<ActionResult<IAccountResponse>> GetByIdAsync(int id)
+        public override async Task<ActionResult<ApiResponse<AccountResponse>>> GetByIdAsync(int id)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace Ezenity_Backend.Controllers
 
                 if (account == null)
                 {
-                    return NotFound(new ApiResponse<IAccountResponse>
+                    return NotFound(new ApiResponse<AccountResponse>
                     {
                         StatusCode = 404,
                         IsSuccess = false,
@@ -47,7 +47,7 @@ namespace Ezenity_Backend.Controllers
                     });
                 }
 
-                return Ok(new ApiResponse<IAccountResponse>
+                return Ok(new ApiResponse<AccountResponse>
                 {
                     StatusCode = 200,
                     IsSuccess = true,
@@ -58,7 +58,7 @@ namespace Ezenity_Backend.Controllers
             {
                 _logger.LogError("[Error] Account fetched unsuccessfully: {0}", ex);
 
-                return StatusCode(500, new ApiResponse<IAccountResponse>
+                return StatusCode(500, new ApiResponse<AccountResponse>
                 {
                     StatusCode = 500,
                     IsSuccess = false,
@@ -68,8 +68,7 @@ namespace Ezenity_Backend.Controllers
         }
 
         [Authorize("Admin")]
-        [HttpGet]
-        public override async Task<ActionResult<IEnumerable<IAccountResponse>>> GetAllAsync()
+        public override async Task<ActionResult<ApiResponse<IEnumerable<AccountResponse>>>> GetAllAsync()
         {
             try
             {
@@ -77,7 +76,7 @@ namespace Ezenity_Backend.Controllers
 
                 if (accounts == null)
                 {
-                    return NotFound(new ApiResponse<IAccountResponse>
+                    return NotFound(new ApiResponse<AccountResponse>
                     {
                         StatusCode = 404,
                         IsSuccess = false,
@@ -85,7 +84,7 @@ namespace Ezenity_Backend.Controllers
                     });
                 }
 
-                return Ok(new ApiResponse<IAccountResponse>
+                return Ok(new ApiResponse<AccountResponse>
                 {
                     StatusCode = 200,
                     IsSuccess = true,
@@ -96,7 +95,7 @@ namespace Ezenity_Backend.Controllers
             {
                 _logger.LogError("[Error] Accounts fetched unsuccessfully: {0}", ex);
 
-                return StatusCode(500, new ApiResponse<IAccountResponse>
+                return StatusCode(500, new ApiResponse<AccountResponse>
                 {
                     StatusCode = 500,
                     IsSuccess = false,
@@ -106,8 +105,7 @@ namespace Ezenity_Backend.Controllers
         }
 
         [Authorize("Admin")]
-        [HttpPost]
-        public override async Task<ActionResult<IAccountResponse>> CreateAsync(ICreateAccountRequest model)
+        public override async Task<ActionResult<ApiResponse<AccountResponse>>> CreateAsync(CreateAccountRequest model)
         {
             try
             {
@@ -115,7 +113,7 @@ namespace Ezenity_Backend.Controllers
 
                 if (account.Email == model.Email)
                 {
-                    return Conflict(new ApiResponse<IAccountResponse>
+                    return Conflict(new ApiResponse<AccountResponse>
                     {
                         StatusCode = 409,
                         IsSuccess = false,
@@ -123,7 +121,7 @@ namespace Ezenity_Backend.Controllers
                     });
                 }
 
-                return Created(""/* TODO: input API endpoint to get account details (URL) */, new ApiResponse<IAccountResponse>
+                return Created(""/* TODO: input API endpoint to get account details (URL) */, new ApiResponse<AccountResponse>
                 {
                     StatusCode = 201,
                     IsSuccess = true,
@@ -134,7 +132,7 @@ namespace Ezenity_Backend.Controllers
             {
                 _logger.LogError("[Error] Accounts created unsuccessfully: {0}", ex);
 
-                return StatusCode(500, new ApiResponse<IAccountResponse>
+                return StatusCode(500, new ApiResponse<AccountResponse>
                 {
                     StatusCode = 500,
                     IsSuccess = false,
@@ -143,40 +141,53 @@ namespace Ezenity_Backend.Controllers
             }
         }
 
-        [Authorize("Admin")]
-        [HttpPut("{id:int}")]
-        public override async Task<ActionResult<IAccountResponse>> UpdateAsync(int id, IUpdateAccountRequest model)
+        [Authorize]
+        public override async Task<ActionResult<ApiResponse<AccountResponse>>> UpdateAsync(int id, UpdateAccountRequest model)
         {
             try
             {
-                // Users can update their own account and admins can update any account
-                if (!IsAccountId(id))
-                    return Unauthorized(new { message = "Unauthorized" });
-
                 var account = await _accountService.UpdateAsync(id, model);
 
-                if (account.Email == model.Email)
-                {
-                    return Conflict(new ApiResponse<IAccountResponse>
-                    {
-                        StatusCode = 409,
-                        IsSuccess = false,
-                        Message = "An Account with this email already exists."
-                    });
-                }
-
-                return Ok(new ApiResponse<IAccountResponse>
+                return Ok(new ApiResponse<AccountResponse>
                 {
                     StatusCode = 200,
                     IsSuccess = true,
+                    Data = account,
                     Message = "Account created successfully"
+                });
+            }
+            catch (ResourceNotFoundException ex)
+            {
+                return NotFound(new ApiResponse<AccountResponse>
+                {
+                    StatusCode = 404,
+                    IsSuccess = false,
+                    Message = ex.Message
+                });
+            }
+            catch (AuthorizationException ex)
+            {
+                return Unauthorized(new ApiResponse<AccountResponse>
+                {
+                    StatusCode = 401,
+                    IsSuccess = false,
+                    Message = ex.Message
+                });
+            }
+            catch (ResourceAlreadyExistsException ex)
+            {
+                return Conflict(new ApiResponse<AccountResponse>
+                {
+                    StatusCode = 409,
+                    IsSuccess = false,
+                    Message = ex.Message
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError("[Error] Accounts created unsuccessfully: {0}", ex);
 
-                return StatusCode(500, new ApiResponse<IAccountResponse>
+                return StatusCode(500, new ApiResponse<AccountResponse>
                 {
                     StatusCode = 500,
                     IsSuccess = false,
@@ -185,39 +196,162 @@ namespace Ezenity_Backend.Controllers
             }
         }
 
-        [Authorize("Admin")]
-        [HttpDelete("{id:int}")]
-        public override async Task<IActionResult> DeleteAsync(int id)
+        [Authorize]
+        public override async Task<ActionResult<ApiResponse<DeleteResponse>>> DeleteAsync(int DeleteAccountId, int DeletedById)
         {
-            // Users can delete their own account and admins can delete any account
-            if (!IsAccountId(id))
-                return Unauthorized(new { message = "Unauthorized" });
-            await _accountService.DeleteAsync(id);
-            return Ok(new { message = "Account deleted seuccessfully." });
+            try
+            {
+                var account = await _accountService.GetByIdAsync(DeletedById);
+                var deletionResult = await _accountService.DeleteAsync(DeleteAccountId);
+
+                DeleteResponse deleteResponse = new DeleteResponse
+                {
+                    Message = "Account deleted successfully",
+                    DeletedBy = account,
+                    DeletedAt = DateTime.UtcNow
+                };
+
+                return Ok(new ApiResponse<DeleteResponse>
+                {
+                    StatusCode = 200,
+                    IsSuccess = true,
+                    Message = "Account deleted successfully",
+                    Data = deleteResponse
+                });
+
+            }
+            catch (ResourceNotFoundException ex)
+            {
+                return NotFound(new ApiResponse<DeleteResponse>
+                {
+                    StatusCode = 404,
+                    IsSuccess = false,
+                    Message = ex.Message
+                });
+            }
+            catch (AuthorizationException ex)
+            {
+                return Unauthorized(new ApiResponse<DeleteResponse>
+                {
+                    StatusCode = 401,
+                    IsSuccess = false,
+                    Message = ex.Message
+                });
+            }
+            catch (DeletionFailedException ex)
+            {
+                return BadRequest(new ApiResponse<DeleteResponse>
+                {
+                    StatusCode = 400,
+                    IsSuccess = false,
+                    Message = ex.Message
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new ApiResponse<DeleteResponse>
+                {
+                    StatusCode = 500,
+                    IsSuccess = false,
+                    Message = "An unexpected error occurred"
+                });
+            }
         }
 
         // Uncommon Methods
 
         [HttpPost("authenticate")]
-        public async Task<ActionResult<IAuthenticateResponse>> AuthenticateAsync(IAuthenticateRequest model)
+        public async Task<ActionResult<ApiResponse<AuthenticateResponse>>> AuthenticateAsync(AuthenticateRequest model)
         {
-            var response = await _accountService.AuthenticateAsync(model, ipAddress());
-            setTokenCookie(response.RefreshToken);
-            return Ok(response);
+            ApiResponse<AuthenticateResponse> apiResponse = new ApiResponse<AuthenticateResponse>();
+
+            try
+            {
+                var response = await _accountService.AuthenticateAsync(model, ipAddress());
+
+                setTokenCookie(response.RefreshToken);
+
+                apiResponse.StatusCode = 200;
+                apiResponse.Message = "Authentication successfull.";
+                apiResponse.IsSuccess = true;
+                apiResponse.Data = response;
+
+                return Ok(apiResponse);
+            }
+            catch (ResourceNotFoundException ex)
+            {
+                apiResponse.StatusCode = 404;
+                apiResponse.Message = ex.Message;
+                apiResponse.IsSuccess = false;
+                apiResponse.Errors.Add(ex.Message);
+
+                return NotFound(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                apiResponse.StatusCode = 500;
+                apiResponse.Message = "An unexpected error occurred.";
+                apiResponse.IsSuccess = false;
+                apiResponse.Errors.Add(ex.Message);
+
+                return StatusCode(500, apiResponse);
+            }
         }
 
         [HttpPost("refresh-token")]
-        public async Task<ActionResult<IAuthenticateResponse>> RefreshTokenAsync()
+        public async Task<ActionResult<ApiResponse<AuthenticateResponse>>> RefreshTokenAsync()
         {
-            var refreshToken = Request.Cookies["refreshToken"];
-            var response = await _accountService.RefreshTokenAsync(refreshToken, ipAddress());
-            setTokenCookie(response.RefreshToken);
-            return Ok(response);
+            ApiResponse<AuthenticateResponse> apiResponse = new ApiResponse<AuthenticateResponse>();
+
+            try
+            {
+                var refreshToken = Request.Cookies["refreshToken"];
+
+                if (string.IsNullOrEmpty(refreshToken))
+                    throw new ResourceNotFoundException("Refresh token is missing.");
+
+                var response = await _accountService.RefreshTokenAsync(refreshToken, ipAddress());
+
+                setTokenCookie(response.RefreshToken);
+
+                apiResponse.StatusCode = 200;
+                apiResponse.Message = "Token refreshed successfully.";
+                apiResponse.IsSuccess = true;
+                apiResponse.Data = response;
+
+                _logger.LogInformation("Token refreshed successfully for IP: {0}", ipAddress());
+
+                return Ok(apiResponse);
+            }
+            catch (ResourceNotFoundException ex)
+            {
+                _logger.LogError("Failed to refresh token: {0}", ex.Message);
+
+                apiResponse.StatusCode = 400;
+                apiResponse.Message = ex.Message;
+                apiResponse.IsSuccess = false;
+                apiResponse.Errors.Add(ex.Message);
+
+                return BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("An unexpected error occurred: {0}", ex.Message);
+
+                apiResponse.StatusCode = 500;
+                apiResponse.Message = "An unexpected error occurred.";
+                apiResponse.IsSuccess = false;
+                apiResponse.Errors.Add(ex.Message);
+
+                return StatusCode(500, apiResponse);
+            }
+
         }
 
         [Authorize("Admin")]
+        [ServiceFilter(typeof(LoadAccountFilter))]
         [HttpPost("revoke-token")]
-        public async Task<IActionResult> RevokeTokenAsync(IRevokeTokenRequest model)
+        public async Task<IActionResult> RevokeTokenAsync(RevokeTokenRequest model)
         {
             // Validate model first
             if (model == null || (string.IsNullOrEmpty(model.Token) && !Request.Cookies.ContainsKey("refreshToken")))
@@ -229,7 +363,17 @@ namespace Ezenity_Backend.Controllers
             // Log the received token (Using for debugging)
             //_logger.LogInformation("received token: {Token}", token);
 
-            if(!IsTokenOwner(token))
+            //var entity = this.Entity;
+
+            //entity.OwnsToken(token);
+
+            /*if (!IsTokenOwner(token))
+                    return Unauthorized(new { message = "Unauthorized" });*/
+
+            // Retrieve the account loaded by the LoadAccountFilter
+            var loadedAccount = Entity;
+
+            if(loadedAccount != null || loadedAccount.OwnsToken(token))
                 return Unauthorized(new { message = "Unauthorized" });
 
             await _accountService.RevokeTokenAsync(token, ipAddress());
@@ -237,35 +381,95 @@ namespace Ezenity_Backend.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> RegisterAsync(IRegisterRequest model)
+        public async Task<IActionResult> RegisterAsync(RegisterRequest model)
         {
-            await _accountService.RegisterAsync(model, Request.Headers["origin"]);
-            return Ok(new { message = "Registration successful, please check your email for verification instructions." });
+            ApiResponse<object> apiResponse = new ApiResponse<object>();
+
+            try
+            {
+                await _accountService.RegisterAsync(model, Request.Headers["origin"]);
+
+                apiResponse.StatusCode = 200;
+                apiResponse.Message = "Registration successful, please check your email for verification instructions.";
+                apiResponse.IsSuccess = true;
+                //apiResponse.Data = response;
+
+                return Ok(apiResponse);
+            }
+            catch (ResourceAlreadyExistsException ex)
+            {
+                return Conflict(new ApiResponse<object>
+                {
+                    StatusCode = 409,
+                    IsSuccess = false,
+                    Message = ex.Message
+                });
+            }
+            catch (ResourceNotFoundException ex)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    StatusCode = 400,
+                    IsSuccess = false,
+                    Message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Error] Account registered unsuccessfully: {0}", ex);
+
+                return StatusCode(500, new ApiResponse<object>
+                {
+                    StatusCode = 500,
+                    IsSuccess = false,
+                    Message = "An error occurred while creating the Account."
+                });
+            }
         }
 
         [HttpPost("verify-email")]
-        public async Task<IActionResult> VerfiyEmailAsync(IVerifyEmailRequest model)
+        public async Task<IActionResult> VerfiyEmailAsync(VerifyEmailRequest model)
         {
-            await _accountService.VerifyEmailAsync(model.Token);
-            return Ok(new { message = "Verification successful, you can now login." });
+            ApiResponse<object> apiResponse = new ApiResponse<object>();
+
+            try
+            {
+                await _accountService.VerifyEmailAsync(model.Token);
+
+                apiResponse.StatusCode = 200;
+                apiResponse.IsSuccess = true;
+                apiResponse.Message = "Verification successful, you can now login.";
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Error] Account verification unsuccessfully: {0}", ex);
+
+                apiResponse.StatusCode = 500;
+                apiResponse.IsSuccess = false;
+                apiResponse.Message = ex.Message;
+
+                return StatusCode(500, apiResponse);
+            }
         }
 
         [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPasswordAsync(IForgotPasswordRequest model)
+        public async Task<IActionResult> ForgotPasswordAsync(ForgotPasswordRequest model)
         {
             await _accountService.ForgotPasswordAsync(model, Request.Headers["origin"]);
             return Ok(new { message = "Please check your meail for password reset instructions." });
         }
 
         [HttpPost("validate-reset-token")]
-        public async Task<IActionResult> ValidateResetTokenAsync(IValidateResetTokenRequest model)
+        public async Task<IActionResult> ValidateResetTokenAsync(ValidateResetTokenRequest model)
         {
             await _accountService.ValidateResetTokenAsync(model);
             return Ok(new { message = "Token is valid." });
         }
 
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPasswordAsync(IResetPasswordRequest model)
+        public async Task<IActionResult> ResetPasswordAsync(ResetPasswordRequest model)
         {
             await _accountService.ResetPasswordAsync(model);
             return Ok(new { message = "Password reset successful, you can now login." });
@@ -295,14 +499,6 @@ namespace Ezenity_Backend.Controllers
                 return Request.Headers["X-Forwarded-For"];
             else
                 return HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
-        }
-
-        private bool IsAccountId(int id)
-        {
-            if (CurrentAccount is Account accountV2)
-                return id == accountV2.Id;
-
-            return false;
         }
 
         private bool IsTokenOwner(string token)

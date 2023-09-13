@@ -1,5 +1,4 @@
-﻿using Ezenity_Backend.Entities;
-using Ezenity_Backend.Entities.Common;
+﻿using Ezenity_Backend.Entities.EmailTemplates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,7 +40,7 @@ namespace Ezenity_Backend.Helpers
             return string.Join(",", emailList.Where(IsValidEmail));
         }
 
-        public static IEmailTemplate GetEmailTemplateByName(string templateName, DataContext context, string version)
+        public static EmailTemplate GetEmailTemplateByName(string templateName, DataContext context)
         {
             return context.EmailTemplates.FirstOrDefault(t => t.TemplateName == templateName);
         }
