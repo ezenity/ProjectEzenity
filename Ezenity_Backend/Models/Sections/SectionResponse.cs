@@ -1,8 +1,6 @@
-﻿using Ezenity_Backend.Models.Common.Sections;
-
-namespace Ezenity_Backend.Models.Sections
+﻿namespace Ezenity_Backend.Models.Sections
 {
-    public class SectionResponse : ISectionResponse
+    public class SectionResponse
     {
         public int Id { get; set; }
         public string Title { get; set; }

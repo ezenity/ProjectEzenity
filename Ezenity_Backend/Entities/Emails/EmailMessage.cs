@@ -1,9 +1,8 @@
-﻿using Ezenity_Backend.Entities.Common;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Ezenity_Backend.Entities.Emails
 {
-    public class EmailMessage : IEmailMessage
+    public class EmailMessage
     {
         public string To { get; set; }
         public string Subject { get; set; }

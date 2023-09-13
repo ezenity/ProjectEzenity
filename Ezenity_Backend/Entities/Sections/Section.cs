@@ -1,10 +1,9 @@
-﻿using Ezenity_Backend.Entities.Common;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Ezenity_Backend.Entities.Sections
 {
-    public class Section : ISection
+    public class Section
     {
         public int Id { get; set; }
 

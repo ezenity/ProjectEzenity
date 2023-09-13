@@ -1,4 +1,6 @@
-﻿using Ezenity_Backend.Helpers;
+﻿using Ezenity_Backend.Entities.Emails;
+using Ezenity_Backend.Helpers;
+using Ezenity_Backend.Helpers.Exceptions;
 using Ezenity_Backend.Services.Common;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -7,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using MimeKit.Text;
+using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 
@@ -25,13 +28,13 @@ namespace Ezenity_Backend.Services.Emails
             _env = env;
         }
 
-        public async Task SendEmailAsync(IEmailMessage message)
+        public async Task SendEmailAsync(EmailMessage message)
         {
             try
             {
 
                 // Get the email template from the database based on the provided template name
-                var emailTemplate = EmailHelpers.GetEmailTemplateByName(message.TemplateName, _context, "v1");
+                var emailTemplate = EmailHelpers.GetEmailTemplateByName(message.TemplateName, _context);
 
                 // Check if the template exists
                 if (emailTemplate == null)
@@ -39,15 +42,44 @@ namespace Ezenity_Backend.Services.Emails
 
                 //Console.WriteLine($"Dynamic Values: {string.Join(", ", message.DynamicValues.Select(kv => $"{kv.Key}: {kv.Value}"))}");
 
+
+                Console.WriteLine($"Before assignment, message.DynamicValues: {JsonConvert.SerializeObject(message.DynamicValues)}");
+                Console.WriteLine($"Before assignment, emailTemplate.PlaceholderValues: {JsonConvert.SerializeObject(emailTemplate.PlaceholderValues)}");
+
+
                 // Set the placeholders for dynamic content
                 emailTemplate.PlaceholderValues = message.DynamicValues;
+                //                message.DynamicValues = emailTemplate.PlaceholderValues;
+
+                // This should populate the PlaceholderValues based on the PlaceholderValuesJson from the database.
+                //emailTemplate.PlaceholderValuesJson = emailTemplate.PlaceholderValuesJson;
+                Console.WriteLine($"After assignment, emailTemplate.PlaceholderValues: {JsonConvert.SerializeObject(emailTemplate.PlaceholderValues)}");
+
+                /*if (message.DynamicValues != null)
+                {
+                    emailTemplate.PlaceholderValues = message.DynamicValues;
+                    Console.WriteLine($"After assignment, emailTemplate.PlaceholderValues: {JsonConvert.SerializeObject(emailTemplate.PlaceholderValues)}");
+                }
+                else
+                {
+                    Console.WriteLine("Warning: message.DynamicValues is null.");
+                }*/
+
+
+
                 //message.DynamicValues = (Dictionary<string, string>) emailTemplate.PlaceholderValues;
 
                 // Replace placeholders in the template with dynamic values
                 //string body = emailTemplate.TemplateBody;
+                // Debug log
+                Console.WriteLine("Placeholder Values: " + JsonConvert.SerializeObject(emailTemplate.PlaceholderValues));
 
                 // Apply dynamic content to the template
                 string body = emailTemplate.ApplyDynamicContent();
+
+                Console.WriteLine($"After applying dynamic content, body: {body}");
+
+                //message.DynamicValues = emailTemplate.PlaceholderValues; // Testing location - not standard
 
                 message.Subject = emailTemplate.Subject;
 
@@ -104,7 +136,7 @@ namespace Ezenity_Backend.Services.Emails
                         try
                         {
                             await smtpClient.AuthenticateAsync(_appSettings.SmtpUser, _appSettings.SmtpPass);
-                        } catch (AuthenticationException ex)
+                        } catch (Ezenity_Backend.Helpers.Exceptions.AuthenticationException ex)
                         {
                             Console.WriteLine("Invalid username or passowrd", ex);
                             return;

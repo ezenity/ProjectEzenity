@@ -4,5 +4,6 @@
     {
         int GetCurrentUserId();
         bool IsCurrentUserAdmin();
+        string GetCurrentUserEmail();
     }
 }

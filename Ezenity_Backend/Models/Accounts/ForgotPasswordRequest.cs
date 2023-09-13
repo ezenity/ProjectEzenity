@@ -1,9 +1,8 @@
-﻿using Ezenity_Backend.Models.Common.Accounts;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Ezenity_Backend.Models.Accounts
 {
-    public class ForgotPasswordRequest : IForgotPasswordRequest
+    public class ForgotPasswordRequest
     {
         [Required]
         [EmailAddress]

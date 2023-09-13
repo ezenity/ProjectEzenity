@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Ezenity_Backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230821171603_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20230912204239_updatedModels")]
+    partial class updatedModels
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -55,7 +55,7 @@ namespace Ezenity_Backend.Migrations
                     b.Property<DateTime?>("ResetTokenExpires")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Role")
+                    b.Property<int?>("RoleId")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -72,7 +72,24 @@ namespace Ezenity_Backend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("RoleId");
+
                     b.ToTable("Accounts");
+                });
+
+            modelBuilder.Entity("Ezenity_Backend.Entities.Accounts.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("Ezenity_Backend.Entities.EmailTemplates.EmailTemplate", b =>
@@ -151,56 +168,12 @@ namespace Ezenity_Backend.Migrations
                     b.ToTable("Sections");
                 });
 
-            modelBuilder.Entity("Ezenity_Backend.Entities.Skill", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<DateTime?>("Created")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Percentage")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("Updated")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Skills");
-                });
-
-            modelBuilder.Entity("Ezenity_Backend.Models.ExpertiseCompentencies.EC", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("Content")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("Created")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("Updated")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ECs");
-                });
-
             modelBuilder.Entity("Ezenity_Backend.Entities.Accounts.Account", b =>
                 {
+                    b.HasOne("Ezenity_Backend.Entities.Accounts.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId");
+
                     b.OwnsMany("Ezenity_Backend.Entities.Accounts.RefreshToken", "RefreshTokens", b1 =>
                         {
                             b1.Property<int>("AccountId")
@@ -244,6 +217,8 @@ namespace Ezenity_Backend.Migrations
                         });
 
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("Role");
                 });
 #pragma warning restore 612, 618
         }

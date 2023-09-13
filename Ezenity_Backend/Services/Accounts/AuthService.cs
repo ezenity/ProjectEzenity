@@ -43,5 +43,17 @@ namespace Ezenity_Backend.Services.Accounts
 
             return false;
         }
+
+        /// <summary>
+        /// Gets the Email of the current user.
+        /// </summary>
+        /// <returns>The Email of the current user.</returns>
+        public string GetCurrentUserEmail()
+        {
+            if (_httpContextAccessor.HttpContext.Items["Account"] is Account account)
+                return account.Email;
+
+            return null;
+        }
     }
 }

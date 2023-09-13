@@ -2,6 +2,7 @@
 {
     public class AppSettings
     {
+        public string BaseUrl { get; set; }
         public string Secret { get; set; }
 
         // Refresh token time to live (in days_, inactive tokens are

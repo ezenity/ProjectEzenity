@@ -1,10 +1,9 @@
-﻿using Ezenity_Backend.Models.Common.Accounts;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Ezenity_Backend.Models.Accounts
 {
-    public class RegisterRequest : IRegisterRequest
+    public class RegisterRequest
     {
         [Required]
         public string Title { get; set; }

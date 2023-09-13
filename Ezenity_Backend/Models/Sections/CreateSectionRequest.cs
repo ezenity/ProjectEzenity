@@ -1,8 +1,6 @@
-﻿using Ezenity_Backend.Models.Common.Sections;
-
-namespace Ezenity_Backend.Models.Sections
+﻿namespace Ezenity_Backend.Models.Sections
 {
-    public class CreateSectionRequest : ICreateSectionRequest
+    public class CreateSectionRequest
     {
         public string Title { get; set; }
         public string ContentType { get; set; }
