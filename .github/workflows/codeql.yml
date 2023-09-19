@@ -83,7 +83,7 @@ jobs:
     
     - run: |
         echo "Run, Build Frontend using script"
-        /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/frontendBuildscript.sh
+        /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/Ezenity_Frontend/frontendBuildscript.sh
       if: matrix.language == 'javascript'
 
 
