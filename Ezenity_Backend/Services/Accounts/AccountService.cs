@@ -18,6 +18,9 @@ using Ezenity_Backend.Models.Accounts;
 
 namespace Ezenity_Backend.Services.Accounts
 {
+    /// <summary>
+    /// Provides services related to account management such as email verification, password reset, CRUD operations, etc.
+    /// </summary>
     public class AccountService : IAccountService
     {
         private readonly DataContext _context;
@@ -28,6 +31,16 @@ namespace Ezenity_Backend.Services.Accounts
         private readonly TokenHelper _tokenHelper;
         private readonly IAuthService _authService;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AccountService"/> class with required dependencies.
+        /// </summary>
+        /// <param name="context">The data context for database operations.</param>
+        /// <param name="mapper">The AutoMapper instance for object mapping.</param>
+        /// <param name="appSettings">The application settings.</param>
+        /// <param name="emailService">The service for email-related tasks.</param>
+        /// <param name="logger">The logger for logging information.</param>
+        /// <param name="tokenHelper">The helper for generating tokens.</param>
+        /// <param name="authService">The service for authentication-related tasks.</param>
         public AccountService(DataContext context, IMapper mapper, IOptions<AppSettings> appSettings, IEmailService emailService, ILogger<AccountService> logger, TokenHelper tokenHelper, IAuthService authService)
         {
             _context = context;
@@ -70,6 +83,13 @@ namespace Ezenity_Backend.Services.Accounts
             return response;
         }
 
+        /// <summary>
+        /// Refreshes an existing JWT token.
+        /// </summary>
+        /// <param name="token">The refresh token used to issue a new JWT token.</param>
+        /// <param name="ipAddress">The IP address of the client requesting the token refresh.</param>
+        /// <returns>Returns an <see cref="AuthenticateResponse"/> object containing the new JWT and refresh tokens.</returns>
+        /// <exception cref="Exception">Thrown when the token refresh fails.</exception>
         public async Task<AuthenticateResponse> RefreshTokenAsync(string token, string ipAddress)
         {
             using(var transaction = _context.Database.BeginTransaction())
@@ -107,6 +127,13 @@ namespace Ezenity_Backend.Services.Accounts
             }
         }
 
+        /// <summary>
+        /// Revokes a refresh token.
+        /// </summary>
+        /// <param name="token">The refresh token to revoke.</param>
+        /// <param name="ipAddress">The IP address of the client requesting the token revocation.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        /// <exception cref="Exception">Thrown when the token revocation fails.</exception>
         public async Task RevokeTokenAsync(string token, string ipAddress)
         {
             var (refreshToken, account) = await _tokenHelper.GetRefreshTokenAsync(token);
@@ -118,6 +145,14 @@ namespace Ezenity_Backend.Services.Accounts
             await _context.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Registers a new account.
+        /// </summary>
+        /// <param name="model">The registration request containing the user's details.</param>
+        /// <param name="origin">The origin header from the client request.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        /// <exception cref="ResourceAlreadyExistsException">Thrown when the email is already registered.</exception>
+        /// <exception cref="ResourceNotFoundException">Thrown when the origin header is missing.</exception>
         public async Task RegisterAsync(RegisterRequest model, string origin)
         {
             // Check is account exists
@@ -201,11 +236,16 @@ namespace Ezenity_Backend.Services.Accounts
             await _emailService.SendEmailAsync(verifyEmail);
         }
 
+        /// <summary>
+        /// Verifies an account's email using a verification token.
+        /// </summary>
+        /// <param name="token">The verification token.</param>
+        /// <exception cref="InvalidVerificationTokenException">Thrown when the verification token is invalid or expired.</exception>
         public async Task VerifyEmailAsync(string token)
         {
             var account = await _context.Accounts.SingleOrDefaultAsync(x => x.VerificationToken == token);
 
-            if (account == null) throw new AppException("Verification failed.");
+            if (account == null) throw new InvalidVerificationTokenException("The verification token is invalid or expired.");
 
             account.Verified = DateTime.UtcNow;
             account.VerificationToken = null;
@@ -214,6 +254,11 @@ namespace Ezenity_Backend.Services.Accounts
             await _context.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Initiates the password reset process for an account identified by email.
+        /// </summary>
+        /// <param name="model">The request model containing the email of the account.</param>
+        /// <param name="origin">The origin header from the client request.</param>
         public async Task ForgotPasswordAsync(ForgotPasswordRequest model, string origin)
         {
             var account = await _context.Accounts.SingleOrDefaultAsync(x => x.Email == model.Email);
@@ -250,6 +295,11 @@ namespace Ezenity_Backend.Services.Accounts
             await _emailService.SendEmailAsync(resetEmail);
         }
 
+        /// <summary>
+        /// Validates a password reset token.
+        /// </summary>
+        /// <param name="model">The request model containing the reset token.</param>
+        /// <exception cref="AppException">Thrown when the reset token is invalid.</exception>
         public async Task ValidateResetTokenAsync(ValidateResetTokenRequest model)
         {
             var account = await _context.Accounts.SingleOrDefaultAsync(x =>
@@ -261,6 +311,11 @@ namespace Ezenity_Backend.Services.Accounts
                 throw new AppException("Invalid token.");
         }
 
+        /// <summary>
+        /// Resets the account's password using a valid reset token.
+        /// </summary>
+        /// <param name="model">The request model containing the new password and reset token.</param>
+        /// <exception cref="AppException">Thrown when the reset token is invalid.</exception>
         public async Task ResetPasswordAsync(ResetPasswordRequest model)
         {
             var account = await _context.Accounts.SingleOrDefaultAsync(x =>
@@ -281,6 +336,10 @@ namespace Ezenity_Backend.Services.Accounts
             await _context.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Retrieves all accounts.
+        /// </summary>
+        /// <returns>A list of all accounts.</returns>
         public async Task<IEnumerable<AccountResponse>> GetAllAsync()
         {
             var accounts = await _context.Accounts
@@ -289,6 +348,11 @@ namespace Ezenity_Backend.Services.Accounts
             return accounts;
         }
 
+        /// <summary>
+        /// Retrieves an account by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the account.</param>
+        /// <returns>The account if found; otherwise null.</returns>
         public async Task<AccountResponse> GetByIdAsync(int id)
         {
             var account = await _context.Accounts
@@ -298,6 +362,12 @@ namespace Ezenity_Backend.Services.Accounts
             return account;
         }
 
+        /// <summary>
+        /// Creates a new account.
+        /// </summary>
+        /// <param name="model">The request model containing the account details.</param>
+        /// <returns>The created account.</returns>
+        /// <exception cref="ResourceAlreadyExistsException">Thrown when an account with the provided email already exists.</exception>
         public async Task<AccountResponse> CreateAsync(CreateAccountRequest model)
         {
             // Validate
@@ -319,6 +389,16 @@ namespace Ezenity_Backend.Services.Accounts
             return _mapper.Map<AccountResponse>(account);
         }
 
+        /// <summary>
+        /// Updates an existing account.
+        /// </summary>
+        /// <param name="id">The ID of the account to update.</param>
+        /// <param name="model">The request model containing the updated details of the account.</param>
+        /// <returns>The updated account.</returns>
+        /// <exception cref="ResourceNotFoundException">Thrown when the account to update is not found.</exception>
+        /// <exception cref="AuthorizationException">Thrown when the current user is not authorized to perform the operation.</exception>
+        /// <exception cref="ResourceAlreadyExistsException">Thrown when the email is already taken.</exception>
+        /// <exception cref="DataAccessException">Thrown when an error occurs while updating the resource.</exception>
         public async Task<AccountResponse> UpdateAsync(int id, UpdateAccountRequest model)
         {
             int currentUserId = _authService.GetCurrentUserId();
@@ -356,6 +436,14 @@ namespace Ezenity_Backend.Services.Accounts
             return _mapper.Map<AccountResponse>(account);
         }
 
+        /// <summary>
+        /// Asynchronously deletes an account with the given ID.
+        /// </summary>
+        /// <param name="id">The ID of the account to be deleted.</param>
+        /// <returns>Returns a <see cref="DeleteResponse"/> object that represents the status of the deletion.</returns>
+        /// <exception cref="ResourceNotFoundException">Thrown when no account with the provided ID is found.</exception>
+        /// <exception cref="AuthorizationException">Thrown when the current user is not authorized to perform the deletion.</exception>
+        /// <exception cref="DeletionFailedException">Thrown when an error occurs during the deletion process.</exception>
         public async Task<DeleteResponse> DeleteAsync(int id)
         {
             int currentUserId = _authService.GetCurrentUserId();
@@ -389,7 +477,7 @@ namespace Ezenity_Backend.Services.Accounts
         /// Retrieves the account associated with the given ID.
         /// </summary>
         /// <param name="id">The ID of the account to retrieve.</param>
-        /// <returns>The <see cref="IAccount"/> object associated with the given ID.</returns>
+        /// <returns>The <see cref="Account"/> object associated with the given ID.</returns>
         /// <exception cref="ResourceNotFoundException">Thrown when no account is found for the given ID.</exception>
         private async Task<Account> GetAccountAsync(int id)
         {

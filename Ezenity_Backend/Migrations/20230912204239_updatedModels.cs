@@ -2,8 +2,16 @@
 
 namespace Ezenity_Backend.Migrations
 {
+    /// <summary>
+    /// This class represents a database migration that updates the models by renaming
+    /// the "Role" table to "Roles" and updating foreign key references.
+    /// </summary>
     public partial class updatedModels : Migration
     {
+        /// <summary>
+        /// Applies the changes to the database schema by updating table and foreign key names.
+        /// </summary>
+        /// <param name="migrationBuilder">An instance of the MigrationBuilder class used for applying migrations.</param>
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
@@ -32,6 +40,10 @@ namespace Ezenity_Backend.Migrations
                 onDelete: ReferentialAction.Restrict);
         }
 
+        /// <summary>
+        /// Reverts the changes applied in the Up() method, effectively rolling back this migration.
+        /// </summary>
+        /// <param name="migrationBuilder">An instance of the MigrationBuilder class used for reverting migrations.</param>
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(

@@ -15,12 +15,32 @@ using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Services.Emails
 {
+    /// <summary>
+    /// Provides services for sending emails.
+    /// </summary>
     public class EmailService : IEmailService
     {
+        /// <summary>
+        /// Holds the application settings.
+        /// </summary>
         private readonly AppSettings _appSettings;
+
+        /// <summary>
+        /// The data context used for database operations.
+        /// </summary>
         private readonly DataContext _context;
+
+        /// <summary>
+        /// Provides details about the web hosting environment an application is running in.
+        /// </summary>
         private readonly IWebHostEnvironment _env;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EmailService"/> class.
+        /// </summary>
+        /// <param name="appSettings">Application settings.</param>
+        /// <param name="context">Data context for database operations.</param>
+        /// <param name="env">Web hosting environment details.</param>
         public EmailService(IOptions<AppSettings> appSettings, DataContext context, IWebHostEnvironment env)
         {
             _appSettings = appSettings.Value;
@@ -28,6 +48,11 @@ namespace Ezenity_Backend.Services.Emails
             _env = env;
         }
 
+        /// <summary>
+        /// Sends an email asynchronously.
+        /// </summary>
+        /// <param name="message">The email message to send.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task SendEmailAsync(EmailMessage message)
         {
             try
@@ -211,7 +236,7 @@ namespace Ezenity_Backend.Services.Emails
             catch (AppException appEx)
             {
                 // Log or handle known application exceptions
-                throw; // Re-throws the caught AppException
+                throw new AppException("An unexpected error occurred while sending the email.", appEx);  // Re-throws the caught AppException
             }
             catch (Exception ex)
             {

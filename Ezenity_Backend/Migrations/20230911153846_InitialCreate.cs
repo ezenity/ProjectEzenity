@@ -3,8 +3,15 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Ezenity_Backend.Migrations
 {
+    /// <summary>
+    /// Represents the initial database migration to create the schema and tables.
+    /// </summary>
     public partial class InitialCreate : Migration
     {
+        /// <summary>
+        /// Executes the upward migration to create tables and indices.
+        /// </summary>
+        /// <param name="migrationBuilder">The migration builder used for creating tables and indices.</param>
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -124,6 +131,10 @@ namespace Ezenity_Backend.Migrations
                 column: "RoleId");
         }
 
+        /// <summary>
+        /// Reverts the changes made in the Up() method, essentially rolling back the migration.
+        /// </summary>
+        /// <param name="migrationBuilder">The migration builder used for deleting tables and indices.</param>
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
