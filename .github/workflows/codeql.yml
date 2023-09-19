@@ -76,12 +76,18 @@ jobs:
     #     echo "Run, Build Application using script"
     #     ./location_of_script_within_repo/buildscript.sh
 
-    - run: |
+    - name: Run Backend Build Script
+      shell: bash
+      run: |
+        ls -al /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/
         echo "Run, Build Backend using script"
         /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/backendBuildscript.sh
       if: matrix.language == 'csharp'
     
-    - run: |
+    - name: Run Frontend Build Script
+      shell: bash
+      run: |
+        ls -al /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/
         echo "Run, Build Frontend using script"
         /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/frontendBuildscript.sh
       if: matrix.language == 'javascript'
