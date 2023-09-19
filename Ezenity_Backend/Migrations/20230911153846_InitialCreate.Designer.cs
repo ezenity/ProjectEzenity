@@ -9,10 +9,17 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Ezenity_Backend.Migrations
 {
+    /// <summary>
+    /// Represents the initial database migration for the application, which sets up the schema and tables.
+    /// </summary>
     [DbContext(typeof(DataContext))]
     [Migration("20230911153846_InitialCreate")]
     partial class InitialCreate
     {
+        /// <summary>
+        /// Defines the schema and configuration for all entities in the model targeting a specific database.
+        /// </summary>
+        /// <param name="modelBuilder">An instance of the ModelBuilder class used to configure the data model.</param>
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

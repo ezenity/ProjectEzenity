@@ -9,17 +9,30 @@ using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Middleware
 {
+    /// <summary>
+    /// Middleware for handling exceptions and converting them into appropriate HTTP responses.
+    /// </summary>
     public class ErrorHandlerMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ErrorHandlerMiddleware"/> class.
+        /// </summary>
+        /// <param name="next">The delegate for the next middleware in the pipeline.</param>
+        /// <param name="logger">The logger to write diagnostic messages to.</param>
         public ErrorHandlerMiddleware(RequestDelegate next, ILogger<ErrorHandlerMiddleware> logger)
         {
             _next = next;
             _logger = logger;
         }
 
+        /// <summary>
+        /// Invokes the middleware.
+        /// </summary>
+        /// <param name="context">The HTTP context for the current request and response.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task Invoke(HttpContext context)
         {
             try

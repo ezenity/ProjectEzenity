@@ -16,15 +16,50 @@ using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Services.EmailTemplates
 {
+    /// <summary>
+    /// Provides functionality to manage Email Templates.
+    /// </summary>
     public class EmailTemplateService : IEmailTemplateService
     {
+        /// <summary>
+        /// Provides data access to the application's data store.
+        /// </summary>
         private readonly DataContext _context;
+
+        /// <summary>
+        /// Provides object-object mapping functionality.
+        /// </summary>
         private readonly IMapper _mapper;
+
+        /// <summary>
+        /// Provides access to application settings.
+        /// </summary>
         private readonly AppSettings _appSettings;
+
+        /// <summary>
+        /// Provides logging capabilities.
+        /// </summary>
         private readonly ILogger<IEmailTemplateService> _logger;
+
+        /// <summary>
+        /// Provides token generation and validation services.
+        /// </summary>
         private readonly TokenHelper _tokenHelper;
+
+        /// <summary>
+        /// Provides user authentication services.
+        /// </summary>
         private readonly IAuthService _authService;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EmailTemplateService"/> class.
+        /// </summary>
+        /// <param name="context">Provides data access to the application's data store.</param>
+        /// <param name="mapper">Provides object-object mapping functionality.</param>
+        /// <param name="appSettings">Provides access to application settings.</param>
+        /// <param name="logger">Provides logging capabilities.</param>
+        /// <param name="tokenHelper">Provides token generation and validation services.</param>
+        /// <param name="authService">Provides user authentication services.</param>
         public EmailTemplateService(DataContext context, IMapper mapper, IOptions<AppSettings> appSettings, ILogger<IEmailTemplateService> logger, TokenHelper tokenHelper, IAuthService authService)
         {
             _context = context;
@@ -35,6 +70,11 @@ namespace Ezenity_Backend.Services.EmailTemplates
             _authService = authService;
         }
 
+        /// <summary>
+        /// Fetches an email template by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the email template to fetch.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the EmailTemplateResponse.</returns>
         public async Task<EmailTemplateResponse> GetByIdAsync(int id)
         {
             //var emailTemplate = await GetEmailTemplate(id);
@@ -49,6 +89,11 @@ namespace Ezenity_Backend.Services.EmailTemplates
             return _mapper.Map<EmailTemplateResponse>(emailTemplate);
         }
 
+        /// <summary>
+        /// Creates a new email template.
+        /// </summary>
+        /// <param name="model">The details for the new email template.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the EmailTemplateResponse for the newly created template.</returns>
         public async Task<EmailTemplateResponse> CreateAsync(CreateEmailTemplateRequest model)
         {
             // Validate
@@ -67,6 +112,11 @@ namespace Ezenity_Backend.Services.EmailTemplates
             return _mapper.Map<EmailTemplateResponse>(emailTemplate);
         }
 
+        /// <summary>
+        /// Deletes an email template by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the email template to delete.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the DeleteResponse.</returns>
         public async Task<DeleteResponse> DeleteAsync(int id)
         {
             var emailTemplate = await GetEmailTemplate(id);
@@ -77,6 +127,10 @@ namespace Ezenity_Backend.Services.EmailTemplates
             return _mapper.Map<DeleteResponse>(emailTemplate);
         }
 
+        /// <summary>
+        /// Fetches all email templates.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a list of EmailTemplateResponses.</returns>
         public async Task<IEnumerable<EmailTemplateResponse>> GetAllAsync()
         {
             var emailTemplate = await _context.EmailTemplates
@@ -86,6 +140,12 @@ namespace Ezenity_Backend.Services.EmailTemplates
             return _mapper.Map<IList<EmailTemplateResponse>>(emailTemplate);
         }
 
+        /// <summary>
+        /// Updates an existing email template.
+        /// </summary>
+        /// <param name="id">The ID of the email template to update.</param>
+        /// <param name="model">The updated details for the email template.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the updated EmailTemplateResponse.</returns>
         public async Task<EmailTemplateResponse> UpdateAsync(int id, UpdateEmailTemplateRequest model)
         {
             var emailTemplate = await GetEmailTemplate(id);
@@ -110,7 +170,11 @@ namespace Ezenity_Backend.Services.EmailTemplates
         /// Helper Methods ///
         /// //////////////////
 
-        // Helper method to get a section by its ID
+        /// <summary>
+        /// Helper method to fetch an email template by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the email template to fetch.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the EmailTemplate.</returns>
         private async Task<EmailTemplate> GetEmailTemplate(int id)
         {
             var emailTemplate = await _context.EmailTemplates.FindAsync(id);

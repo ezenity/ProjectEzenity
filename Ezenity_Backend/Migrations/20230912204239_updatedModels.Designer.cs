@@ -9,10 +9,17 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Ezenity_Backend.Migrations
 {
+    /// <summary>
+    /// Represents the updatedModels migration class that contains the logic to build the target model of the data context.
+    /// </summary>
     [DbContext(typeof(DataContext))]
     [Migration("20230912204239_updatedModels")]
     partial class updatedModels
     {
+        /// <summary>
+        /// Builds the target model of the data context.
+        /// </summary>
+        /// <param name="modelBuilder">The model builder to configure the model of the data context.</param>
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

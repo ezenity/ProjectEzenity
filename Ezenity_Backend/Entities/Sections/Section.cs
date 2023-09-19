@@ -3,22 +3,49 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Ezenity_Backend.Entities.Sections
 {
+    /// <summary>
+    /// Represents a section in the system, typically a part of a page or component.
+    /// </summary>
     public class Section
     {
+        /// <summary>
+        /// Gets or sets the unique identifier for the section.
+        /// </summary>
         public int Id { get; set; }
 
-        [Required]
-        [MaxLength(100)]
+        /// <summary>
+        /// Gets or sets the title of the section.
+        /// Required. Maximum length is 100 characters.
+        /// </summary>
         public string Title { get; set; }
 
-        [Required]
+        /// <summary>
+        /// Gets or sets the type of content that the section holds.
+        /// This could be text, HTML, markdown, etc.
+        /// Required.
+        /// </summary>
         public string ContentType { get; set; }
 
-        [Required]
+        /// <summary>
+        /// Gets or sets the actual content of the section.
+        /// Required.
+        /// </summary>
         public string Content { get; set; }
 
+        /// <summary>
+        /// Gets or sets the layout type or template that the section uses.
+        /// This is optional and could be used for custom rendering.
+        /// </summary>
         public string Layout { get; set; }
+
+        /// <summary>
+        /// Gets or sets the date and time when the section was created.
+        /// </summary>
         public DateTime? Created { get; set; }
+
+        /// <summary>
+        /// Gets or sets the date and time when the section was last updated.
+        /// </summary>
         public DateTime? Updated { get; set; }
     }
 }

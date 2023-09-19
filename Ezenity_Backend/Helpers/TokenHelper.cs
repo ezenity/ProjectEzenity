@@ -13,12 +13,33 @@ using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Helpers
 {
+    /// <summary>
+    /// Provides functionalities for handling JWT and refresh tokens.
+    /// </summary>
     public class TokenHelper
     {
+        /// <summary>
+        /// Data context for database interaction.
+        /// </summary>
         private readonly DataContext _context;
+
+        /// <summary>
+        /// Application-specific settings.
+        /// </summary>
         private readonly AppSettings _appSettings;
+
+        /// <summary>
+        /// Secret key for token generation.
+        /// </summary>
         private readonly string _secret;
 
+
+        /// <summary>
+        /// Initializes a new instance of the TokenHelper class with DataContext, AppSettings, and secret string.
+        /// </summary>
+        /// <param name="context">The data context for database interaction.</param>
+        /// <param name="appSettings">Application-specific settings.</param>
+        /// <param name="secret">Secret key for token generation.</param>
         public TokenHelper(DataContext context, IOptions<AppSettings> appSettings, string secret)
         {
             _context = context;
@@ -26,11 +47,20 @@ namespace Ezenity_Backend.Helpers
             _secret = secret;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the TokenHelper class with only a secret string.
+        /// </summary>
+        /// <param name="secret">Secret key for token generation.</param>
         public TokenHelper(string secret)
         {
             _secret = secret;
         }
 
+        /// <summary>
+        /// Generates a JWT token for a given account ID.
+        /// </summary>
+        /// <param name="accountId">The account ID for which to generate the token.</param>
+        /// <returns>The JWT token as a string.</returns>
         public string GenerateJwtToken(int accountId)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -55,10 +85,10 @@ namespace Ezenity_Backend.Helpers
         }
 
         /// <summary>
-        /// Generates a new refresh token for the given IP address.
+        /// Generates a new refresh token.
         /// </summary>
-        /// <param name="ipAddress">The IP address initiating the request.</param>
-        /// <returns>The newly generated refresh token.</returns>
+        /// <param name="ipAddress">The originating IP address.</param>
+        /// <returns>A new RefreshToken object.</returns>
         public RefreshToken GenerateNewRefreshToken(string ipAddress)
         {
             return new RefreshToken
@@ -109,6 +139,10 @@ namespace Ezenity_Backend.Helpers
             return (refreshToken, account);
         }
 
+        /// <summary>
+        /// Generates a random token string.
+        /// </summary>
+        /// <returns>The generated token string.</returns>
         public string RandomTokenString()
         {
             using var rngCryptoServiceProvider = new RNGCryptoServiceProvider();

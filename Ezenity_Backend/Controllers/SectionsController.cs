@@ -9,17 +9,39 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace Ezenity_Backend.Controllers
 {
+    /// <summary>
+    /// Provides an API controller for managing sections.
+    /// </summary>
     [ApiController]
     [Route("api/sections")]
+    [Produces("application/json", "application/xml")]
     public class SectionsController : BaseController<Section, SectionResponse, CreateSectionRequest, UpdateSectionRequest, DeleteResponse>
     {
+        /// <summary>
+        /// Service to handle section-related business logic.
+        /// </summary>
         private readonly ISectionService _sectionService;
+
+        /// <summary>
+        /// Service to handle account-related business logic.
+        /// </summary>
         private readonly IAccountService _accountService;
+
+        /// <summary>
+        /// Logger for capturing runtime information.
+        /// </summary>
         private readonly ILogger<SectionsController> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the SectionsController class.
+        /// </summary>
+        /// <param name="sectionService">Service for section-related business logic.</param>
+        /// <param name="accountService">Service for account-related business logic.</param>
+        /// <param name="logger">Logger instance for capturing runtime logs.</param>
         public SectionsController(ISectionService sectionService, IAccountService accountService, ILogger<SectionsController> logger)
         {
             _sectionService = sectionService;
@@ -27,6 +49,17 @@ namespace Ezenity_Backend.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Fetches a section by its ID asynchronously.
+        /// </summary>
+        /// <param name="id">The ID of the section to fetch.</param>
+        /// <returns>A wrapped API response containing the section data or errors.</returns>
+        /// <exception cref="ResourceNotFoundException">Thrown when the requested section is not found.</exception>
+        /// <exception cref="Exception">Thrown for generic server errors.</exception>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<SectionResponse>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<SectionResponse>), StatusCodes.Status500InternalServerError)]
+        [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<SectionResponse>>> GetByIdAsync(int id)
         {
             ApiResponse<SectionResponse> apiResponse = new ApiResponse<SectionResponse>();
@@ -64,6 +97,14 @@ namespace Ezenity_Backend.Controllers
             }
         }
 
+        /// <summary>
+        /// Fetches all sections asynchronously.
+        /// </summary>
+        /// <returns>A wrapped API response containing the list of sections or errors.</returns>
+        /// <exception cref="Exception">Thrown for generic server errors.</exception>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<SectionResponse>>), StatusCodes.Status500InternalServerError)]
+        [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<IEnumerable<SectionResponse>>>> GetAllAsync()
         {
             //IApiResponse<ISectionResponse> apiResponse = new ApiResponse<ISectionResponse>();
@@ -94,6 +135,15 @@ namespace Ezenity_Backend.Controllers
             }
         }
 
+        /// <summary>
+        /// Creates a new section based on the provided request model.
+        /// </summary>
+        /// <param name="model">The request model containing the data to create a new section.</param>
+        /// <returns>A wrapped API response containing the created section or errors.</returns>
+        /// <exception cref="Exception">Thrown for generic server errors.</exception>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<SectionResponse>), StatusCodes.Status500InternalServerError)]
+        [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<SectionResponse>>> CreateAsync(CreateSectionRequest model)
         {
             ApiResponse<SectionResponse> apiResponse = new ApiResponse<SectionResponse>();
@@ -122,7 +172,19 @@ namespace Ezenity_Backend.Controllers
             }
         }
 
+        /// <summary>
+        /// Updates an existing section based on the provided ID and request model.
+        /// </summary>
+        /// <param name="id">The ID of the section to update.</param>
+        /// <param name="model">The request model containing the data to update the section.</param>
+        /// <returns>A wrapped API response containing the updated section or errors.</returns>
+        /// <exception cref="ResourceNotFoundException">Thrown when the requested section is not found.</exception>
+        /// <exception cref="Exception">Thrown for generic server errors.</exception>
         [Authorize("Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<SectionResponse>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<SectionResponse>), StatusCodes.Status500InternalServerError)]
+        [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<SectionResponse>>> UpdateAsync(int id, UpdateSectionRequest model)
         {
             ApiResponse<SectionResponse> apiResponse = new ApiResponse<SectionResponse>();
@@ -160,7 +222,23 @@ namespace Ezenity_Backend.Controllers
             }
         }
 
+        /// <summary>
+        /// Deletes an existing section based on the provided ID and the ID of the user performing the deletion.
+        /// </summary>
+        /// <param name="DeleteSectionId">The ID of the section to delete.</param>
+        /// <param name="DeletedById">The ID of the user performing the deletion.</param>
+        /// <returns>A wrapped API response containing the deletion status or errors.</returns>
+        /// <exception cref="ResourceNotFoundException">Thrown when the requested section or user is not found.</exception>
+        /// <exception cref="AuthorizationException">Thrown when the user is not authorized to perform the deletion.</exception>
+        /// <exception cref="DeletionFailedException">Thrown when deletion fails due to server or validation errors.</exception>
+        /// <exception cref="Exception">Thrown for generic server errors.</exception>
         [Authorize("Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status500InternalServerError)]
+        [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<DeleteResponse>>> DeleteAsync(int DeleteSectionId, int DeletedById)
         {
             DeleteResponse deleteResponse = new DeleteResponse();
