@@ -19,6 +19,8 @@ using System.Linq;
 using System.Reflection;
 using System.IO;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Newtonsoft.Json.Serialization;
 
 namespace Ezenity_Backend
 {
@@ -78,21 +80,26 @@ namespace Ezenity_Backend
                 options.Filters.Add(
                     new ProducesResponseTypeAttribute(
                         StatusCodes.Status500InternalServerError));
+            }).AddNewtonsoftJson(setupAction =>
+            {
+                setupAction.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                setupAction.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+                setupAction.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
             }).AddXmlDataContractSerializerFormatters();
 
             // Configure Microsoft Json
-            services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+            /*services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
             {
                 AppConfiguration.ConfigureJsonOptions(options);
-            });
+            });*/
 
 
             // Requires NewtonsoftJsonOutputFormatter
-            /*services.Configure<MvcOptions>(options =>
+            services.Configure<MvcOptions>(options =>
             {
                 var jsonOutputFormatter = options.OutputFormatters.OfType<NewtonsoftJsonOutputFormatter>().FirstOrDefault();
 
-                if(jsonOutputFormatter != null)
+                if (jsonOutputFormatter != null)
                 {
                     // Remove text/json as it ins't the aproved media type
                     // for working with JSON at API level
@@ -101,7 +108,7 @@ namespace Ezenity_Backend
                         jsonOutputFormatter.SupportedMediaTypes.Remove("text/json");
                     }
                 }
-            });*/
+            });
 
 
 
@@ -126,6 +133,21 @@ namespace Ezenity_Backend
                         Url = new Uri("https://opensource.org/licenses/MIT")
                     }
                 });
+
+                /*c.ResolveConflictingActions(apiDescription =>
+                {
+                    return apiDescription.First(); // Not a good approach and leaves out second custom attribute
+
+                    *//*var firstDescription = apiDescription.First();
+                    var secondDescription = apiDescription.ElementAt(1);
+
+                    firstDescription.SupportedResponseTypes.AddRange(
+                        secondDescription.SupportedResponseTypes
+                        .Where(a => a.StatusCode == 200));*//*
+                });*/
+
+                c.OperationFilter<CreateEmailTemplateFilter>();
+                c.OperationFilter<GetEmailTemplateFilter>();
 
                 var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
