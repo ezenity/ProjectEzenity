@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Navigate to your React app's directory
-cd ./Ezenity_Frontend
+# cd ./Ezenity_Frontend
 
 # Install dependencies
 npm install
