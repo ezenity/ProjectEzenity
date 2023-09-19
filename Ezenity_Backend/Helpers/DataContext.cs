@@ -7,13 +7,26 @@ using System;
 
 namespace Ezenity_Backend.Helpers
 {
+    /// <summary>
+    /// Represents the Entity Framework Core database context for the application.
+    /// </summary>
     public class DataContext : DbContext
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataContext"/> class.
+        /// </summary>
+        /// <param name="options">The options for this context.</param>
         public DataContext(DbContextOptions<DataContext> options) : base(options) { }
 
+        /// <summary>
+        /// Parameterless constructor for cases requiring manual configuration.
+        /// </summary>
         public DataContext() { } // Empty cosntructor for parameterless initialization
 
-
+        /// <summary>
+        /// Invoked to set up the context options such as the database provider and connection string.
+        /// </summary>
+        /// <param name="optionsBuilder">Used to configure the DbContext.</param>
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             // Check if there is no configuration set for the context
@@ -29,12 +42,30 @@ namespace Ezenity_Backend.Helpers
             }
         }
 
+        /// <summary>
+        /// Gets or sets the accounts available in the database.
+        /// </summary>
         public DbSet<Account> Accounts { get; set; }
+
+        /// <summary>
+        /// Gets or sets the roles available in the database.
+        /// </summary>
         public DbSet<Role> Roles { get; set; }
+
+        /// <summary>
+        /// Gets or sets the email templates available in the database.
+        /// </summary>
         public DbSet<EmailTemplate> EmailTemplates { get; set; }
+
+        /// <summary>
+        /// Gets or sets the sections available in the database.
+        /// </summary>
         public DbSet<Section> Sections { get; set; }
 
-
+        /// <summary>
+        /// Invoked to configure the database model and relationships.
+        /// </summary>
+        /// <param name="modelBuilder">Used to map the domain classes to database schema.</param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configurations
@@ -51,6 +82,10 @@ namespace Ezenity_Backend.Helpers
             //     .HasForeignKey(o => o.SectionId);
         }
 
+        /// <summary>
+        /// Configures the accounts table schema.
+        /// </summary>
+        /// <param name="modelBuilder">The model builder for EF Core.</param>
         private void ConfigureAccounts(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Account>(entity =>
@@ -73,6 +108,10 @@ namespace Ezenity_Backend.Helpers
             });
         }
 
+        /// <summary>
+        /// Configures the roles table schema.
+        /// </summary>
+        /// <param name="modelBuilder">The model builder for EF Core.</param>
         private void ConfigureRoles(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Role>(entity =>
@@ -82,6 +121,10 @@ namespace Ezenity_Backend.Helpers
             });
         }
 
+        /// <summary>
+        /// Configures the email templates table schema.
+        /// </summary>
+        /// <param name="modelBuilder">The model builder for EF Core.</param>
         private void ConfigureEmailTemplates(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<EmailTemplate>(entity =>
@@ -91,6 +134,10 @@ namespace Ezenity_Backend.Helpers
             });
         }
 
+        /// <summary>
+        /// Configures the sections table schema.
+        /// </summary>
+        /// <param name="modelBuilder">The model builder for EF Core.</param>
         private void ConfigureSections(ModelBuilder modelBuilder)
         {
 

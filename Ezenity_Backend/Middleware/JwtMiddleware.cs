@@ -10,17 +10,38 @@ using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Middleware
 {
+    /// <summary>
+    /// Middleware for handling JSON Web Tokens (JWT) in the system.
+    /// </summary>
     public class JwtMiddleware
     {
+        /// <summary>
+        /// The delegate for the next middleware in the pipeline.
+        /// </summary>
         private readonly RequestDelegate _next;
+
+        /// <summary>
+        /// Application settings for configuring JWT.
+        /// </summary>
         private readonly AppSettings _appSettings;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JwtMiddleware"/> class.
+        /// </summary>
+        /// <param name="next">The delegate for the next middleware in the pipeline.</param>
+        /// <param name="appSettings">Application settings for configuring JWT.</param>
         public JwtMiddleware(RequestDelegate next, IOptions<AppSettings> appSettings)
         {
             _next = next;
             _appSettings = appSettings.Value;
         }
 
+        /// <summary>
+        /// Invokes the middleware.
+        /// </summary>
+        /// <param name="context">The HTTP context for the current request and response.</param>
+        /// <param name="dataContext">The database context to query for accounts.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task Invoke(HttpContext context, DataContext dataContext)
         {
             var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
@@ -31,6 +52,13 @@ namespace Ezenity_Backend.Middleware
             await _next(context);
         }
 
+        /// <summary>
+        /// Attaches the account associated with a valid JWT to the HTTP context.
+        /// </summary>
+        /// <param name="context">The HTTP context for the current request and response.</param>
+        /// <param name="dataContext">The database context to query for accounts.</param>
+        /// <param name="token">The JWT to validate and extract account information from.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         private async Task attachAccountToContext(HttpContext context, DataContext dataContext, string token)
         {
             try

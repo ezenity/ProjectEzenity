@@ -8,12 +8,19 @@ using Ezenity_Backend.Models.Sections;
 
 namespace Ezenity_Backend.Helpers
 {
+    /// <summary>
+    /// Defines the AutoMapper profiles for mapping between entity and model objects.
+    /// </summary>
     public class AutoMapperProfile : Profile
     {
-        // Mappings between model and entity objects
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AutoMapperProfile"/> class and configures object mappings.
+        /// Mappings between model and entity objects
+        /// </summary>
         public AutoMapperProfile()
         {
             // Accounts
+            //  - Configures the mappings for Account-related objects.
             CreateMap<Account, AccountResponse>();
             CreateMap<Account, AuthenticateResponse>();
             CreateMap<RegisterRequest, Account>();
@@ -34,6 +41,7 @@ namespace Ezenity_Backend.Helpers
                 ));
 
             // Email Templates
+            //  - Configures the mappings for EmailTemplate-related objects.
             CreateMap<EmailTemplate, EmailTemplateResponse>();
             CreateMap<CreateEmailTemplateRequest, EmailTemplate>();
             CreateMap<UpdateEmailTemplateRequest, EmailTemplate>()
@@ -49,6 +57,7 @@ namespace Ezenity_Backend.Helpers
                 ));
 
             // Sections
+            //  - Configures the mappings for Section-related objects.
             CreateMap<Section, SectionResponse>()
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
