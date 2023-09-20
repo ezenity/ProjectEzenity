@@ -87,14 +87,6 @@ namespace Ezenity_Backend
                 setupAction.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
             }).AddXmlDataContractSerializerFormatters();
 
-            // Configure Microsoft Json
-            /*services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
-            {
-                AppConfiguration.ConfigureJsonOptions(options);
-            });*/
-
-
-            // Requires NewtonsoftJsonOutputFormatter
             services.Configure<MvcOptions>(options =>
             {
                 var jsonOutputFormatter = options.OutputFormatters.OfType<NewtonsoftJsonOutputFormatter>().FirstOrDefault();
@@ -110,10 +102,7 @@ namespace Ezenity_Backend
                 }
             });
 
-
-
             services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
-
 
             services.AddSwaggerGen(c =>
             {
@@ -146,7 +135,11 @@ namespace Ezenity_Backend
                         .Where(a => a.StatusCode == 200));*//*
                 });*/
 
+                // Create opertional Filters
                 c.OperationFilter<CreateEmailTemplateFilter>();
+                c.OperationFilter<CreateSectionFilter>();
+
+                // Get Operational Filters
                 c.OperationFilter<GetEmailTemplateFilter>();
 
                 var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";

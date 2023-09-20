@@ -4,6 +4,69 @@
         <name>Ezenity_Backend</name>
     </assembly>
     <members>
+        <member name="T:Ezenity_Backend.Attributes.AuthorizeAttribute">
+            <summary>
+            Custom attribute to handle authorization for specified roles. 
+            Implements the <see cref="T:Microsoft.AspNetCore.Mvc.Filters.IAuthorizationFilter"/> interface to handle custom authorization logic.
+            </summary>
+        </member>
+        <member name="F:Ezenity_Backend.Attributes.AuthorizeAttribute._roles">
+            <summary>
+            Internal field holding a list of roles that are allowed to access the resource.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Attributes.AuthorizeAttribute.#ctor(System.String[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Attributes.AuthorizeAttribute"/> class.
+            </summary>
+            <param name="roleNames">An array of role names that are authorized to access the resource.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Attributes.AuthorizeAttribute.OnAuthorization(Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext)">
+            <summary>
+            Handles the authorization logic. This method is called by the framework before the controller action is invoked.
+            </summary>
+            <param name="context">Provides access to the <see cref="T:Microsoft.AspNetCore.Http.HttpContext"/>, action descriptors, and more.</param>
+        </member>
+        <member name="T:Ezenity_Backend.Attributes.RequestHeaderMatchesMediaTypeAttribute">
+            <summary>
+            Represents an attribute that is used to constrain an action method so it handles only HTTP requests
+            that contain one of the specified media types in one of the request headers.
+            </summary>
+        </member>
+        <member name="F:Ezenity_Backend.Attributes.RequestHeaderMatchesMediaTypeAttribute._mediaTypes">
+            <summary>
+            Stores the media types to be matched against.
+            </summary>
+        </member>
+        <member name="F:Ezenity_Backend.Attributes.RequestHeaderMatchesMediaTypeAttribute._requestHeaderToMatch">
+            <summary>
+            The request header that should contain the media type to match.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Attributes.RequestHeaderMatchesMediaTypeAttribute.#ctor(System.String,System.String,System.String[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Attributes.RequestHeaderMatchesMediaTypeAttribute"/> class.
+            </summary>
+            <param name="requestHeaderToMatch">The name of the request header to match against.</param>
+            <param name="mediaType">The primary media type to match.</param>
+            <param name="otherMediaTypes">Additional media types to match.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when requestHeaderToMatch or mediaType is null.</exception>
+            <exception cref="T:System.ArgumentException">Thrown when mediaType or otherMediaTypes are not valid media types.</exception>
+        </member>
+        <member name="P:Ezenity_Backend.Attributes.RequestHeaderMatchesMediaTypeAttribute.Order">
+            <summary>
+            Gets the order value for determining the order of execution of action constraints.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Attributes.RequestHeaderMatchesMediaTypeAttribute.Accept(Microsoft.AspNetCore.Mvc.ActionConstraints.ActionConstraintContext)">
+            <summary>
+            Determines whether this instance accepts the specified action constraint context.
+            </summary>
+            <param name="context">The action constraint context.</param>
+            <returns>
+              <c>true</c> if this instance accepts the specified action constraint context; otherwise, <c>false</c>.
+            </returns>
+        </member>
         <member name="T:Ezenity_Backend.Controllers.AccountsController">
             <summary>
             Handles HTTP requests and responses related to Account entities.
@@ -359,6 +422,14 @@
             <param name="model">The email template creation model.</param>
             <returns>An action result containing the created email template.</returns>
         </member>
+        <member name="M:Ezenity_Backend.Controllers.EmailTemplatesController.CreateAsyncTest(Ezenity_Backend.Models.EmailTemplates.CreateEmailTemplateRequest)">
+            <summary>
+            Asynchronously creates a new email template
+             - This is a test method which requires no Authentication.
+            </summary>
+            <param name="model">The email template creation model.</param>
+            <returns>An action result containing the created email template.</returns>
+        </member>
         <member name="M:Ezenity_Backend.Controllers.EmailTemplatesController.DeleteAsync(System.Int32,System.Int32)">
             <summary>
             Asynchronously deletes an existing email template.
@@ -385,6 +456,15 @@
             <param name="id">The ID of the email template to fetch.</param>
             <returns>An action result containing the fetched email template.</returns>
             <exception cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException">Thrown when the email template is not found.</exception>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity_Backend.Controllers.EmailTemplatesController.GetNonDynamicByIdAsync(System.Int32)">
+            <summary>
+            Retrieves a non-dynamic email template by its ID asynchronously.
+            </summary>
+            <param name="id">The ID of the email template.</param>
+            <returns>An API response containing the requested email template.</returns>
+            <exception cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException">Thrown if the email template does not exist.</exception>
             <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
         </member>
         <member name="M:Ezenity_Backend.Controllers.EmailTemplatesController.UpdateAsync(System.Int32,Ezenity_Backend.Models.EmailTemplates.UpdateEmailTemplateRequest)">
@@ -427,6 +507,11 @@
             Make an HTTP OPTIONS request to this endpoint to reload the application's configuration.
             </remarks>
             <exception cref="T:System.Exception">Thrown when an error occurs during configuration reload.</exception>
+        </member>
+        <member name="T:Ezenity_Backend.Controllers.RolesController">
+            <summary>
+            Handles API operations related to roles within the system.
+            </summary>
         </member>
         <member name="T:Ezenity_Backend.Controllers.SectionsController">
             <summary>
@@ -479,6 +564,14 @@
             <param name="model">The request model containing the data to create a new section.</param>
             <returns>A wrapped API response containing the created section or errors.</returns>
             <exception cref="T:System.Exception">Thrown for generic server errors.</exception>
+        </member>
+        <member name="M:Ezenity_Backend.Controllers.SectionsController.CreateWithAdditionalAsync(Ezenity_Backend.Models.Sections.CreateSectionWithAdditonalRequest)">
+            <summary>
+            Creates a new section with additional properties asynchronously.
+            </summary>
+            <param name="model">The model containing data for the new section.</param>
+            <returns>An API response containing the created section.</returns>
+            <exception cref="T:Ezenity_Backend.Helpers.Exceptions.AppException">Thrown if the section title already exists.</exception>
         </member>
         <member name="M:Ezenity_Backend.Controllers.SectionsController.UpdateAsync(System.Int32,Ezenity_Backend.Models.Sections.UpdateSectionRequest)">
             <summary>
@@ -826,15 +919,279 @@
             Gets or sets the date and time when the section was last updated.
             </summary>
         </member>
+        <member name="P:Ezenity_Backend.Entities.Sections.Section.IsActive">
+            <summary>
+            Gets or sets the visibility control
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Entities.Sections.Section.AccessLevel">
+            <summary>
+            Gets or sets who can see the section
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Entities.Sections.Section.ParentSectionId">
+            <summary>
+            Get or set the ID for nested sections
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Entities.Sections.Section.MetaTags">
+            <summary>
+            Get or set the SEO meta tags that could be applied to the section
+            </summary>
+        </member>
         <member name="T:Ezenity_Backend.Filters.ApiExceptionFilter">
             <summary>
-            Filter for global exception handling.
+            Provides global exception handling for API responses by capturing any thrown exceptions
+            and converting them into a standardized JSON response format.
             </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Filters.ApiExceptionFilter.OnException(Microsoft.AspNetCore.Mvc.Filters.ExceptionContext)">
+            <summary>
+            Called when an exception occurs in the application. Overrides the base method to provide
+            a custom response in case of an exception.
+            </summary>
+            <param name="context">
+            The <see cref="T:Microsoft.AspNetCore.Mvc.Filters.ExceptionContext"/> encapsulating the exception details and other 
+            contextual information.
+            </param>
+        </member>
+        <member name="T:Ezenity_Backend.Filters.CreateEmailTemplateFilter">
+            <summary>
+            Operation filter for modifying Swagger documentation related to the 'CreateEmailTemplate' operation.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Filters.CreateEmailTemplateFilter.Apply(Microsoft.OpenApi.Models.OpenApiOperation,Swashbuckle.AspNetCore.SwaggerGen.OperationFilterContext)">
+            <summary>
+            Applies modifications to the OpenAPI operation for the 'CreateEmailTemplate' endpoint.
+            </summary>
+            <param name="operation">The OpenAPI operation object.</param>
+            <param name="context">Context that provides schema and other information.</param>
+        </member>
+        <member name="T:Ezenity_Backend.Filters.CreateSectionFilter">
+            <summary>
+            Operation filter for modifying Swagger documentation related to the 'CreateSection' operation.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Filters.CreateSectionFilter.Apply(Microsoft.OpenApi.Models.OpenApiOperation,Swashbuckle.AspNetCore.SwaggerGen.OperationFilterContext)">
+            <summary>
+            Applies modifications to the OpenAPI operation for the 'CreateSection' endpoint.
+            </summary>
+            <param name="operation">The OpenAPI operation object.</param>
+            <param name="context">Context that provides schema and other information.</param>
+        </member>
+        <member name="T:Ezenity_Backend.Filters.GetEmailTemplateFilter">
+            <summary>
+            Operation filter for modifying Swagger documentation related to the 'GetEmailTemplate' operation.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Filters.GetEmailTemplateFilter.Apply(Microsoft.OpenApi.Models.OpenApiOperation,Swashbuckle.AspNetCore.SwaggerGen.OperationFilterContext)">
+            <summary>
+            Applies modifications to the OpenAPI operation for the 'GetEmailTemplate' endpoint.
+            </summary>
+            <param name="operation">The OpenAPI operation object.</param>
+            <param name="context">Context that provides schema and other information.</param>
         </member>
         <member name="T:Ezenity_Backend.Filters.LoadAccountFilter">
             <summary>
-            Filter to load account based on HTTP header.
+            Represents a filter that loads an account from the database based on the "Account" HTTP header.
+            This class implements the <see cref="T:Microsoft.AspNetCore.Mvc.Filters.IAsyncActionFilter"/> interface.
             </summary>
+        </member>
+        <member name="F:Ezenity_Backend.Filters.LoadAccountFilter._context">
+            <summary>
+            The database context used for retrieving the account data.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Filters.LoadAccountFilter.#ctor(Ezenity_Backend.Helpers.DataContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Filters.LoadAccountFilter"/> class.
+            </summary>
+            <param name="context">The database context.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Filters.LoadAccountFilter.OnActionExecutionAsync(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext,Microsoft.AspNetCore.Mvc.Filters.ActionExecutionDelegate)">
+            <summary>
+            Executes the action filter asynchronously.
+            </summary>
+            <param name="context">The context for the action, including the HTTP context and action arguments.</param>
+            <param name="next">The delegate for executing the next stage in the filter pipeline.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the result of the asynchronous operation.</returns>
+            <remarks>
+            This method tries to parse the "Account" HTTP header into an integer (account ID),
+            and then queries the database for the corresponding account. If the account exists,
+            it is stored in the HttpContext.Items dictionary for later use.
+            </remarks>
+        </member>
+        <member name="T:Ezenity_Backend.Helpers.AppSettings">
+            <summary>
+            Contains settings for the application.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.AppSettings.BaseUrl">
+            <summary>
+            Gets or sets the base URL of the application.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.AppSettings.Secret">
+            <summary>
+            Gets or sets the secret used for cryptographic operations.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.AppSettings.RefreshTokenTTL">
+            <summary>
+            Gets or sets the Time-To-Live (TTL) for refresh tokens (in days).
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.AppSettings.EmailFrom">
+            <summary>
+            Gets or sets the email address that will be used as the 'From' address in outgoing emails.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.AppSettings.SmtpHost">
+            <summary>
+            Gets or sets the host name for the SMTP server used for sending emails.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.AppSettings.SmtpPort">
+            <summary>
+            Gets or sets the port number for the SMTP server.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.AppSettings.SmtpUser">
+            <summary>
+            Gets or sets the username for authentication with the SMTP server.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.AppSettings.SmtpPass">
+            <summary>
+            Gets or sets the password for authentication with the SMTP server.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.AppSettings.SmtpEnableSsl">
+            <summary>
+            Gets or sets a value indicating whether SSL is enabled for SMTP communications.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.AppSettings.AccessToken">
+            <summary>
+            Gets or sets the access token used for some third-party services or internal processes.
+            </summary>
+        </member>
+        <member name="T:Ezenity_Backend.Helpers.AutoMapperProfile">
+            <summary>
+            Defines the AutoMapper profiles for mapping between entity and model objects.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.AutoMapperProfile.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.AutoMapperProfile"/> class and configures object mappings.
+            Mappings between model and entity objects
+            </summary>
+        </member>
+        <member name="T:Ezenity_Backend.Helpers.DataContext">
+            <summary>
+            Represents the Entity Framework Core database context for the application.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.DataContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Ezenity_Backend.Helpers.DataContext})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.DataContext"/> class.
+            </summary>
+            <param name="options">The options for this context.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.DataContext.#ctor">
+            <summary>
+            Parameterless constructor for cases requiring manual configuration.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.DataContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
+            <summary>
+            Invoked to set up the context options such as the database provider and connection string.
+            </summary>
+            <param name="optionsBuilder">Used to configure the DbContext.</param>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.DataContext.Accounts">
+            <summary>
+            Gets or sets the accounts available in the database.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.DataContext.Roles">
+            <summary>
+            Gets or sets the roles available in the database.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.DataContext.EmailTemplates">
+            <summary>
+            Gets or sets the email templates available in the database.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Helpers.DataContext.Sections">
+            <summary>
+            Gets or sets the sections available in the database.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.DataContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Invoked to configure the database model and relationships.
+            </summary>
+            <param name="modelBuilder">Used to map the domain classes to database schema.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.DataContext.ConfigureAccounts(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Configures the accounts table schema.
+            </summary>
+            <param name="modelBuilder">The model builder for EF Core.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.DataContext.ConfigureRoles(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Configures the roles table schema.
+            </summary>
+            <param name="modelBuilder">The model builder for EF Core.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.DataContext.ConfigureEmailTemplates(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Configures the email templates table schema.
+            </summary>
+            <param name="modelBuilder">The model builder for EF Core.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.DataContext.ConfigureSections(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Configures the sections table schema.
+            </summary>
+            <param name="modelBuilder">The model builder for EF Core.</param>
+        </member>
+        <member name="T:Ezenity_Backend.Helpers.EmailHelpers">
+            <summary>
+            Provides utility methods for handling and validating emails.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.EmailHelpers.IsValidEmail(System.String)">
+            <summary>
+            Validates the provided email string.
+            </summary>
+            <param name="email">The email string to validate.</param>
+            <returns>true if the email is valid, otherwise false.</returns>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.EmailHelpers.ExtractEmailAddress(System.String)">
+            <summary>
+            Extracts email addresses from the provided input string.
+            </summary>
+            <param name="input">Input string potentially containing an email.</param>
+            <returns>The email address if found; otherwise, an empty string.</returns>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.EmailHelpers.CommaSeparatedEmails(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Converts an IEnumerable of email strings to a single comma-separated string.
+            </summary>
+            <param name="emailList">IEnumerable of email strings.</param>
+            <returns>A comma-separated string of emails.</returns>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.EmailHelpers.GetEmailTemplateByName(System.String,Ezenity_Backend.Helpers.DataContext)">
+            <summary>
+            Retrieves an email template by its name from the database context.
+            </summary>
+            <param name="templateName">Name of the template.</param>
+            <param name="context">The data context.</param>
+            <returns>The EmailTemplate object if found; otherwise, null.</returns>
         </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.AppException">
             <summary>
@@ -864,35 +1221,161 @@
             Exception for capturing authentication-related issues, such as invalid credentials.
             </summary>
         </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.AuthenticationException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.AuthenticationException"/> class.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.AuthenticationException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.AuthenticationException"/> class with a specific message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.AuthenticationException.#ctor(System.String,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.AuthenticationException"/> class with a formatted message.
+            </summary>
+            <param name="message">A composite format string that contains text intermixed with zero or more format items, which correspond to objects in the args array.</param>
+            <param name="args">An object array that contains zero or more objects to format.</param>
+        </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.AuthorizationException">
             <summary>
             Exception for capturing authorization failures, such as insufficient permissions.
             </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.AuthorizationException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.AuthorizationException"/> class.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.AuthorizationException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.AuthorizationException"/> class with a specific message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.AuthorizationException.#ctor(System.String,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.AuthorizationException"/> class with a formatted message.
+            </summary>
+            <param name="message">A composite format string that contains text intermixed with zero or more format items, which correspond to objects in the args array.</param>
+            <param name="args">An object array that contains zero or more objects to format.</param>
         </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.BusinessRuleException">
             <summary>
             Exception for capturing specific business rule or domain constraint violations.
             </summary>
         </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.BusinessRuleException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.BusinessRuleException"/> class.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.BusinessRuleException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.BusinessRuleException"/> class with a specific message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.BusinessRuleException.#ctor(System.String,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.BusinessRuleException"/> class with a formatted message.
+            </summary>
+            <param name="message">A composite format string that contains text intermixed with zero or more format items, which correspond to objects in the args array.</param>
+            <param name="args">An object array that contains zero or more objects to format.</param>
+        </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.ConcurrencyException">
             <summary>
             Exception for capturing issues related to concurrent access to shared resources.
             </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.ConcurrencyException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.ConcurrencyException"/> class.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.ConcurrencyException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.ConcurrencyException"/> class with a specific message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.ConcurrencyException.#ctor(System.String,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.ConcurrencyException"/> class with a formatted message.
+            </summary>
+            <param name="message">A composite format string that contains text intermixed with zero or more format items, which correspond to objects in the args array.</param>
+            <param name="args">An object array that contains zero or more objects to format.</param>
         </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.DataAccessException">
             <summary>
             Exception for capturing lower-level, unrecoverable errors when interacting with data storage.
             </summary>
         </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.DataAccessException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.DataAccessException"/> class.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.DataAccessException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.DataAccessException"/> class with a specific message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.DataAccessException.#ctor(System.String,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.DataAccessException"/> class with a formatted message.
+            </summary>
+            <param name="message">A composite format string that contains text intermixed with zero or more format items.</param>
+            <param name="args">An object array containing zero or more objects to format.</param>
+        </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.DeletionFailedException">
             <summary>
             Exception for indicating that a deletion operation has failed.
             </summary>
         </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.DeletionFailedException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.DeletionFailedException"/> class.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.DeletionFailedException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.DeletionFailedException"/> class with a specific message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.DeletionFailedException.#ctor(System.String,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.DeletionFailedException"/> class with a formatted message.
+            </summary>
+            <param name="message">A composite format string that contains text intermixed with zero or more format items.</param>
+            <param name="args">An object array containing zero or more objects to format.</param>
+        </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.DependencyFailureException">
             <summary>
             Exception for capturing failures due to external services or components being unavailable or failing.
             </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.DependencyFailureException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.DependencyFailureException"/> class.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.DependencyFailureException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.DependencyFailureException"/> class with a specific message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.DependencyFailureException.#ctor(System.String,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.DependencyFailureException"/> class with a formatted message.
+            </summary>
+            <param name="message">A composite format string that contains text intermixed with zero or more format items.</param>
+            <param name="args">An object array containing zero or more objects to format.</param>
         </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.InvalidVerificationTokenException">
             <summary>
@@ -906,48 +1389,179 @@
         </member>
         <member name="M:Ezenity_Backend.Helpers.Exceptions.InvalidVerificationTokenException.#ctor(System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.InvalidVerificationTokenException"/> class with a specified error message.
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.InvalidVerificationTokenException"/> class with a specific message.
             </summary>
             <param name="message">The message that describes the error.</param>
         </member>
         <member name="M:Ezenity_Backend.Helpers.Exceptions.InvalidVerificationTokenException.#ctor(System.String,System.Object[])">
             <summary>
-            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.InvalidVerificationTokenException"/> class with a specified error message and arguments.
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.InvalidVerificationTokenException"/> class with a formatted message.
             </summary>
-            <param name="message">The message format string.</param>
-            <param name="args">An object array that contains zero or more objects to format.</param>
+            <param name="message">A composite format string that contains text intermixed with zero or more format items.</param>
+            <param name="args">An object array containing zero or more objects to format.</param>
         </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.NotFoundException">
             <summary>
             General exception for not finding a resource, whether it's a data record or file.
             </summary>
         </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.NotFoundException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.NotFoundException"/> class.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.NotFoundException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.NotFoundException"/> class with a specific message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.NotFoundException.#ctor(System.String,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.NotFoundException"/> class with a formatted message.
+            </summary>
+            <param name="message">A composite format string that contains text intermixed with zero or more format items.</param>
+            <param name="args">An object array containing zero or more objects to format.</param>
+        </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.RateLimitExceededException">
             <summary>
             Exception for capturing API rate-limiting issues, useful for limiting resource usage.
             </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.RateLimitExceededException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.RateLimitExceededException"/> class.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.RateLimitExceededException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.RateLimitExceededException"/> class with a specific message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.RateLimitExceededException.#ctor(System.String,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.RateLimitExceededException"/> class with a formatted message.
+            </summary>
+            <param name="message">A composite format string that contains text intermixed with zero or more format items.</param>
+            <param name="args">An object array containing zero or more objects to format.</param>
         </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.ResourceAlreadyExistsException">
             <summary>
             Exception for capturing situations where a resource already exists when trying to create a new one.
             </summary>
         </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.ResourceAlreadyExistsException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceAlreadyExistsException"/> class.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.ResourceAlreadyExistsException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceAlreadyExistsException"/> class with a specific message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.ResourceAlreadyExistsException.#ctor(System.String,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceAlreadyExistsException"/> class with a formatted message.
+            </summary>
+            <param name="message">A composite format string.</param>
+            <param name="args">An array of objects to format.</param>
+        </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException">
             <summary>
             Exception for indicating that a requested resource could not be found.
             </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException"/> class.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException"/> class with a specific message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException.#ctor(System.String,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException"/> class with a formatted message.
+            </summary>
+            <param name="message">A composite format string.</param>
+            <param name="args">An array of objects to format.</param>
         </member>
         <member name="T:Ezenity_Backend.Helpers.Exceptions.ValidationException">
             <summary>
             Exception for capturing validation errors in models and business logic.
             </summary>
         </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.ValidationException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.ValidationException"/> class.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.ValidationException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.ValidationException"/> class with a specific message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.Exceptions.ValidationException.#ctor(System.String,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.Exceptions.ValidationException"/> class with a formatted message.
+            </summary>
+            <param name="message">A composite format string.</param>
+            <param name="args">An array of objects to format.</param>
+        </member>
+        <member name="T:Ezenity_Backend.Helpers.TokenHelper">
+            <summary>
+            Provides functionalities for handling JWT and refresh tokens.
+            </summary>
+        </member>
+        <member name="F:Ezenity_Backend.Helpers.TokenHelper._context">
+            <summary>
+            Data context for database interaction.
+            </summary>
+        </member>
+        <member name="F:Ezenity_Backend.Helpers.TokenHelper._appSettings">
+            <summary>
+            Application-specific settings.
+            </summary>
+        </member>
+        <member name="F:Ezenity_Backend.Helpers.TokenHelper._secret">
+            <summary>
+            Secret key for token generation.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.TokenHelper.#ctor(Ezenity_Backend.Helpers.DataContext,Microsoft.Extensions.Options.IOptions{Ezenity_Backend.Helpers.AppSettings},System.String)">
+            <summary>
+            Initializes a new instance of the TokenHelper class with DataContext, AppSettings, and secret string.
+            </summary>
+            <param name="context">The data context for database interaction.</param>
+            <param name="appSettings">Application-specific settings.</param>
+            <param name="secret">Secret key for token generation.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.TokenHelper.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the TokenHelper class with only a secret string.
+            </summary>
+            <param name="secret">Secret key for token generation.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.TokenHelper.GenerateJwtToken(System.Int32)">
+            <summary>
+            Generates a JWT token for a given account ID.
+            </summary>
+            <param name="accountId">The account ID for which to generate the token.</param>
+            <returns>The JWT token as a string.</returns>
+        </member>
         <member name="M:Ezenity_Backend.Helpers.TokenHelper.GenerateNewRefreshToken(System.String)">
             <summary>
-            Generates a new refresh token for the given IP address.
+            Generates a new refresh token.
             </summary>
-            <param name="ipAddress">The IP address initiating the request.</param>
-            <returns>The newly generated refresh token.</returns>
+            <param name="ipAddress">The originating IP address.</param>
+            <returns>A new RefreshToken object.</returns>
         </member>
         <member name="M:Ezenity_Backend.Helpers.TokenHelper.UpdateRefreshToken(Ezenity_Backend.Entities.Accounts.RefreshToken,Ezenity_Backend.Entities.Accounts.RefreshToken,System.String)">
             <summary>
@@ -970,6 +1584,12 @@
             <param name="token">The token string to search for.</param>
             <returns>A tuple containing the refresh token and associated account.</returns>
             <exception cref="T:Ezenity_Backend.Helpers.Exceptions.AppException">Thrown if the token is invalid or inactive.</exception>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.TokenHelper.RandomTokenString">
+            <summary>
+            Generates a random token string.
+            </summary>
+            <returns>The generated token string.</returns>
         </member>
         <member name="T:Ezenity_Backend.Middleware.ErrorHandlerMiddleware">
             <summary>
@@ -1028,6 +1648,59 @@
             <param name="dataContext">The database context to query for accounts.</param>
             <param name="token">The JWT to validate and extract account information from.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="T:Ezenity_Backend.Migrations.InitialCreate">
+            <summary>
+            Represents the initial database migration to create the schema and tables.
+            </summary>
+            <summary>
+            Represents the initial database migration for the application, which sets up the schema and tables.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <summary>
+            Executes the upward migration to create tables and indices.
+            </summary>
+            <param name="migrationBuilder">The migration builder used for creating tables and indices.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <summary>
+            Reverts the changes made in the Up() method, essentially rolling back the migration.
+            </summary>
+            <param name="migrationBuilder">The migration builder used for deleting tables and indices.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Defines the schema and configuration for all entities in the model targeting a specific database.
+            </summary>
+            <param name="modelBuilder">An instance of the ModelBuilder class used to configure the data model.</param>
+        </member>
+        <member name="T:Ezenity_Backend.Migrations.updatedModels">
+            <summary>
+            This class represents a database migration that updates the models by renaming
+            the "Role" table to "Roles" and updating foreign key references.
+            </summary>
+            <summary>
+            Represents the updatedModels migration class that contains the logic to build the target model of the data context.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Migrations.updatedModels.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <summary>
+            Applies the changes to the database schema by updating table and foreign key names.
+            </summary>
+            <param name="migrationBuilder">An instance of the MigrationBuilder class used for applying migrations.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Migrations.updatedModels.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <summary>
+            Reverts the changes applied in the Up() method, effectively rolling back this migration.
+            </summary>
+            <param name="migrationBuilder">An instance of the MigrationBuilder class used for reverting migrations.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Migrations.updatedModels.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Builds the target model of the data context.
+            </summary>
+            <param name="modelBuilder">The model builder to configure the model of the data context.</param>
         </member>
         <member name="T:Ezenity_Backend.Models.Accounts.AccountResponse">
             <summary>
@@ -1467,6 +2140,51 @@
             Gets or sets the placeholder values in the email template.
             </summary>
         </member>
+        <member name="T:Ezenity_Backend.Models.EmailTemplates.EmailTemplateNonDynamicResponse">
+            <summary>
+            Represents the response payload containing details of an email template.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Models.EmailTemplates.EmailTemplateNonDynamicResponse.Id">
+            <summary>
+            Gets or sets the unique identifier of the email template.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Models.EmailTemplates.EmailTemplateNonDynamicResponse.TemplateName">
+            <summary>
+            Gets or sets the name of the email template.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Models.EmailTemplates.EmailTemplateNonDynamicResponse.Subject">
+            <summary>
+            Gets or sets the subject line of the email.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Models.EmailTemplates.EmailTemplateNonDynamicResponse.Content">
+            <summary>
+            Gets or sets the content of the email.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Models.EmailTemplates.EmailTemplateNonDynamicResponse.IsDefault">
+            <summary>
+            Indicates if this template is the default template.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Models.EmailTemplates.EmailTemplateNonDynamicResponse.StartDate">
+            <summary>
+            Gets or sets the start date for using this template.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Models.EmailTemplates.EmailTemplateNonDynamicResponse.EndDate">
+            <summary>
+            Gets or sets the end date for using this template.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Models.EmailTemplates.EmailTemplateNonDynamicResponse.IsActive">
+            <summary>
+            Indicates if the email template is currently active.
+            </summary>
+        </member>
         <member name="T:Ezenity_Backend.Models.EmailTemplates.EmailTemplateResponse">
             <summary>
             Represents the response payload containing details of an email template.
@@ -1587,6 +2305,21 @@
             Gets or sets the layout of the section.
             </summary>
         </member>
+        <member name="T:Ezenity_Backend.Models.Sections.CreateSectionWithAdditonalRequest">
+            <summary>
+            Represents a request to create a new section.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Models.Sections.CreateSectionWithAdditonalRequest.AccessLevel">
+            <summary>
+            Gets or sets who can see the section
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Models.Sections.CreateSectionWithAdditonalRequest.MetaTags">
+            <summary>
+            Get or set the SEO meta tags that could be applied to the section
+            </summary>
+        </member>
         <member name="T:Ezenity_Backend.Models.Sections.SectionResponse">
             <summary>
             Represents a response containing section details.
@@ -1693,6 +2426,24 @@
             Sets additional debug information.
             </summary>
             <param name="info">The debug information.</param>
+        </member>
+        <member name="T:Ezenity_Backend.Program">
+            <summary>
+            Entry point for the Ezenity Backend application.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Program.Main(System.String[])">
+            <summary>
+            Main entry point for the application.
+            </summary>
+            <param name="args">Command-line arguments.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Program.CreateHostBuilder(System.String[])">
+            <summary>
+            Creates an instance of the <see cref="T:Microsoft.Extensions.Hosting.IHostBuilder"/> with pre-configured defaults.
+            </summary>
+            <param name="args">Command-line arguments.</param>
+            <returns>An instance of <see cref="T:Microsoft.Extensions.Hosting.IHostBuilder"/>.</returns>
         </member>
         <member name="T:Ezenity_Backend.Services.Accounts.AccountService">
             <summary>
@@ -1810,6 +2561,16 @@
             <exception cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceAlreadyExistsException">Thrown when the email is already taken.</exception>
             <exception cref="T:Ezenity_Backend.Helpers.Exceptions.DataAccessException">Thrown when an error occurs while updating the resource.</exception>
         </member>
+        <member name="M:Ezenity_Backend.Services.Accounts.AccountService.DeleteAsync(System.Int32)">
+            <summary>
+            Asynchronously deletes an account with the given ID.
+            </summary>
+            <param name="id">The ID of the account to be deleted.</param>
+            <returns>Returns a <see cref="T:Ezenity_Backend.Models.DeleteResponse"/> object that represents the status of the deletion.</returns>
+            <exception cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException">Thrown when no account with the provided ID is found.</exception>
+            <exception cref="T:Ezenity_Backend.Helpers.Exceptions.AuthorizationException">Thrown when the current user is not authorized to perform the deletion.</exception>
+            <exception cref="T:Ezenity_Backend.Helpers.Exceptions.DeletionFailedException">Thrown when an error occurs during the deletion process.</exception>
+        </member>
         <member name="M:Ezenity_Backend.Services.Accounts.AccountService.GetAccountAsync(System.Int32)">
             //////////////////
             Helper Methods ///
@@ -1818,7 +2579,7 @@
             Retrieves the account associated with the given ID.
             </summary>
             <param name="id">The ID of the account to retrieve.</param>
-            <returns>The <see cref="!:IAccount"/> object associated with the given ID.</returns>
+            <returns>The <see cref="T:Ezenity_Backend.Entities.Accounts.Account"/> object associated with the given ID.</returns>
             <exception cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException">Thrown when no account is found for the given ID.</exception>
         </member>
         <member name="M:Ezenity_Backend.Services.Accounts.AccountService.FindAndValidateAccountAsync(System.String)">
@@ -1989,6 +2750,11 @@
         <member name="T:Ezenity_Backend.Services.Common.IEmailTemplateService">
             <summary>
             Service for managing email templates.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Services.Common.IEmailTemplateService.GetNonDynamicByIdAsync(System.Int32)">
+            <summary>
+            Gets an entity by its ID.
             </summary>
         </member>
         <member name="T:Ezenity_Backend.Services.Common.ISectionService">
@@ -2227,6 +2993,35 @@
             </summary>
             <param name="id">Section identifier.</param>
             <returns>The section entity.</returns>
+        </member>
+        <member name="T:Ezenity_Backend.Startup">
+            <summary>
+            Initializes the configuration and services for the application.
+            </summary>
+        </member>
+        <member name="F:Ezenity_Backend.Startup._configuration">
+            <summary>
+            Application's configuration settings.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Startup.#ctor(Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Startup"/> class.
+            </summary>
+            <param name="configuration">Application's configuration settings.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Configures application services and adds them to the dependency injection container.
+            </summary>
+            <param name="services">Specifies the contract for a collection of service descriptors.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Ezenity_Backend.Helpers.DataContext)">
+            <summary>
+            Configures the HTTP request pipeline.
+            </summary>
+            <param name="app">Defines a class that provides the mechanisms to configure an application's request pipeline.</param>
+            <param name="dataContext">Database context for entity operations.</param>
         </member>
     </members>
 </doc>

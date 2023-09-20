@@ -47,7 +47,7 @@ namespace Ezenity_Backend.Attributes
                 if (MediaTypeHeaderValue.TryParse(otherMediaType, out MediaTypeHeaderValue? parsedOtherMediaType))
                     _mediaTypes.Add(parsedOtherMediaType);
                 else
-                    throw new ArgumentException("Arugment can not be null or empty.", nameof(otherMediaType);
+                    throw new ArgumentException("Arugment can not be null or empty.", nameof(otherMediaType));
             }
         }
 

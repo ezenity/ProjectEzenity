@@ -1,6 +1,7 @@
 ﻿using Ezenity_Backend.Entities.Sections;
 using Ezenity_Backend.Models;
 using Ezenity_Backend.Models.Sections;
+using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Services.Common
 {
@@ -9,5 +10,6 @@ namespace Ezenity_Backend.Services.Common
     /// </summary>
     public interface ISectionService : IBaseService<Section, SectionResponse, CreateSectionRequest, UpdateSectionRequest, DeleteResponse>
     {
+        Task<CreateSectionWithAdditonalRequest> CreateWithAdditionalAsync(CreateSectionWithAdditonalRequest model);
     }
 }

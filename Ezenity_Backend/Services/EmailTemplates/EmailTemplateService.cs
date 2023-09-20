@@ -89,6 +89,20 @@ namespace Ezenity_Backend.Services.EmailTemplates
             return _mapper.Map<EmailTemplateResponse>(emailTemplate);
         }
 
+        public async Task<EmailTemplateNonDynamicResponse> GetNonDynamicByIdAsync(int id)
+        {
+            //var emailTemplate = await GetEmailTemplate(id);
+            var emailTemplate = await _context.EmailTemplates
+                                    .Where(x => x.Id == id)
+                                    .ProjectTo<EmailTemplateNonDynamicResponse>(_mapper.ConfigurationProvider)
+                                    .SingleOrDefaultAsync();
+
+            if (emailTemplate == null)
+                throw new ResourceNotFoundException($"Email Template ID, {id}, was not found.");
+
+            return _mapper.Map<EmailTemplateNonDynamicResponse>(emailTemplate);
+        }
+
         /// <summary>
         /// Creates a new email template.
         /// </summary>

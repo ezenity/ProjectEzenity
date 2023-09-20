@@ -1,4 +1,5 @@
-﻿using Ezenity_Backend.Entities.Accounts;
+﻿using Ezenity_Backend.Attributes;
+using Ezenity_Backend.Entities.Accounts;
 using Ezenity_Backend.Filters;
 using Ezenity_Backend.Helpers;
 using Ezenity_Backend.Helpers.Exceptions;

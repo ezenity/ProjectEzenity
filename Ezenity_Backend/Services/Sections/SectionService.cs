@@ -98,6 +98,33 @@ namespace Ezenity_Backend.Services.Sections
             return _mapper.Map<SectionResponse>(section);
         }
 
+        public async Task<CreateSectionWithAdditonalRequest> CreateWithAdditionalAsync(CreateSectionWithAdditonalRequest model)
+        {
+            // Validate
+            if (await _context.Sections.AnyAsync(x => x.Title == model.Title))
+                throw new AppException($"The Section Title, '{model.Title}', already exist. Please try a different title.");
+
+            /*var section = new Section
+            {
+                Title = model.Title,
+                Layout = model.Layout,
+                ContentType = model.ContentType,
+                Content = sectionContent
+            };*/
+
+            // Map Model to new section object
+            var section = _mapper.Map<Section>(model);
+
+            section.Created = DateTime.UtcNow;
+            //     skill.Verified = DateTime.UtcNow; // Might not be needed
+
+            // Save the section to the database
+            _context.Sections.Add(section);
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<CreateSectionWithAdditonalRequest>(section);
+        }
+
         /// <summary>
         /// Deletes a section by its identifier.
         /// </summary>

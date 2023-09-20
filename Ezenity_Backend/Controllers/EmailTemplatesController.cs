@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Ezenity_Backend.Attributes;
 
 namespace Ezenity_Backend.Controllers
 {
@@ -60,6 +61,11 @@ namespace Ezenity_Backend.Controllers
         /// </summary>
         /// <param name="model">The email template creation model.</param>
         /// <returns>An action result containing the created email template.</returns>
+        [RequestHeaderMatchesMediaType(
+            "Accept",
+            "application/ezenity.api.createemailtemplate+json")]
+        [Consumes("application/ezenity.api.createemailtemplate+json")]
+        [HttpPost(Name = "CreateEmailTemplate")]
         public override async Task<ActionResult<ApiResponse<EmailTemplateResponse>>> CreateAsync(CreateEmailTemplateRequest model)
         {
             var emailTemplate = await _emailTemplateService.CreateAsync(model);
@@ -72,8 +78,14 @@ namespace Ezenity_Backend.Controllers
         /// </summary>
         /// <param name="model">The email template creation model.</param>
         /// <returns>An action result containing the created email template.</returns>
+        [RequestHeaderMatchesMediaType(
+            "Accept",
+            "application/ezenity.api.createemailtemplatetest+json")]
+        [Consumes("application/ezenity.api.createemailtemplatetest+json")]
         [HttpPost("create-test")]
-        public async Task<ActionResult<ApiResponse<EmailTemplateResponse>>> CreateAsyncTest([FromServices]CreateEmailTemplateRequest model)
+        //[ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<ActionResult<ApiResponse<EmailTemplateResponse>>> CreateAsyncTest([FromServices] CreateEmailTemplateRequest model)
+            //public async Task<ActionResult<ApiResponse<EmailTemplateResponse>>> CreateAsyncTest([FromServices] CreateEmailTemplateRequest model)
         {
             var emailTemplate = await _emailTemplateService.CreateAsync(model);
             return Ok(emailTemplate);
@@ -226,10 +238,15 @@ namespace Ezenity_Backend.Controllers
         /// <returns>An action result containing the fetched email template.</returns>
         /// <exception cref="ResourceNotFoundException">Thrown when the email template is not found.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
+        [RequestHeaderMatchesMediaType(
+            "Accept",
+            "application/ezenity.api.getemailtemplate+json")]
+        [Produces("application/ezenity.api.getemailtemplate+json")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<EmailTemplateResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<EmailTemplateResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
+        [HttpGet("{id:int}", Name = "GetEmailTemplate")]
         public override async Task<ActionResult<ApiResponse<EmailTemplateResponse>>> GetByIdAsync(int id)
         {
             ApiResponse<EmailTemplateResponse> apiResponse = new ApiResponse<EmailTemplateResponse>();
@@ -237,6 +254,60 @@ namespace Ezenity_Backend.Controllers
             try
             {
                 var emailTemplate = await _emailTemplateService.GetByIdAsync(id);
+
+                apiResponse.StatusCode = 200;
+                apiResponse.Message = "Email Template fetched successfully.";
+                apiResponse.IsSuccess = true;
+                apiResponse.Data = emailTemplate;
+
+                return Ok(apiResponse);
+            }
+            catch (ResourceNotFoundException ex)
+            {
+                apiResponse.StatusCode = 404;
+                apiResponse.Message = ex.Message;
+                apiResponse.IsSuccess = false;
+                apiResponse.Errors.Add(ex.Message);
+
+                return NotFound(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Error] Email Template fetched unsuccessfully: {0}", ex);
+
+                apiResponse.StatusCode = 500;
+                apiResponse.Message = "An error occurred while fetching the Email Template.";
+                apiResponse.IsSuccess = false;
+                apiResponse.Errors.Add(ex.Message);
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        /// <summary>
+        /// Retrieves a non-dynamic email template by its ID asynchronously.
+        /// </summary>
+        /// <param name="id">The ID of the email template.</param>
+        /// <returns>An API response containing the requested email template.</returns>
+        /// <exception cref="ResourceNotFoundException">Thrown if the email template does not exist.</exception>
+        /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
+        [RequestHeaderMatchesMediaType(
+            "Accept",
+            "application/ezenity.api.getemailtemplatenondynamiccontent+json")]
+        [Produces("application/ezenity.api.getemailtemplatenondynamiccontent+json")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<EmailTemplateResponse>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<EmailTemplateResponse>), StatusCodes.Status500InternalServerError)]
+        [ProducesDefaultResponseType]
+        [HttpGet("{id:int}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<ActionResult<ApiResponse<EmailTemplateNonDynamicResponse>>> GetNonDynamicByIdAsync(int id)
+        {
+            ApiResponse<EmailTemplateNonDynamicResponse> apiResponse = new ApiResponse<EmailTemplateNonDynamicResponse>();
+
+            try
+            {
+                var emailTemplate = await _emailTemplateService.GetNonDynamicByIdAsync(id);
 
                 apiResponse.StatusCode = 200;
                 apiResponse.Message = "Email Template fetched successfully.";
