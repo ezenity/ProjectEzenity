@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Ezenity_Backend.Helpers
+namespace Ezenity_Backend.Attributes
 {
     /// <summary>
     /// Custom attribute to handle authorization for specified roles. 
