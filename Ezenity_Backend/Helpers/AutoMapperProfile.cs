@@ -43,6 +43,7 @@ namespace Ezenity_Backend.Helpers
             // Email Templates
             //  - Configures the mappings for EmailTemplate-related objects.
             CreateMap<EmailTemplate, EmailTemplateResponse>();
+            CreateMap<EmailTemplate, EmailTemplateNonDynamicResponse>();
             CreateMap<CreateEmailTemplateRequest, EmailTemplate>();
             CreateMap<UpdateEmailTemplateRequest, EmailTemplate>()
                 .ForAllMembers(x => x.Condition(
@@ -64,8 +65,10 @@ namespace Ezenity_Backend.Helpers
                 .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
                 .ForMember(dest => dest.ContentType, opt => opt.MapFrom(src => src.ContentType))
                 .ForMember(dest => dest.Layout, opt => opt.MapFrom(src => src.Layout));
+            CreateMap<Section, CreateSectionWithAdditonalRequest>();
 
             CreateMap<CreateSectionRequest, Section>();
+            CreateMap<CreateSectionWithAdditonalRequest, Section>();
             CreateMap<UpdateSectionRequest, Section>()
                 .ForMember(dest => dest.Content, opt => opt.Ignore())
                 .ForAllMembers(x => x.Condition(

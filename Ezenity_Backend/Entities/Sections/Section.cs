@@ -47,5 +47,26 @@ namespace Ezenity_Backend.Entities.Sections
         /// Gets or sets the date and time when the section was last updated.
         /// </summary>
         public DateTime? Updated { get; set; }
+
+        /// <summary>
+        /// Gets or sets the visibility control
+        /// </summary>
+        public bool IsActive { get; set; }
+
+        /// <summary>
+        /// Gets or sets who can see the section
+        /// </summary>
+        public string AccessLevel { get; set; }
+
+        /// <summary>
+        /// Get or set the ID for nested sections
+        /// </summary>
+        public int? ParentSectionId { get; set; }
+
+        /// <summary>
+        /// Get or set the SEO meta tags that could be applied to the section
+        /// </summary>
+        public string MetaTags { get; set; }
+
     }
 }
