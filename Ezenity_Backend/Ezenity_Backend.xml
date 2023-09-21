@@ -4,24 +4,24 @@
         <name>Ezenity_Backend</name>
     </assembly>
     <members>
-        <member name="T:Ezenity_Backend.Attributes.AuthorizeAttribute">
+        <member name="T:Ezenity_Backend.Attributes.AuthorizeV2Attribute">
             <summary>
             Custom attribute to handle authorization for specified roles. 
             Implements the <see cref="T:Microsoft.AspNetCore.Mvc.Filters.IAuthorizationFilter"/> interface to handle custom authorization logic.
             </summary>
         </member>
-        <member name="F:Ezenity_Backend.Attributes.AuthorizeAttribute._roles">
+        <member name="F:Ezenity_Backend.Attributes.AuthorizeV2Attribute._roles">
             <summary>
             Internal field holding a list of roles that are allowed to access the resource.
             </summary>
         </member>
-        <member name="M:Ezenity_Backend.Attributes.AuthorizeAttribute.#ctor(System.String[])">
+        <member name="M:Ezenity_Backend.Attributes.AuthorizeV2Attribute.#ctor(System.String[])">
             <summary>
-            Initializes a new instance of the <see cref="T:Ezenity_Backend.Attributes.AuthorizeAttribute"/> class.
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Attributes.AuthorizeV2Attribute"/> class.
             </summary>
             <param name="roleNames">An array of role names that are authorized to access the resource.</param>
         </member>
-        <member name="M:Ezenity_Backend.Attributes.AuthorizeAttribute.OnAuthorization(Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext)">
+        <member name="M:Ezenity_Backend.Attributes.AuthorizeV2Attribute.OnAuthorization(Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext)">
             <summary>
             Handles the authorization logic. This method is called by the framework before the controller action is invoked.
             </summary>
@@ -154,6 +154,43 @@
             <remarks>
             This method updates an existing account based on the provided identifier and UpdateAccountRequest model.
             It is authorized for use by any authenticated user.
+            Multiple error conditions are handled, such as resource not found, authorization failure, or conflict with existing resources.
+            </remarks>
+            <returns>
+            An <see cref="T:Microsoft.AspNetCore.Mvc.ActionResult"/> containing an <see cref="T:Ezenity_Backend.Models.ApiResponse`1"/>.
+            The ApiResponse contains the status code, success flag, the updated account data, and a message indicating the result of the operation.
+            </returns>
+            <response code="200">Returns an OK response if the account is successfully updated.</response>
+            <response code="404">Returns a not found response if the account with the specified ID does not exist.</response>
+            <response code="401">Returns an unauthorized response if the caller lacks necessary permissions.</response>
+            <response code="409">Returns a conflict response if updating the account would cause a conflict.</response>
+            <response code="500">Returns an internal server error if an unexpected error occurs.</response>
+            <exception cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException">Thrown when the account with the specified ID does not exist.</exception>
+            <exception cref="T:Ezenity_Backend.Helpers.Exceptions.AuthorizationException">Thrown when the caller lacks necessary permissions.</exception>
+            <exception cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity_Backend.Controllers.AccountsController.UpdatePartialAsync(System.Int32,Ezenity_Backend.Models.Accounts.UpdateAccountRequest)">
+            <summary>
+            Asynchronously updates partially on an existing account.
+            </summary>
+            <param name="id">The identifier of the account to be updated partially.</param>
+            <param name="model">The <see cref="T:Ezenity_Backend.Models.Accounts.UpdateAccountRequest"/> model containing the new account details.</param>
+            <remarks>
+            This method partially updates an existing account based on the provided identifier and UpdateAccountRequest model.    
+                
+            This request updates the account's **First Name**:    
+                
+                PATCH /api/accounts/{id} \
+                { \
+                    "Title": "Mr.", \
+                    "FirstName": "John", \
+                    "LastName": "Doe" \
+                } \
+                 
+            **Note**: All fields are optional and can be patched individually. The update is partial; fields not provided will not be updated.    
+                
+            It is authorized for use by any authenticated user who are the Role Admin.    
             Multiple error conditions are handled, such as resource not found, authorization failure, or conflict with existing resources.
             </remarks>
             <returns>
@@ -1092,7 +1129,7 @@
             Represents the Entity Framework Core database context for the application.
             </summary>
         </member>
-        <member name="M:Ezenity_Backend.Helpers.DataContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Ezenity_Backend.Helpers.DataContext})">
+        <member name="M:Ezenity_Backend.Helpers.DataContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Ezenity_Backend.Helpers.DataContext},Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
             Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.DataContext"/> class.
             </summary>
@@ -1590,6 +1627,40 @@
             Generates a random token string.
             </summary>
             <returns>The generated token string.</returns>
+        </member>
+        <member name="T:Ezenity_Backend.Middleware.CustomJwtAuthenticationHandler">
+            <summary>
+            Custom authentication handler for handling JSON Web Tokens (JWT).
+            </summary>
+            <remarks>
+            This class extends the <see cref="T:Microsoft.AspNetCore.Authentication.AuthenticationHandler`1"/> to provide custom JWT authentication.
+            It validates the JWT token from the "Authorization" header and sets the user principal accordingly.
+            </remarks>
+        </member>
+        <member name="F:Ezenity_Backend.Middleware.CustomJwtAuthenticationHandler._appSettings">
+            <summary>
+            Application settings for configuring JWT.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Middleware.CustomJwtAuthenticationHandler.#ctor(Microsoft.Extensions.Options.IOptionsMonitor{Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions},Microsoft.Extensions.Options.IOptions{Ezenity_Backend.Helpers.AppSettings},Microsoft.Extensions.Logging.ILoggerFactory,System.Text.Encodings.Web.UrlEncoder,Microsoft.AspNetCore.Authentication.ISystemClock)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Middleware.CustomJwtAuthenticationHandler"/> class.
+            </summary>
+            <param name="options">The options monitor for the authentication scheme options.</param>
+            <param name="appSettings">The application settings for JWT.</param>
+            <param name="logger">The logger factory.</param>
+            <param name="encoder">The URL encoder.</param>
+            <param name="clock">The system clock.</param>
+        </member>
+        <member name="M:Ezenity_Backend.Middleware.CustomJwtAuthenticationHandler.HandleAuthenticateAsync">
+            <summary>
+            Handles the authentication asynchronously.
+            </summary>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation, containing the <see cref="T:Microsoft.AspNetCore.Authentication.AuthenticateResult"/>.</returns>
+            <remarks>
+            This method attempts to authenticate the user by validating the JWT token from the "Authorization" header.
+            If the token is valid, it sets the user principal accordingly and returns a successful authentication result.
+            </remarks>
         </member>
         <member name="T:Ezenity_Backend.Middleware.ErrorHandlerMiddleware">
             <summary>
@@ -2427,24 +2498,6 @@
             </summary>
             <param name="info">The debug information.</param>
         </member>
-        <member name="T:Ezenity_Backend.Program">
-            <summary>
-            Entry point for the Ezenity Backend application.
-            </summary>
-        </member>
-        <member name="M:Ezenity_Backend.Program.Main(System.String[])">
-            <summary>
-            Main entry point for the application.
-            </summary>
-            <param name="args">Command-line arguments.</param>
-        </member>
-        <member name="M:Ezenity_Backend.Program.CreateHostBuilder(System.String[])">
-            <summary>
-            Creates an instance of the <see cref="T:Microsoft.Extensions.Hosting.IHostBuilder"/> with pre-configured defaults.
-            </summary>
-            <param name="args">Command-line arguments.</param>
-            <returns>An instance of <see cref="T:Microsoft.Extensions.Hosting.IHostBuilder"/>.</returns>
-        </member>
         <member name="T:Ezenity_Backend.Services.Accounts.AccountService">
             <summary>
             Provides services related to account management such as email verification, password reset, CRUD operations, etc.
@@ -2966,6 +3019,14 @@
             <param name="model">Data for creating the section.</param>
             <returns>The newly created section.</returns>
         </member>
+        <member name="M:Ezenity_Backend.Services.Sections.SectionService.CreateWithAdditionalAsync(Ezenity_Backend.Models.Sections.CreateSectionWithAdditonalRequest)">
+            <summary>
+            Asynchronously creates a new section with additional information.
+            </summary>
+            <param name="model">The request model containing the details for the new section.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the created section details.</returns>
+            <exception cref="T:Ezenity_Backend.Helpers.Exceptions.AppException">Thrown when the section title already exists.</exception>
+        </member>
         <member name="M:Ezenity_Backend.Services.Sections.SectionService.DeleteAsync(System.Int32)">
             <summary>
             Deletes a section by its identifier.
@@ -2993,35 +3054,6 @@
             </summary>
             <param name="id">Section identifier.</param>
             <returns>The section entity.</returns>
-        </member>
-        <member name="T:Ezenity_Backend.Startup">
-            <summary>
-            Initializes the configuration and services for the application.
-            </summary>
-        </member>
-        <member name="F:Ezenity_Backend.Startup._configuration">
-            <summary>
-            Application's configuration settings.
-            </summary>
-        </member>
-        <member name="M:Ezenity_Backend.Startup.#ctor(Microsoft.Extensions.Configuration.IConfiguration)">
-            <summary>
-            Initializes a new instance of the <see cref="T:Ezenity_Backend.Startup"/> class.
-            </summary>
-            <param name="configuration">Application's configuration settings.</param>
-        </member>
-        <member name="M:Ezenity_Backend.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
-            <summary>
-            Configures application services and adds them to the dependency injection container.
-            </summary>
-            <param name="services">Specifies the contract for a collection of service descriptors.</param>
-        </member>
-        <member name="M:Ezenity_Backend.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Ezenity_Backend.Helpers.DataContext)">
-            <summary>
-            Configures the HTTP request pipeline.
-            </summary>
-            <param name="app">Defines a class that provides the mechanisms to configure an application's request pipeline.</param>
-            <param name="dataContext">Database context for entity operations.</param>
         </member>
     </members>
 </doc>

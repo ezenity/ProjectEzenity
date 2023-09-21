@@ -17,7 +17,8 @@ namespace Ezenity_Backend.Controllers
     /// Controller for managing email templates. Inherits from the BaseController class to provide CRUD operations.
     /// </summary>
     [ApiController]
-    [Route("api/emailtemplates")]
+    [Route("api/v{version:apiVersion}/emailtemplates")]
+    [ApiVersion("1.0")]
     [Produces("application/json", "application/xml")]
     public class EmailTemplatesController : BaseController<EmailTemplate, EmailTemplateResponse, CreateEmailTemplateRequest, UpdateEmailTemplateRequest, DeleteResponse>
     {

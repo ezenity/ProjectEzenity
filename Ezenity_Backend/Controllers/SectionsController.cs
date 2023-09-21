@@ -18,7 +18,8 @@ namespace Ezenity_Backend.Controllers
     /// Provides an API controller for managing sections.
     /// </summary>
     [ApiController]
-    [Route("api/sections")]
+    [Route("api/v{version:apiVersion}/sections")]
+    [ApiVersion("1.0")]
     [Produces("application/json", "application/xml")]
     public class SectionsController : BaseController<Section, SectionResponse, CreateSectionRequest, UpdateSectionRequest, DeleteResponse>
     {
@@ -231,7 +232,7 @@ namespace Ezenity_Backend.Controllers
         /// <returns>A wrapped API response containing the updated section or errors.</returns>
         /// <exception cref="ResourceNotFoundException">Thrown when the requested section is not found.</exception>
         /// <exception cref="Exception">Thrown for generic server errors.</exception>
-        [Authorize("Admin")]
+        [AuthorizeV2("Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<SectionResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<SectionResponse>), StatusCodes.Status500InternalServerError)]
@@ -283,7 +284,7 @@ namespace Ezenity_Backend.Controllers
         /// <exception cref="AuthorizationException">Thrown when the user is not authorized to perform the deletion.</exception>
         /// <exception cref="DeletionFailedException">Thrown when deletion fails due to server or validation errors.</exception>
         /// <exception cref="Exception">Thrown for generic server errors.</exception>
-        [Authorize("Admin")]
+        [AuthorizeV2("Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status401Unauthorized)]
