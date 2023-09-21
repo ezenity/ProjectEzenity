@@ -13,7 +13,7 @@ namespace Ezenity_Backend.Attributes
     /// Implements the <see cref="IAuthorizationFilter"/> interface to handle custom authorization logic.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public class AuthorizeAttribute : Attribute, IAuthorizationFilter
+    public class AuthorizeV2Attribute : Attribute, IAuthorizationFilter
     {
         /// <summary>
         /// Internal field holding a list of roles that are allowed to access the resource.
@@ -21,10 +21,10 @@ namespace Ezenity_Backend.Attributes
         private readonly IList<string> _roles;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AuthorizeAttribute"/> class.
+        /// Initializes a new instance of the <see cref="AuthorizeV2Attribute"/> class.
         /// </summary>
         /// <param name="roleNames">An array of role names that are authorized to access the resource.</param>
-        public AuthorizeAttribute(params string[] roleNames)
+        public AuthorizeV2Attribute(params string[] roleNames)
         {
             _roles = roleNames ?? new string[] { };
         }

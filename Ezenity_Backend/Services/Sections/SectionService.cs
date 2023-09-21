@@ -98,6 +98,12 @@ namespace Ezenity_Backend.Services.Sections
             return _mapper.Map<SectionResponse>(section);
         }
 
+        /// <summary>
+        /// Asynchronously creates a new section with additional information.
+        /// </summary>
+        /// <param name="model">The request model containing the details for the new section.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the created section details.</returns>
+        /// <exception cref="AppException">Thrown when the section title already exists.</exception>
         public async Task<CreateSectionWithAdditonalRequest> CreateWithAdditionalAsync(CreateSectionWithAdditonalRequest model)
         {
             // Validate

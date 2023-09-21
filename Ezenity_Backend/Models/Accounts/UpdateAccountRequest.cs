@@ -16,22 +16,22 @@ namespace Ezenity_Backend.Models.Accounts
         /// <summary>
         /// Gets or sets the title for the account holder.
         /// </summary>
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
         /// <summary>
         /// Gets or sets the first name of the account holder.
         /// </summary>
-        public string FirstName { get; set; }
+        public string? FirstName { get; set; }
 
         /// <summary>
         /// Gets or sets the last name of the account holder.
         /// </summary>
-        public string LastName { get; set; }
+        public string? LastName { get; set; }
 
         /// <summary>
         /// Gets or sets the role ID of the account holder. This field is optional.
         /// </summary>
-        public string Role
+        public string? Role
         {
             get => _role;
             set => _role = replaceEmptyWithNull(value);
@@ -41,7 +41,7 @@ namespace Ezenity_Backend.Models.Accounts
         /// Gets or sets the email of the account holder. This field is optional.
         /// </summary>
         [EmailAddress]
-        public string Email
+        public string? Email
         {
             get => _email;
             set => _email = replaceEmptyWithNull(value);
@@ -51,7 +51,7 @@ namespace Ezenity_Backend.Models.Accounts
         /// Gets or sets the password of the account holder. This field is optional.
         /// </summary>
         [MinLength(6)]
-        public string Password
+        public string? Password
         {
             get => _password;
             set => _password = replaceEmptyWithNull(value);
@@ -61,7 +61,7 @@ namespace Ezenity_Backend.Models.Accounts
         /// Gets or sets the confirmation password of the account holder. Should match the password.
         /// </summary>
         [Compare("Password")]
-        public string ConfirmPassword
+        public string? ConfirmPassword
         {
             get => _confirmPassword;
             set => _confirmPassword = replaceEmptyWithNull(value);
