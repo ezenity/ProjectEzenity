@@ -12,11 +12,25 @@ namespace Ezenity_Backend.Helpers
     /// </summary>
     public class DataContext : DbContext
     {
+        private readonly IConfiguration _configuration;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="DataContext"/> class.
         /// </summary>
         /// <param name="options">The options for this context.</param>
-        public DataContext(DbContextOptions<DataContext> options) : base(options) { }
+        public DataContext(DbContextOptions<DataContext> options, IConfiguration configuration) : base(options) 
+        {
+            _configuration = configuration;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IConfiguration"/> class.
+        /// </summary>
+        /// <param name="configuration">Loads the configuration</param>
+        /*public DataContext(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }*/
 
         /// <summary>
         /// Parameterless constructor for cases requiring manual configuration.
@@ -32,13 +46,7 @@ namespace Ezenity_Backend.Helpers
             // Check if there is no configuration set for the context
             if (!optionsBuilder.IsConfigured)
             {
-                // If no configuration is provided, configure using the default connection string
-                IConfigurationRoot configuration = new ConfigurationBuilder()
-                    .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                    .AddJsonFile("appsettings.json")
-                    .Build();
-
-                optionsBuilder.UseSqlServer(configuration.GetConnectionString("WebApiDatabase"));
+                optionsBuilder.UseSqlServer(_configuration.GetConnectionString("WebApiDatabase"));
             }
         }
 

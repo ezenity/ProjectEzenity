@@ -6,6 +6,7 @@ using Ezenity_Backend.Helpers.Exceptions;
 using Ezenity_Backend.Models;
 using Ezenity_Backend.Models.Accounts;
 using Ezenity_Backend.Services.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -19,7 +20,8 @@ namespace Ezenity_Backend.Controllers
     /// Handles HTTP requests and responses related to Account entities.
     /// </summary>
     [ApiController]
-    [Route("api/accounts")]
+    [Route("api/v{version:apiVersion}/accounts")]
+    [ApiVersion("1.0")]
     [Produces("application/json", "application/xml")]
     public class AccountsController : BaseController<Account, AccountResponse, CreateAccountRequest, UpdateAccountRequest, DeleteResponse>
     {
@@ -90,7 +92,8 @@ namespace Ezenity_Backend.Controllers
                 {
                     StatusCode = 200,
                     IsSuccess = true,
-                    Message = "Account fetched successfully"
+                    Message = "Account fetched successfully",
+                    Data = account
                 });
             }
             catch (Exception ex)
@@ -121,7 +124,8 @@ namespace Ezenity_Backend.Controllers
         /// <response code="404">Returns a not found response if no accounts exist.</response>
         /// <response code="500">Returns if an internal server error occurs.</response>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
-        [Authorize("Admin")]
+        //[Authorize("Admin")]
+        [Authorize(Policy = "RequireAdminRole")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
@@ -179,7 +183,7 @@ namespace Ezenity_Backend.Controllers
         /// <response code="409">Returns a conflict response if an account with the given email already exists.</response>
         /// <response code="500">Returns if an internal server error occurs.</response>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
-        [Authorize("Admin")]
+        [AuthorizeV2("Admin")]
         [Consumes("application/json", "application/xml")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status409Conflict)]
@@ -244,7 +248,7 @@ namespace Ezenity_Backend.Controllers
         /// <exception cref="AuthorizationException">Thrown when the caller lacks necessary permissions.</exception>
         /// <exception cref="ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
-        [Authorize]
+        [AuthorizeV2]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status404NotFound)]
@@ -252,6 +256,104 @@ namespace Ezenity_Backend.Controllers
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<AccountResponse>>> UpdateAsync(int id, UpdateAccountRequest model)
+        {
+            try
+            {
+                var account = await _accountService.UpdateAsync(id, model);
+
+                return Ok(new ApiResponse<AccountResponse>
+                {
+                    StatusCode = 200,
+                    IsSuccess = true,
+                    Data = account,
+                    Message = "Account created successfully"
+                });
+            }
+            catch (ResourceNotFoundException ex)
+            {
+                return NotFound(new ApiResponse<AccountResponse>
+                {
+                    StatusCode = 404,
+                    IsSuccess = false,
+                    Message = ex.Message
+                });
+            }
+            catch (AuthorizationException ex)
+            {
+                return Unauthorized(new ApiResponse<AccountResponse>
+                {
+                    StatusCode = 401,
+                    IsSuccess = false,
+                    Message = ex.Message
+                });
+            }
+            catch (ResourceAlreadyExistsException ex)
+            {
+                return Conflict(new ApiResponse<AccountResponse>
+                {
+                    StatusCode = 409,
+                    IsSuccess = false,
+                    Message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Error] Accounts created unsuccessfully: {0}", ex);
+
+                return StatusCode(500, new ApiResponse<AccountResponse>
+                {
+                    StatusCode = 500,
+                    IsSuccess = false,
+                    Message = "An error occurred while creating the Account."
+                });
+            }
+        }
+
+
+        /// <summary>
+        /// Asynchronously updates partially on an existing account.
+        /// </summary>
+        /// <param name="id">The identifier of the account to be updated partially.</param>
+        /// <param name="model">The <see cref="UpdateAccountRequest"/> model containing the new account details.</param>
+        /// <remarks>
+        /// This method partially updates an existing account based on the provided identifier and UpdateAccountRequest model.    
+        ///     
+        /// This request updates the account's **First Name**:    
+        ///     
+        ///     PATCH /api/accounts/{id} \
+        ///     { \
+        ///         "Title": "Mr.", \
+        ///         "FirstName": "John", \
+        ///         "LastName": "Doe" \
+        ///     } \
+        ///      
+        /// **Note**: All fields are optional and can be patched individually. The update is partial; fields not provided will not be updated.    
+        ///     
+        /// It is authorized for use by any authenticated user who are the Role Admin.    
+        /// Multiple error conditions are handled, such as resource not found, authorization failure, or conflict with existing resources.
+        /// </remarks>
+        /// <returns>
+        /// An <see cref="ActionResult"/> containing an <see cref="ApiResponse{AccountResponse}"/>.
+        /// The ApiResponse contains the status code, success flag, the updated account data, and a message indicating the result of the operation.
+        /// </returns>
+        /// <response code="200">Returns an OK response if the account is successfully updated.</response>
+        /// <response code="404">Returns a not found response if the account with the specified ID does not exist.</response>
+        /// <response code="401">Returns an unauthorized response if the caller lacks necessary permissions.</response>
+        /// <response code="409">Returns a conflict response if updating the account would cause a conflict.</response>
+        /// <response code="500">Returns an internal server error if an unexpected error occurs.</response>
+        /// <exception cref="ResourceNotFoundException">Thrown when the account with the specified ID does not exist.</exception>
+        /// <exception cref="AuthorizationException">Thrown when the caller lacks necessary permissions.</exception>
+        /// <exception cref="ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
+        /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
+        [Authorize(Policy = "RequireAdminRole")]
+        [HttpPatch("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
+        [ProducesDefaultResponseType]
+        public async Task<ActionResult<ApiResponse<AccountResponse>>> UpdatePartialAsync(int id, UpdateAccountRequest model)
         {
             try
             {
@@ -328,7 +430,7 @@ namespace Ezenity_Backend.Controllers
         /// <exception cref="AuthorizationException">Thrown when the caller lacks necessary permissions.</exception>
         /// <exception cref="DeletionFailedException">Thrown if the deletion fails for some specific reason.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
-        [Authorize]
+        [AuthorizeV2]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status401Unauthorized)]
@@ -550,7 +652,7 @@ namespace Ezenity_Backend.Controllers
         /// <response code="400">Returns BadRequest if the token is not provided.</response>
         /// <response code="401">Returns Unauthorized if the token is not owned by the loaded account.</response>
         /// <exception cref="Exception">Thrown when any unexpected error occurs.</exception>
-        [Authorize("Admin")]
+        [AuthorizeV2("Admin")]
         [ServiceFilter(typeof(LoadAccountFilter))]
         [HttpPost("revoke-token")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -601,6 +703,7 @@ namespace Ezenity_Backend.Controllers
         /// <response code="409">Returns Conflict if the account already exists.</response>
         /// <response code="400">Returns BadRequest if the request parameters are not valid.</response>
         /// <response code="500">Returns a StatusCode of 500 if an unexpected error occurs.</response>
+        [AllowAnonymous]
         [HttpPost("register")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]

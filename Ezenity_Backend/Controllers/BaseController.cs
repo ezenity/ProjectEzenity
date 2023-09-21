@@ -35,7 +35,7 @@ namespace Ezenity_Backend.Controllers
         /// Retrieves all entities. Access restricted to Admin role.
         /// </summary>
         /// <returns>An action result containing an API response with a list of entities.</returns>
-        [Authorize("Admin")]
+        [AuthorizeV2("Admin")]
         [HttpGet]
         public abstract Task<ActionResult<ApiResponse<IEnumerable<TResponse>>>> GetAllAsync();
 
@@ -44,7 +44,7 @@ namespace Ezenity_Backend.Controllers
         /// </summary>
         /// <param name="model">The creation model for the new entity.</param>
         /// <returns>An action result containing an API response with the created entity data.</returns>
-        [Authorize("Admin")]
+        [AuthorizeV2("Admin")]
         [HttpPost]
         public abstract Task<ActionResult<ApiResponse<TResponse>>> CreateAsync(TCreateRequest model);
 
@@ -54,7 +54,7 @@ namespace Ezenity_Backend.Controllers
         /// <param name="id">The identifier of the entity to be updated.</param>
         /// <param name="model">The update model containing the new data.</param>
         /// <returns>An action result containing an API response with the updated entity data.</returns>
-        [Authorize]
+        [AuthorizeV2]
         [HttpPut("{id:int}")]
         public abstract Task<ActionResult<ApiResponse<TResponse>>> UpdateAsync(int id, TUpdateRequest model);
 
@@ -64,8 +64,8 @@ namespace Ezenity_Backend.Controllers
         /// <param name="DeleteAccountId">The identifier of the entity to be deleted.</param>
         /// <param name="DeletedById">The identifier of the user who is deleting the entity.</param>
         /// <returns>An action result containing an API response with the status of the deletion operation.</returns>
-        [Authorize]
-        [HttpDelete("{id:int}")]
+        [AuthorizeV2]
+        [HttpDelete("{DeleteAccountId:int}")]
         public abstract Task<ActionResult<ApiResponse<TDeleteResponse>>> DeleteAsync(int DeleteAccountId, int DeletedById);
     }
 
