@@ -1,10 +1,38 @@
-# Ezenity Backend API
+## Table of Contents
+- [Backend API](#backend-api)
+  - [Introduction](#introduction)
+  - [Features](#features)
+  - [Technologies Used](technologies-used)
+  - [Security](#security)
+    - [SHA-512 Encryption](#sha-512-encryption)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Configuration](#configuration)
+  - [Usage](#usage)
+    - [API Documentation](#api-documentation)
+    - [Token Handling](#token-handling)
+    - [Database Operations](#database-operations)
+    - [Logging](#logging)
+    - [Testing](#testing)
+  - [Future Enhancments](#future-enhancements)
+- [Frontend](#frontend)
+  - [Introduction](#introduction-1)
+  - [Features](#features-1)
+  - [Technologies Used](technologies-used-1)
+  - [Installation](#installation-1)
+  - [Configuration](#configuration-1)
+  - [Usage](#usage-1)
+- [Contributing](#contributing)
+- [License](#license)
+---
 
-## Introduction
+# Backend API
+
+### Introduction
 
 The Ezenity Backend API serves as a versatile backend for any frontend technology that can plug into it. It offers a range of features from account creation and management to customizable profiles and sections. The API is designed to be flexible, allowing for various use-cases including basic portfolio frontends.
 
-## Features
+### Features
 
 - **Account Management**: Create, update, and manage user accounts.
 - **Customizable Profiles**: Future support for customizable user profiles.
@@ -16,58 +44,122 @@ The Ezenity Backend API serves as a versatile backend for any frontend technolog
 - **API Documentation**: SwaggerUI for endpoint documentation.
 - **Future Plans**: Payment processing feature to be added.
 
-## Technologies Used
+### Technologies Used
 
 - **.NET 6.0**: The API is built using .NET 6.0.
 - **Serilog**: Custom logging for better traceability, with daily log files.
 - **Swashbuckle (Swagger)**: API documentation and testing.
 - **Custom JWT**: Utilizes custom JWT for authorization. (Upgrading from SHA256 to SHA512 is in progress)
 
-## Installation and Setup
+### Security
+
+#### SHA-512 Encryption
+The application uses SHA-512 for enhanced security in JWT token handling and other cryptographic operations.
+
+---
+
+### Prerequisites
+- .NET SDK 6.0 or higher
+- SQL Server (or a compatible database engine)
+- Your preferred API testing tool (e.g., Postman)
+
+### Installation
 
 > Note: Default email templates and an admin account for basic functions will be available in a future release.
 
-## API Documentation
+1. Clone the repository:
+    ```
+    git clone https://github.com/ezenity/Ezenity_VPN_Server.git
+    ```
+2. Navigate to the `Ezenity_Backend` folder:
+    ```
+    cd Ezenity_VPN_Server/Ezenity_Backend
+    ```
+3. Restore the NuGet packages:
+    ```
+    dotnet restore
+    ```
+4. Build the project:
+    ```
+    dotnet build
+    ```
+5. Run the project:
+    ```
+    dotnet run
+    ```
+### Configuration
+- **AppSettings**: Description of the properties in `appsettings.json` and their functions.
+- **Environment Variables**: You'll want to setup a **SECRET_KEY** or a file containing the Secret Key.
 
-The API endpoints are documented using SwaggerUI. You can access it at `[Swagger UI URL here]`.
+---
 
-## Future Enhancements
+### Usage
+
+#### API Documentation
+
+The API endpoints are documented using SwaggerUI. You can access it at `http://localhost:5001`.
+
+#### Token Handling
+> Note: No specific Token Handling are available at this moment.
+
+#### Database Operations
+> Note: No specific Database Operations are available at this moment.
+
+#### Logging
+> Note: No specific Logging are available at this moment.
+
+#### Testing
+> Note: No specific Testing are available at this moment.
+
+---
+
+### Future Enhancements
 
 - Implement a payment processing feature.
 - Increase security from SHA256 to SHA512.
 
 
 
-# Ezenity Frontend
+# Frontend
 
-## Introduction
+### Introduction
 
-The Ezenity Frontend serves two main purposes: to showcase the capabilities of the Ezenity Backend API and to act as a personal website. The project is in its early beta stages and is designed to be modular, configurable, and customizable.
+The Ezenity Frontend serves two main purposes:
+- to showcase the capabilities of the Ezenity Backend API
+- To act as a personal website.
 
-## Features
+The project is in its early beta stages and is designed to be modular, configurable, and customizable.
+
+### Features
 
 - **Profile Creation**: Users can create and manage their profiles.
 - **Role-Based Permissions**: Modify sections based on role ID.
 - **Section Modification**: Users with the correct role ID can modify sections. (Note: This is in early beta and a lot of functionalities are hardcoded)
 - **Modular Design**: Everything will be modular and configurable in the future.
 
-## Technologies Used
+### Technologies Used
 
 - **React**: The frontend is built using React, but it can be adapted for other frontend technologies like Angular.
 
-## Installation and Setup
+### Installation
 
 > Future Goal: The frontend will eventually feature a setup wizard that guides users through the initial setup process.
 
-## Usage Examples
+### Configuration
+
+> Note: No specific configuration are available at this moment.
+
+### Usage
 
 > Note: No specific use-cases or examples are available at this moment.
 
-## Contributing
+
+
+# Contributing
 
 If you would like to contribute to this project, please fork the repository and submit a pull request.
 
-## License
+# License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
