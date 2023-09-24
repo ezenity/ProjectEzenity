@@ -36,13 +36,6 @@ The API endpoints are documented using SwaggerUI. You can access it at `[Swagger
 - Implement a payment processing feature.
 - Increase security from SHA256 to SHA512.
 
-## Contributing
-
-If you would like to contribute to this project, please fork the repository and submit a pull request.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
 
 # Ezenity Frontend
