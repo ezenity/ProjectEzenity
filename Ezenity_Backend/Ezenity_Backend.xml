@@ -170,7 +170,7 @@
             <exception cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
             <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
         </member>
-        <member name="M:Ezenity_Backend.Controllers.AccountsController.UpdatePartialAsync(System.Int32,Ezenity_Backend.Models.Accounts.UpdateAccountRequest)">
+        <member name="M:Ezenity_Backend.Controllers.AccountsController.UpdatePartialAsync(System.Int32,Microsoft.AspNetCore.JsonPatch.JsonPatchDocument{Ezenity_Backend.Models.Accounts.UpdateAccountRequest})">
             <summary>
             Asynchronously updates partially on an existing account.
             </summary>
@@ -672,9 +672,14 @@
             Gets or sets a value indicating whether the terms are accepted.
             </summary>
         </member>
+        <member name="P:Ezenity_Backend.Entities.Accounts.Account.RoleId">
+            <summary>
+            Gets or sets the Role Foreign Key
+            </summary>
+        </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.Account.Role">
             <summary>
-            Gets or sets the role of the account holder.
+            Gets or sets the role of the account holder; used for navigation
             </summary>
         </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.Account.VerificationToken">
@@ -739,9 +744,14 @@
             Gets or sets the ID of the refresh token.
             </summary>
         </member>
+        <member name="P:Ezenity_Backend.Entities.Accounts.RefreshToken.AccountId">
+            <summary>
+            Gets or sets the Foreign key relationship with <see cref="P:Ezenity_Backend.Entities.Accounts.RefreshToken.Account"/> entity
+            </summary>
+        </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.RefreshToken.Account">
             <summary>
-            Gets or sets the account associated with this refresh token.
+            Gets or sets the account associated with this refresh token for navigation
             </summary>
         </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.RefreshToken.Token">
@@ -802,6 +812,11 @@
         <member name="P:Ezenity_Backend.Entities.Accounts.Role.Name">
             <summary>
             Gets or sets the name of the role.
+            </summary>
+        </member>
+        <member name="P:Ezenity_Backend.Entities.Accounts.Role.Accounts">
+            <summary>
+            Gets or sets the asociated accounts with the specified Role
             </summary>
         </member>
         <member name="T:Ezenity_Backend.Entities.Emails.EmailMessage">
@@ -1058,6 +1073,18 @@
             it is stored in the HttpContext.Items dictionary for later use.
             </remarks>
         </member>
+        <member name="T:Ezenity_Backend.Filters.UpdateAccountFilter">
+            <summary>
+            Operation filter for modifying Swagger documentation related to the 'CreateSection' operation.
+            </summary>
+        </member>
+        <member name="M:Ezenity_Backend.Filters.UpdateAccountFilter.Apply(Microsoft.OpenApi.Models.OpenApiOperation,Swashbuckle.AspNetCore.SwaggerGen.OperationFilterContext)">
+            <summary>
+            Applies modifications to the OpenAPI operation for the 'UpdateAccount' endpoint.
+            </summary>
+            <param name="operation">The OpenAPI operation object.</param>
+            <param name="context">Context that provides schema and other information.</param>
+        </member>
         <member name="T:Ezenity_Backend.Helpers.AppSettings">
             <summary>
             Contains settings for the application.
@@ -1129,22 +1156,11 @@
             Represents the Entity Framework Core database context for the application.
             </summary>
         </member>
-        <member name="M:Ezenity_Backend.Helpers.DataContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Ezenity_Backend.Helpers.DataContext},Microsoft.Extensions.Configuration.IConfiguration)">
+        <member name="M:Ezenity_Backend.Helpers.DataContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Ezenity_Backend.Helpers.DataContext})">
             <summary>
-            Initializes a new instance of the <see cref="T:Ezenity_Backend.Helpers.DataContext"/> class.
+            Initializes a new instance of the "DataContext" class.
             </summary>
             <param name="options">The options for this context.</param>
-        </member>
-        <member name="M:Ezenity_Backend.Helpers.DataContext.#ctor">
-            <summary>
-            Parameterless constructor for cases requiring manual configuration.
-            </summary>
-        </member>
-        <member name="M:Ezenity_Backend.Helpers.DataContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
-            <summary>
-            Invoked to set up the context options such as the database provider and connection string.
-            </summary>
-            <param name="optionsBuilder">Used to configure the DbContext.</param>
         </member>
         <member name="P:Ezenity_Backend.Helpers.DataContext.Accounts">
             <summary>
@@ -1168,33 +1184,81 @@
         </member>
         <member name="M:Ezenity_Backend.Helpers.DataContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <summary>
-            Invoked to configure the database model and relationships.
+            Overrides the OnModelCreating method to configure the entity relationships and table schema in the database.
             </summary>
-            <param name="modelBuilder">Used to map the domain classes to database schema.</param>
+            <param name="modelBuilder">The model builder used by Entity Framework Core to configure the entity relationships and schema.</param>
+            <remarks>
+            This method does the following:
+            - Calls the ConfigureAccounts method to set up the Accounts table.
+            - Calls the ConfigureRefreshtoken method to set up the RefreshTokens table.
+            - Calls the ConfigureRoles method to set up the Roles table.
+            - Calls the ConfigureEmailTemplates method to set up the EmailTemplates table.
+            - Calls the ConfigureSections method to set up the Sections table.
+            - Additional relationships between entities can be added as necessary.
+            </remarks>
         </member>
         <member name="M:Ezenity_Backend.Helpers.DataContext.ConfigureAccounts(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <summary>
-            Configures the accounts table schema.
+            Configures the schema for the Accounts table in the database.
+            This method sets up various properties and relationships for the Account entity.
             </summary>
-            <param name="modelBuilder">The model builder for EF Core.</param>
+            <param name="modelBuilder">The model builder used by Entity Framework Core to configure the entity.</param>
+            <remarks>
+            - Sets the primary key for the Accounts table as 'Id'.
+            - Establishes a many-to-one relationship between the Account and Role entities.
+              Each Account has one Role, while a Role can be associated with multiple Accounts.
+              The relationship is enforced by a foreign key 'RoleId' in the Account entity.
+            </remarks>
+        </member>
+        <member name="M:Ezenity_Backend.Helpers.DataContext.ConfigureRefreshtoken(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Configures the schema for the RefreshTokens table in the database.
+            This method sets up various properties, their requirements, and establishes the relationship
+            between the RefreshToken entity and the Account entity.
+            </summary>
+            <param name="modelBuilder">The model builder used by Entity Framework Core to configure the entity.</param>
+            <remarks>
+            - Sets the primary key for the RefreshTokens table as 'Id'.
+            - Sets the 'Token', 'Expires', and 'Created' properties to be required.
+            - Makes 'CreatedByIp', 'Revoked', 'RevokedByIp', and 'ReplacedByToken' as optional fields.
+            - Establishes a one-to-many relationship between the Account entity and RefreshToken entity. 
+              Each Account can have multiple RefreshTokens, and each RefreshToken is linked back to an Account
+              via a foreign key 'AccountId'.
+            </remarks>
         </member>
         <member name="M:Ezenity_Backend.Helpers.DataContext.ConfigureRoles(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <summary>
-            Configures the roles table schema.
+            Configures the schema for the Roles table in the database.
+            This method sets up various properties and establishes relationships
+            between the Role entity and the Account entity.
             </summary>
-            <param name="modelBuilder">The model builder for EF Core.</param>
+            <param name="modelBuilder">The model builder used by Entity Framework Core to configure the entity.</param>
+            <remarks>
+            - Sets the primary key for the Roles table as 'Id'.
+            - Establishes a one-to-many relationship between the Role entity and the Account entity.
+              Each Role can be associated with multiple Accounts, and each Account has a Role.
+              The relationship is enforced by a foreign key 'RoleId' in the Account entity.
+            </remarks>
         </member>
         <member name="M:Ezenity_Backend.Helpers.DataContext.ConfigureEmailTemplates(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <summary>
-            Configures the email templates table schema.
+            Configures the schema for the EmailTemplates table in the database.
+            This method sets the primary key for the EmailTemplate entity.
             </summary>
-            <param name="modelBuilder">The model builder for EF Core.</param>
+            <param name="modelBuilder">The model builder used by Entity Framework Core to configure the entity.</param>
+            <remarks>
+            - Sets the primary key for the EmailTemplates table as 'Id'.
+            </remarks>
         </member>
         <member name="M:Ezenity_Backend.Helpers.DataContext.ConfigureSections(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <summary>
-            Configures the sections table schema.
+            Configures the schema for the Sections table in the database.
+            This method sets the primary key for the Section entity.
             </summary>
-            <param name="modelBuilder">The model builder for EF Core.</param>
+            <param name="modelBuilder">The model builder used by Entity Framework Core to configure the entity.</param>
+            <remarks>
+            - Sets the primary key for the Sections table as 'Id'.
+            </remarks>
         </member>
         <member name="T:Ezenity_Backend.Helpers.EmailHelpers">
             <summary>
@@ -1555,6 +1619,12 @@
         <member name="T:Ezenity_Backend.Helpers.TokenHelper">
             <summary>
             Provides functionalities for handling JWT and refresh tokens.
+            
+            One instance of 'TokenHelper' per HTTP request. This will ensure
+            that it is working with a consistent set of data within a single 
+            request. This will also keep some state consistent throughout
+            the single request lifecycle but will not keep the state longer
+            than that.
             </summary>
         </member>
         <member name="F:Ezenity_Backend.Helpers.TokenHelper._context">
@@ -1642,7 +1712,7 @@
             Application settings for configuring JWT.
             </summary>
         </member>
-        <member name="M:Ezenity_Backend.Middleware.CustomJwtAuthenticationHandler.#ctor(Microsoft.Extensions.Options.IOptionsMonitor{Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions},Microsoft.Extensions.Options.IOptions{Ezenity_Backend.Helpers.AppSettings},Microsoft.Extensions.Logging.ILoggerFactory,System.Text.Encodings.Web.UrlEncoder,Microsoft.AspNetCore.Authentication.ISystemClock)">
+        <member name="M:Ezenity_Backend.Middleware.CustomJwtAuthenticationHandler.#ctor(Microsoft.Extensions.Options.IOptionsMonitor{Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions},Microsoft.Extensions.Options.IOptions{Ezenity_Backend.Helpers.AppSettings},Microsoft.Extensions.Logging.ILoggerFactory,System.Text.Encodings.Web.UrlEncoder,Microsoft.AspNetCore.Authentication.ISystemClock,Ezenity_Backend.Helpers.DataContext)">
             <summary>
             Initializes a new instance of the <see cref="T:Ezenity_Backend.Middleware.CustomJwtAuthenticationHandler"/> class.
             </summary>
@@ -1719,59 +1789,6 @@
             <param name="dataContext">The database context to query for accounts.</param>
             <param name="token">The JWT to validate and extract account information from.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
-        </member>
-        <member name="T:Ezenity_Backend.Migrations.InitialCreate">
-            <summary>
-            Represents the initial database migration to create the schema and tables.
-            </summary>
-            <summary>
-            Represents the initial database migration for the application, which sets up the schema and tables.
-            </summary>
-        </member>
-        <member name="M:Ezenity_Backend.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <summary>
-            Executes the upward migration to create tables and indices.
-            </summary>
-            <param name="migrationBuilder">The migration builder used for creating tables and indices.</param>
-        </member>
-        <member name="M:Ezenity_Backend.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <summary>
-            Reverts the changes made in the Up() method, essentially rolling back the migration.
-            </summary>
-            <param name="migrationBuilder">The migration builder used for deleting tables and indices.</param>
-        </member>
-        <member name="M:Ezenity_Backend.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <summary>
-            Defines the schema and configuration for all entities in the model targeting a specific database.
-            </summary>
-            <param name="modelBuilder">An instance of the ModelBuilder class used to configure the data model.</param>
-        </member>
-        <member name="T:Ezenity_Backend.Migrations.updatedModels">
-            <summary>
-            This class represents a database migration that updates the models by renaming
-            the "Role" table to "Roles" and updating foreign key references.
-            </summary>
-            <summary>
-            Represents the updatedModels migration class that contains the logic to build the target model of the data context.
-            </summary>
-        </member>
-        <member name="M:Ezenity_Backend.Migrations.updatedModels.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <summary>
-            Applies the changes to the database schema by updating table and foreign key names.
-            </summary>
-            <param name="migrationBuilder">An instance of the MigrationBuilder class used for applying migrations.</param>
-        </member>
-        <member name="M:Ezenity_Backend.Migrations.updatedModels.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <summary>
-            Reverts the changes applied in the Up() method, effectively rolling back this migration.
-            </summary>
-            <param name="migrationBuilder">An instance of the MigrationBuilder class used for reverting migrations.</param>
-        </member>
-        <member name="M:Ezenity_Backend.Migrations.updatedModels.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <summary>
-            Builds the target model of the data context.
-            </summary>
-            <param name="modelBuilder">The model builder to configure the model of the data context.</param>
         </member>
         <member name="T:Ezenity_Backend.Models.Accounts.AccountResponse">
             <summary>

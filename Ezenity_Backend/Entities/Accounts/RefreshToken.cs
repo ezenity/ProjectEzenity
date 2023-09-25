@@ -6,7 +6,6 @@ namespace Ezenity_Backend.Entities.Accounts
     /// <summary>
     /// Represents a refresh token for an account.
     /// </summary>
-    [Owned]
     public class RefreshToken
     {
         /// <summary>
@@ -15,7 +14,12 @@ namespace Ezenity_Backend.Entities.Accounts
         public int Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the account associated with this refresh token.
+        /// Gets or sets the Foreign key relationship with <see cref="Account"/> entity
+        /// </summary>
+        public int AccountId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the account associated with this refresh token for navigation
         /// </summary>
         public Account Account { get; set; }
 

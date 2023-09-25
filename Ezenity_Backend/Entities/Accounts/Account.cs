@@ -44,7 +44,12 @@ namespace Ezenity_Backend.Entities.Accounts
         public bool AcceptTerms { get; set; }
 
         /// <summary>
-        /// Gets or sets the role of the account holder.
+        /// Gets or sets the Role Foreign Key
+        /// </summary>
+        public int RoleId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the role of the account holder; used for navigation
         /// </summary>
         public Role Role { get; set; }
 

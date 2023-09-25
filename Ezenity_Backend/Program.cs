@@ -25,13 +25,21 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.StaticFiles;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.File("logs/api.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
     ApplicationName = typeof(Program).Assembly.FullName,
     ContentRootPath = Directory.GetCurrentDirectory()
-    /*EnvironmentName = Environments.Staging*/
 });
 
 if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production")
@@ -39,20 +47,23 @@ if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production"
 else
     builder.Environment.EnvironmentName = Environments.Production;
 
-Console.WriteLine("##########################################################################################################");
+//builder.Logging.ClearProviders();
+/*builder.Logging.AddConfiguration(configuration.GetSection("Logging"));
+builder.Logging.AddJsonConsole();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();*/
+
+// Set Logging Provider
+builder.Host.UseSerilog();
+
+Console.WriteLine("###################################");
 Console.WriteLine($"Application Name: {builder.Environment.ApplicationName}");
 Console.WriteLine($"Environment Name: {builder.Environment.EnvironmentName}");
 Console.WriteLine($"ContentRoot Path: {builder.Environment.ContentRootPath}");
-Console.WriteLine("##########################################################################################################");
+Console.WriteLine("###################################");
 
 // Application's configuration settings
 var configuration = builder.Configuration;
-
-builder.Logging.AddConfiguration(configuration.GetSection("Logging"));
-builder.Logging.AddJsonConsole();
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
-
 
 // Add configurations from appsettings.json, appsettings.Development.json, etc.
 configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -90,8 +101,6 @@ services.AddControllers(options =>
     setupAction.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
 }).AddXmlDataContractSerializerFormatters();
 
-
-
 services.Configure<MvcOptions>(options =>
 {
     var jsonOutputFormatter = options.OutputFormatters.OfType<NewtonsoftJsonOutputFormatter>().FirstOrDefault();
@@ -107,13 +116,18 @@ services.Configure<MvcOptions>(options =>
     }
 });
 
-services.AddDbContext<DataContext>();
+// Configure stringly typed settings objects
+services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
+
+var connectionString = configuration.GetConnectionString("WebApiDatabase");
+services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
+
 // Make the data repository available for dependency injection. Whenever an interface is 
 // referenced in a constructor, substitute an instace of the class.
 //
 // AddScope: Only one instance of the class is created in a given HTTP request (Last for whole HTTP request)
 // AddTransient: Generate a new instance of the class each time it is requested
-// AddSingleton: Geernate only one clas instance for the lifetime of the whole app
+// AddSingleton: Geernate only one class instance for the lifetime of the whole app
 // configure Dependecy Injection for application services
 services.AddScoped<IAccountService, AccountService>();
 services.AddScoped<IEmailService, EmailService>();
@@ -123,20 +137,15 @@ services.AddScoped<IAuthService, AuthService>();
 // Filter DI
 services.AddScoped<LoadAccountFilter>();
 
-// Configure stringly typed settings objects
-services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
-
-
 string secretKey;
 if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
     secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? System.IO.File.ReadAllText("secret/file/location").Trim(); // TODO: Insert correct location once on server
 else
     secretKey = configuration.GetSection("AppSettings")["Secret"];
 
-services.AddSingleton(sp => new TokenHelper(secretKey));
+services.AddScoped(sp => new TokenHelper(secretKey));
 services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
-
 
 services.AddCors(options =>
 {
@@ -148,7 +157,6 @@ services.AddCors(options =>
             .AllowCredentials();
     });
 });
-
 
 services.AddApiVersioning(setupAction =>
 {
@@ -247,6 +255,8 @@ services.AddSwaggerGen(setupAction =>
     setupAction.IncludeXmlComments(xmlCommentsFullPath);
 });
 
+services.AddSingleton<FileExtensionContentTypeProvider>();
+
 
 services.AddAuthentication(options =>
 {
@@ -264,6 +274,7 @@ services.AddAuthorization(options =>
 // Build the application
 var app = builder.Build();
 
+app.UseStaticFiles();
 
 // Generate swagger json and swagger ui middleware
 app.UseSwagger();
@@ -275,6 +286,15 @@ app.UseSwaggerUI(setupAction =>
             $"/swagger/ProjectEzenityAPISpecs{description.GroupName}/swagger.json",
             $"Project Ezenity API {description.GroupName.ToUpperInvariant()}");
     }
+
+    setupAction.DefaultModelExpandDepth(2);
+    setupAction.DefaultModelRendering(Swashbuckle.AspNetCore.SwaggerUI.ModelRendering.Model);
+    setupAction.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None); // Default = List
+    setupAction.EnableDeepLinking();
+    setupAction.DisplayOperationId();
+
+    setupAction.InjectStylesheet("/assets/custom-ui.css");
+
     setupAction.RoutePrefix = String.Empty;
 });
 
@@ -296,17 +316,17 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseEndpoints(
-    configure => configure.MapControllers()
+    endpoints => endpoints.MapControllers()
 );
 
-using var scope = app.Services.CreateScope();
-var dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 // Migrate any database changes on startup (includes initial db creation)
 // Ensure to be used only for development. For production, run migrations 
 // manually incase of breaking changes in the database schema.
-if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production")
+/*if(app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
     dataContext.Database.Migrate();
-
-
+}*/
 
 app.Run();
