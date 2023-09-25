@@ -644,22 +644,22 @@
         </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.Account.Title">
             <summary>
-            Gets or sets the account title.
+            Gets the account title. Cannot be null after the object is constructed.
             </summary>
         </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.Account.FirstName">
             <summary>
-            Gets or sets the first name of the account holder.
+            Gets the first name of the account holder. Cannot be null after the object is constructed.
             </summary>
         </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.Account.LastName">
             <summary>
-            Gets or sets the last name of the account holder.
+            Gets the last name of the account holder. Cannot be null after the object is constructed.
             </summary>
         </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.Account.Email">
             <summary>
-            Gets or sets the email of the account holder.
+            Gets the email of the account holder. Cannot be null after the object is constructed.
             </summary>
         </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.Account.PasswordHash">
@@ -733,6 +733,18 @@
             </summary>
             <param name="token">The token to check ownership of.</param>
             <returns>true if the account owns the token, false otherwise.</returns>
+        </member>
+        <member name="M:Ezenity_Backend.Entities.Accounts.Account.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Entities.Accounts.Account"/> class.
+            Validates that Title, FirstName, LastName, and Email are not null.
+            Throws an ArgumentNullException for any null arguments.
+            </summary>
+            <param name="title">The title of the account holder.</param>
+            <param name="firstName">The first name of the account holder.</param>
+            <param name="lastName">The last name of the account holder.</param>
+            <param name="email">The email of the account holder.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown if any argument is null.</exception>
         </member>
         <member name="T:Ezenity_Backend.Entities.Accounts.RefreshToken">
             <summary>

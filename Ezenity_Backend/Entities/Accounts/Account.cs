@@ -14,24 +14,24 @@ namespace Ezenity_Backend.Entities.Accounts
         public int Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the account title.
+        /// Gets the account title. Cannot be null after the object is constructed.
         /// </summary>
-        public string Title { get; set; }
+        public string Title { get; private set; }
 
         /// <summary>
-        /// Gets or sets the first name of the account holder.
+        /// Gets the first name of the account holder. Cannot be null after the object is constructed.
         /// </summary>
-        public string FirstName { get; set; }
+        public string FirstName { get; private set; }
 
         /// <summary>
-        /// Gets or sets the last name of the account holder.
+        /// Gets the last name of the account holder. Cannot be null after the object is constructed.
         /// </summary>
-        public string LastName { get; set; }
+        public string LastName { get; private set; }
 
         /// <summary>
-        /// Gets or sets the email of the account holder.
+        /// Gets the email of the account holder. Cannot be null after the object is constructed.
         /// </summary>
-        public string Email { get; set; }
+        public string Email { get; private set; }
 
         /// <summary>
         /// Gets or sets the hashed password for the account.
@@ -106,6 +106,24 @@ namespace Ezenity_Backend.Entities.Accounts
         public bool OwnsToken(string token)
         {
             return this.RefreshTokens?.Find(x => x.Token == token) != null;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Account"/> class.
+        /// Validates that Title, FirstName, LastName, and Email are not null.
+        /// Throws an ArgumentNullException for any null arguments.
+        /// </summary>
+        /// <param name="title">The title of the account holder.</param>
+        /// <param name="firstName">The first name of the account holder.</param>
+        /// <param name="lastName">The last name of the account holder.</param>
+        /// <param name="email">The email of the account holder.</param>
+        /// <exception cref="ArgumentNullException">Thrown if any argument is null.</exception>
+        public Account(string title, string firstName, string lastName, string email)
+        {
+            Title = title ?? throw new ArgumentNullException(nameof(title), "Title cannot be null");
+            FirstName = firstName ?? throw new ArgumentNullException(nameof(firstName), "First name cannot be null");
+            LastName = lastName ?? throw new ArgumentNullException(nameof(lastName), "Last name cannot be null");
+            Email = email ?? throw new ArgumentNullException(nameof(email), "Email cannot be null");
         }
     }
 }
