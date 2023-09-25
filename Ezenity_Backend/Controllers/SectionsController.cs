@@ -46,9 +46,9 @@ namespace Ezenity_Backend.Controllers
         /// <param name="logger">Logger instance for capturing runtime logs.</param>
         public SectionsController(ISectionService sectionService, IAccountService accountService, ILogger<SectionsController> logger)
         {
-            _sectionService = sectionService;
-            _accountService = accountService;
-            _logger = logger;
+            _sectionService = sectionService ?? throw new ArgumentNullException(nameof(logger));
+            _accountService = accountService ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>

@@ -48,7 +48,7 @@ namespace Ezenity_Backend.Controllers
         /// <param name="logger">The logger used for logging any events in this class.</param>
         public AccountsController(IAccountService accountService, ILogger<AccountsController> logger)
         {
-            _accountService = accountService;
+            _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 

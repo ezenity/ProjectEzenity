@@ -51,10 +51,10 @@ namespace Ezenity_Backend.Controllers
         /// <param name="logger">The logger service.</param>
         public EmailTemplatesController(IEmailTemplateService emailTemplateService, IAuthService authService, IAccountService accountService, ILogger<EmailTemplatesController> logger)
         {
-            _emailTemplateService = emailTemplateService;
-            _authService = authService;
-            _accountService = accountService;
-            _logger = logger;
+            _emailTemplateService = emailTemplateService ?? throw new ArgumentNullException(nameof(emailTemplateService));
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+            _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
