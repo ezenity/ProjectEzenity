@@ -96,7 +96,7 @@ namespace Ezenity_Backend.Entities.Accounts
         /// <summary>
         /// Gets or sets the refresh tokens for the account.
         /// </summary>
-        public List<RefreshToken> RefreshTokens { get; set; }
+        public List<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
         /// <summary>
         /// Checks if the account owns a specific token.
