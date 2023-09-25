@@ -1,17 +1,12 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
+#nullable disable
+
 namespace Ezenity_Backend.Migrations
 {
-    /// <summary>
-    /// Represents the initial database migration to create the schema and tables.
-    /// </summary>
     public partial class InitialCreate : Migration
     {
-        /// <summary>
-        /// Executes the upward migration to create tables and indices.
-        /// </summary>
-        /// <param name="migrationBuilder">The migration builder used for creating tables and indices.</param>
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -37,7 +32,7 @@ namespace Ezenity_Backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Role",
+                name: "Roles",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -46,7 +41,7 @@ namespace Ezenity_Backend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Role", x => x.Id);
+                    table.PrimaryKey("PK_Roles", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -55,12 +50,16 @@ namespace Ezenity_Backend.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    ContentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ContentType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Layout = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Created = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Updated = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Updated = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    AccessLevel = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ParentSectionId = table.Column<int>(type: "int", nullable: true),
+                    MetaTags = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -79,7 +78,7 @@ namespace Ezenity_Backend.Migrations
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     AcceptTerms = table.Column<bool>(type: "bit", nullable: false),
-                    RoleId = table.Column<int>(type: "int", nullable: true),
+                    RoleId = table.Column<int>(type: "int", nullable: false),
                     VerificationToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Verified = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ResetToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -92,15 +91,15 @@ namespace Ezenity_Backend.Migrations
                 {
                     table.PrimaryKey("PK_Accounts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Accounts_Role_RoleId",
+                        name: "FK_Accounts_Roles_RoleId",
                         column: x => x.RoleId,
-                        principalTable: "Role",
+                        principalTable: "Roles",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "RefreshToken",
+                name: "RefreshTokens",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -116,9 +115,9 @@ namespace Ezenity_Backend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RefreshToken", x => new { x.AccountId, x.Id });
+                    table.PrimaryKey("PK_RefreshTokens", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_RefreshToken_Accounts_AccountId",
+                        name: "FK_RefreshTokens_Accounts_AccountId",
                         column: x => x.AccountId,
                         principalTable: "Accounts",
                         principalColumn: "Id",
@@ -129,19 +128,20 @@ namespace Ezenity_Backend.Migrations
                 name: "IX_Accounts_RoleId",
                 table: "Accounts",
                 column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_AccountId",
+                table: "RefreshTokens",
+                column: "AccountId");
         }
 
-        /// <summary>
-        /// Reverts the changes made in the Up() method, essentially rolling back the migration.
-        /// </summary>
-        /// <param name="migrationBuilder">The migration builder used for deleting tables and indices.</param>
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "EmailTemplates");
 
             migrationBuilder.DropTable(
-                name: "RefreshToken");
+                name: "RefreshTokens");
 
             migrationBuilder.DropTable(
                 name: "Sections");
@@ -150,7 +150,7 @@ namespace Ezenity_Backend.Migrations
                 name: "Accounts");
 
             migrationBuilder.DropTable(
-                name: "Role");
+                name: "Roles");
         }
     }
 }

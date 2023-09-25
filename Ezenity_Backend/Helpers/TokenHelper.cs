@@ -15,6 +15,12 @@ namespace Ezenity_Backend.Helpers
 {
     /// <summary>
     /// Provides functionalities for handling JWT and refresh tokens.
+    /// 
+    /// One instance of 'TokenHelper' per HTTP request. This will ensure
+    /// that it is working with a consistent set of data within a single 
+    /// request. This will also keep some state consistent throughout
+    /// the single request lifecycle but will not keep the state longer
+    /// than that.
     /// </summary>
     public class TokenHelper
     {
@@ -146,6 +152,7 @@ namespace Ezenity_Backend.Helpers
         public string RandomTokenString()
         {
             using var rngCryptoServiceProvider = new RNGCryptoServiceProvider();
+            //var test = new RandomNumberGenerator().Create();
             var randomBytes = new Byte[40];
             rngCryptoServiceProvider.GetBytes(randomBytes);
             // Convert random bytes to hex string

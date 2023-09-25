@@ -1,4 +1,6 @@
-﻿namespace Ezenity_Backend.Entities.Accounts
+﻿using System.Collections.Generic;
+
+namespace Ezenity_Backend.Entities.Accounts
 {
     /// <summary>
     /// Represents a role in the system.
@@ -14,5 +16,10 @@
         /// Gets or sets the name of the role.
         /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the asociated accounts with the specified Role
+        /// </summary>
+        public List<Account> Accounts { get; set; }
     }
 }
