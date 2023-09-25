@@ -10,7 +10,7 @@ namespace Ezenity_Backend.Models.Accounts
         /// <summary>
         /// Gets or sets the email for authentication.
         /// </summary>
-        [Required]
+        [Required(ErrorMessage = "An email is required.")]
         [EmailAddress]
         public string Email { get; set; }
 

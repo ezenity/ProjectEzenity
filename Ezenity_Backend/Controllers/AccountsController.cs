@@ -1,13 +1,13 @@
 ﻿using Ezenity_Backend.Attributes;
 using Ezenity_Backend.Entities.Accounts;
 using Ezenity_Backend.Filters;
-using Ezenity_Backend.Helpers;
 using Ezenity_Backend.Helpers.Exceptions;
 using Ezenity_Backend.Models;
 using Ezenity_Backend.Models.Accounts;
 using Ezenity_Backend.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -49,7 +49,7 @@ namespace Ezenity_Backend.Controllers
         public AccountsController(IAccountService accountService, ILogger<AccountsController> logger)
         {
             _accountService = accountService;
-            _logger = logger;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /*
@@ -80,6 +80,8 @@ namespace Ezenity_Backend.Controllers
 
                 if (account == null)
                 {
+                    _logger.LogInformation($"Account with id {id} wasn't found when accessing accounts.");
+
                     return NotFound(new ApiResponse<AccountResponse>
                     {
                         StatusCode = 404,
@@ -98,7 +100,7 @@ namespace Ezenity_Backend.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("[Error] Account fetched unsuccessfully: {0}", ex);
+                _logger.LogCritical("Account fetched unsuccessfully: {0}", ex);
 
                 return StatusCode(500, new ApiResponse<AccountResponse>
                 {
@@ -138,6 +140,8 @@ namespace Ezenity_Backend.Controllers
 
                 if (accounts == null)
                 {
+                    _logger.LogInformation("No accounts were found/");
+
                     return NotFound(new ApiResponse<AccountResponse>
                     {
                         StatusCode = 404,
@@ -249,6 +253,13 @@ namespace Ezenity_Backend.Controllers
         /// <exception cref="ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [AuthorizeV2]
+        [HttpPost(Name = "UpdateAccount")]
+        [RequestHeaderMatchesMediaType("Content-Type",
+            "application/json",
+            "application/ezenity.api.updateaccount+json")]
+        [Consumes(
+            "application/json",
+            "application/ezenity.api.updateaccount+json")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status404NotFound)]
@@ -347,23 +358,30 @@ namespace Ezenity_Backend.Controllers
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [Authorize(Policy = "RequireAdminRole")]
         [HttpPatch("{id:int}")]
+        [RequestHeaderMatchesMediaType("Content-Type",
+            "application/json",
+            "application/ezenity.api.updatepartialaccount+json")]
+        [Consumes(
+            "application/json",
+            "application/ezenity.api.updatepartialaccount+json")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
-        public async Task<ActionResult<ApiResponse<AccountResponse>>> UpdatePartialAsync(int id, UpdateAccountRequest model)
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<ActionResult<ApiResponse<AccountResponse>>> UpdatePartialAsync(int id, JsonPatchDocument<UpdateAccountRequest> model)
         {
             try
             {
-                var account = await _accountService.UpdateAsync(id, model);
+                //var account = await _accountService.UpdateAsync(id, model);
 
                 return Ok(new ApiResponse<AccountResponse>
                 {
                     StatusCode = 200,
                     IsSuccess = true,
-                    Data = account,
+                    //Data = account,
                     Message = "Account created successfully"
                 });
             }

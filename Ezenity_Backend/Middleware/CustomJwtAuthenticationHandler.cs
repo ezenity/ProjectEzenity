@@ -29,6 +29,7 @@ namespace Ezenity_Backend.Middleware
         /// Application settings for configuring JWT.
         /// </summary>
         private readonly AppSettings _appSettings;
+        private readonly DataContext _context;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CustomJwtAuthenticationHandler"/> class.
@@ -43,10 +44,12 @@ namespace Ezenity_Backend.Middleware
             IOptions<AppSettings> appSettings,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            ISystemClock clock)
+            ISystemClock clock,
+            DataContext context)
             : base(options, logger, encoder, clock)
         {
             _appSettings = appSettings.Value;
+            _context = context;
         }
 
         /// <summary>
@@ -106,9 +109,8 @@ namespace Ezenity_Backend.Middleware
 
         private async Task<Role> GetRoleByAccountIdAsync(int accountId)
         {
-            using var context = new DataContext();
-            var account = await context.Accounts.FindAsync(accountId);
-            return await context.Roles.FindAsync(account.Id);
+            var account = await _context.Accounts.FindAsync(accountId);
+            return await _context.Roles.FindAsync(account.Id);
         }
     }
 }
