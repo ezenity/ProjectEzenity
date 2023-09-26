@@ -188,7 +188,6 @@ namespace Ezenity_Backend.Controllers
         /// <response code="500">Returns if an internal server error occurs.</response>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [AuthorizeV2("Admin")]
-        [Consumes("application/json", "application/xml")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
@@ -253,7 +252,7 @@ namespace Ezenity_Backend.Controllers
         /// <exception cref="ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [AuthorizeV2]
-        [HttpPost(Name = "UpdateAccount")]
+        [HttpPatch(Name = "UpdateAccount")]
         [RequestHeaderMatchesMediaType("Content-Type",
             "application/json",
             "application/ezenity.api.updateaccount+json")]
@@ -359,10 +358,8 @@ namespace Ezenity_Backend.Controllers
         [Authorize(Policy = "RequireAdminRole")]
         [HttpPatch("{id:int}")]
         [RequestHeaderMatchesMediaType("Content-Type",
-            "application/json",
             "application/ezenity.api.updatepartialaccount+json")]
         [Consumes(
-            "application/json",
             "application/ezenity.api.updatepartialaccount+json")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status401Unauthorized)]

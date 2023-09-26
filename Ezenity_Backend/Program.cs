@@ -27,6 +27,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.StaticFiles;
 using Serilog;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -42,10 +43,12 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
     ContentRootPath = Directory.GetCurrentDirectory()
 });
 
+var environmentName = builder.Environment.EnvironmentName;
+
 if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production")
-    builder.Environment.EnvironmentName = Environments.Development;
+    environmentName = Environments.Development;
 else
-    builder.Environment.EnvironmentName = Environments.Production;
+    environmentName = Environments.Production;
 
 //builder.Logging.ClearProviders();
 /*builder.Logging.AddConfiguration(configuration.GetSection("Logging"));
@@ -67,7 +70,7 @@ var configuration = builder.Configuration;
 
 // Add configurations from appsettings.json, appsettings.Development.json, etc.
 configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+    .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
 
 // Add serices to the container
 var services = builder.Services;
@@ -127,6 +130,7 @@ services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionStr
 //
 // AddScope: Only one instance of the class is created in a given HTTP request (Last for whole HTTP request)
 // AddTransient: Generate a new instance of the class each time it is requested
+//      Good for lightwieght stateless services
 // AddSingleton: Geernate only one class instance for the lifetime of the whole app
 // configure Dependecy Injection for application services
 services.AddScoped<IAccountService, AccountService>();
@@ -138,10 +142,10 @@ services.AddScoped<IAuthService, AuthService>();
 services.AddScoped<LoadAccountFilter>();
 
 string secretKey;
-if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
-    secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? System.IO.File.ReadAllText("secret/file/location").Trim(); // TODO: Insert correct location once on server
-else
+if (builder.Environment.IsDevelopment())
     secretKey = configuration.GetSection("AppSettings")["Secret"];
+else
+    secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? System.IO.File.ReadAllText("./secret/key.txt").Trim(); // TODO: Insert correct location once on server
 
 services.AddScoped(sp => new TokenHelper(secretKey));
 services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -158,102 +162,95 @@ services.AddCors(options =>
     });
 });
 
-services.AddApiVersioning(setupAction =>
+if (builder.Environment.IsDevelopment())
 {
-    setupAction.AssumeDefaultVersionWhenUnspecified = true;
-    setupAction.DefaultApiVersion = new ApiVersion(1, 0);
-    setupAction.ReportApiVersions = true;
+    services.AddApiVersioning(setupAction =>
+    {
+        setupAction.AssumeDefaultVersionWhenUnspecified = true;
+        setupAction.DefaultApiVersion = new ApiVersion(1, 0);
+        setupAction.ReportApiVersions = true;
     //setupAction.ApiVersionReader = new HeaderApiVersionReader("api-version");
     //setupAction.ApiVersionReader = new MediaTypeApiVersionReader();
-});
+    });
 
-services.AddVersionedApiExplorer(setupAction =>
-{
-    setupAction.GroupNameFormat = "'v'VV";
-});
-
-var apiVersionDescriptionProvider = services.BuildServiceProvider().GetService<IApiVersionDescriptionProvider>();
-var logger = services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
-
-
-services.AddSwaggerGen(setupAction =>
-{
-    foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+    services.AddVersionedApiExplorer(setupAction =>
     {
-        setupAction.SwaggerDoc($"ProjectEzenityAPISpecs{description.GroupName}", new OpenApiInfo
-        {
-            Title = "Project Ezenity API",
-            Version = description.ApiVersion.ToString(),
-            Description = "Through this API you can access accounts, sections, roles, operations, and email templates.",
-            Contact = new()
-            {
-                Email = "anthonymmacallister@gmail.com",
-                Name = "Anthony MacAllister",
-                Url = new Uri("https://ezenity.com/")
-            },
-            License = new()
-            {
-                Name = "MIT License",
-                Url = new Uri("https://opensource.org/licenses/MIT")
-            }
-        });
-    }
+        setupAction.GroupNameFormat = "'v'VV";
+    });
 
-    setupAction.DocInclusionPredicate((documentName, apiDescription) =>
+    var apiVersionDescriptionProvider = services.BuildServiceProvider().GetRequiredService<IApiVersionDescriptionProvider>();
+    var logger = services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
+
+    services.AddSwaggerGen(setupAction =>
     {
-        var actionApiVersionModel = apiDescription.ActionDescriptor.GetApiVersionModel(ApiVersionMapping.Explicit | ApiVersionMapping.Implicit);
-
-        logger.LogInformation($"Evaluating API description for document: {documentName}");
-        logger.LogInformation($"ActionApiVersionModel: {actionApiVersionModel}");
-
-        if (actionApiVersionModel == null)
+        foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
         {
-            logger.LogInformation("ActionApiVersionModel is null. Including in document.");
-            return true;
+            setupAction.SwaggerDoc($"ProjectEzenityAPISpecs{description.GroupName}", new OpenApiInfo
+            {
+                Title = "Project Ezenity API",
+                Version = description.ApiVersion.ToString(),
+                Description = "Through this API you can access accounts, sections, roles, operations, and email templates.",
+                Contact = new()
+                {
+                    Email = "anthonymmacallister@gmail.com",
+                    Name = "Anthony MacAllister",
+                    Url = new Uri("https://ezenity.com/")
+                },
+                License = new()
+                {
+                    Name = "MIT License",
+                    Url = new Uri("https://opensource.org/licenses/MIT")
+                }
+            });
         }
 
-        if (actionApiVersionModel.DeclaredApiVersions.Any())
+        setupAction.DocInclusionPredicate((documentName, apiDescription) =>
         {
+            var actionApiVersionModel = apiDescription.ActionDescriptor.GetApiVersionModel(ApiVersionMapping.Explicit | ApiVersionMapping.Implicit);
+
+            logger.LogInformation($"Evaluating API description for document: {documentName}");
+            logger.LogInformation($"ActionApiVersionModel: {actionApiVersionModel}");
+
+            if (actionApiVersionModel == null)
+            {
+                logger.LogInformation("ActionApiVersionModel is null. Including in document.");
+                return true;
+            }
+
+            if (actionApiVersionModel.DeclaredApiVersions.Any())
+            {
             //var isIncluded = actionApiVersionModel.DeclaredApiVersions.Any(v => $"ProjectEzenityAPISpecs{v}" == documentName);
             var isIncluded = actionApiVersionModel.DeclaredApiVersions.Any(v => string.Equals($"ProjectEzenityAPISpecsv{v}", documentName, StringComparison.OrdinalIgnoreCase));
 
-            logger.LogInformation($"Is included in DeclaredApiVersions: {isIncluded}");
+                logger.LogInformation($"Is included in DeclaredApiVersions: {isIncluded}");
 
-            logger.LogInformation($"Document Name: {documentName}");
-            logger.LogInformation($"Declared API Versions: {string.Join(", ", actionApiVersionModel.DeclaredApiVersions.Select(v => v.ToString()))}");
+                logger.LogInformation($"Document Name: {documentName}");
+                logger.LogInformation($"Declared API Versions: {string.Join(", ", actionApiVersionModel.DeclaredApiVersions.Select(v => v.ToString()))}");
 
-            return isIncluded;
-        }
+                return isIncluded;
+            }
 
-        var isImplemented = actionApiVersionModel.ImplementedApiVersions.Any(v => $"ProjectEzenityAPISpecsv{v}" == documentName);
-        logger.LogInformation($"Is included in ImplementedApiVersions: {isImplemented}");
-        return isImplemented;
+            var isImplemented = actionApiVersionModel.ImplementedApiVersions.Any(v => $"ProjectEzenityAPISpecsv{v}" == documentName);
+            logger.LogInformation($"Is included in ImplementedApiVersions: {isImplemented}");
+            return isImplemented;
+        });
+
+        // Create Operational Filters
+        setupAction.OperationFilter<CreateEmailTemplateFilter>();
+        setupAction.OperationFilter<CreateSectionFilter>();
+
+        // Update Operational Filters
+        setupAction.OperationFilter<UpdateAccountFilter>();
+
+        // Get Operational Filters
+        setupAction.OperationFilter<GetEmailTemplateFilter>();
+
+        var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
+
+        setupAction.IncludeXmlComments(xmlCommentsFullPath);
     });
-
-    /*c.ResolveConflictingActions(apiDescription =>
-    {
-        return apiDescription.First(); // Not a good approach and leaves out second custom attribute
-
-        *//*var firstDescription = apiDescription.First();
-        var secondDescription = apiDescription.ElementAt(1);
-
-        firstDescription.SupportedResponseTypes.AddRange(
-            secondDescription.SupportedResponseTypes
-            .Where(a => a.StatusCode == 200));*//*
-    });*/
-
-    // Create opertional Filters
-    setupAction.OperationFilter<CreateEmailTemplateFilter>();
-    setupAction.OperationFilter<CreateSectionFilter>();
-
-    // Get Operational Filters
-    setupAction.OperationFilter<GetEmailTemplateFilter>();
-
-    var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
-
-    setupAction.IncludeXmlComments(xmlCommentsFullPath);
-});
+}
 
 services.AddSingleton<FileExtensionContentTypeProvider>();
 
@@ -269,34 +266,40 @@ services.AddAuthorization(options =>
     options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
 });
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 // Build the application
 var app = builder.Build();
 
-app.UseStaticFiles();
 
-// Generate swagger json and swagger ui middleware
-app.UseSwagger();
-app.UseSwaggerUI(setupAction =>
+if (app.Environment.IsDevelopment())
 {
-    foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+    var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
+    app.UseStaticFiles();
+
+    // Generate swagger json and swagger ui middleware
+    app.UseSwagger();
+    app.UseSwaggerUI(setupAction =>
     {
-        setupAction.SwaggerEndpoint(
-            $"/swagger/ProjectEzenityAPISpecs{description.GroupName}/swagger.json",
-            $"Project Ezenity API {description.GroupName.ToUpperInvariant()}");
-    }
+        foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+        {
+            setupAction.SwaggerEndpoint(
+                $"/swagger/ProjectEzenityAPISpecs{description.GroupName}/swagger.json",
+                $"Project Ezenity API {description.GroupName.ToUpperInvariant()}");
+        }
 
-    setupAction.DefaultModelExpandDepth(2);
-    setupAction.DefaultModelRendering(Swashbuckle.AspNetCore.SwaggerUI.ModelRendering.Model);
-    setupAction.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None); // Default = List
-    setupAction.EnableDeepLinking();
-    setupAction.DisplayOperationId();
+        setupAction.DefaultModelExpandDepth(2);
+        setupAction.DefaultModelRendering(Swashbuckle.AspNetCore.SwaggerUI.ModelRendering.Model);
+        setupAction.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None); // Default = List
+        setupAction.EnableDeepLinking();
+        setupAction.DisplayOperationId();
 
-    setupAction.InjectStylesheet("/assets/custom-ui.css");
+        setupAction.InjectStylesheet("/assets/custom-ui.css");
 
-    setupAction.RoutePrefix = String.Empty;
-});
+        setupAction.RoutePrefix = String.Empty;
+    });
+}
 
 // Global CORS policy
 app.UseCors("CorsPolicy");

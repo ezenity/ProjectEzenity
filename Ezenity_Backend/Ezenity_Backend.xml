@@ -1733,6 +1733,7 @@
             <param name="logger">The logger factory.</param>
             <param name="encoder">The URL encoder.</param>
             <param name="clock">The system clock.</param>
+            <param name="context">The data context for database operations.</param>
         </member>
         <member name="M:Ezenity_Backend.Middleware.CustomJwtAuthenticationHandler.HandleAuthenticateAsync">
             <summary>

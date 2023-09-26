@@ -55,7 +55,7 @@ namespace Ezenity_Backend.Controllers
         /// <param name="model">The update model containing the new data.</param>
         /// <returns>An action result containing an API response with the updated entity data.</returns>
         [AuthorizeV2]
-        [HttpPut("{id:int}")]
+        [HttpPatch("{id:int}")]
         public abstract Task<ActionResult<ApiResponse<TResponse>>> UpdateAsync(int id, TUpdateRequest model);
 
         /// <summary>
