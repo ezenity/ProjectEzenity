@@ -39,6 +39,7 @@ namespace Ezenity_Backend.Middleware
         /// <param name="logger">The logger factory.</param>
         /// <param name="encoder">The URL encoder.</param>
         /// <param name="clock">The system clock.</param>
+        /// <param name="context">The data context for database operations.</param>
         public CustomJwtAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             IOptions<AppSettings> appSettings,
