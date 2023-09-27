@@ -89,6 +89,7 @@ jobs:
       shell: bash
       run: |
         ls -al /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/
+        chmod +x /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/Ezenity_Frontend/frontendBuildscript.sh
         echo "Run, Build Frontend using script"
         /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/Ezenity_Frontend/frontendBuildscript.sh
       if: matrix.language == 'typescript'
