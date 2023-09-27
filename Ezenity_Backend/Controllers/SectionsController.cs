@@ -46,9 +46,9 @@ namespace Ezenity_Backend.Controllers
         /// <param name="logger">Logger instance for capturing runtime logs.</param>
         public SectionsController(ISectionService sectionService, IAccountService accountService, ILogger<SectionsController> logger)
         {
-            _sectionService = sectionService;
-            _accountService = accountService;
-            _logger = logger;
+            _sectionService = sectionService ?? throw new ArgumentNullException(nameof(logger));
+            _accountService = accountService ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace Ezenity_Backend.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<SectionResponse>>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
-        public override async Task<ActionResult<ApiResponse<IEnumerable<SectionResponse>>>> GetAllAsync()
+        public override async Task<ActionResult<ApiResponse<IEnumerable<SectionResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery)
         {
             //IApiResponse<ISectionResponse> apiResponse = new ApiResponse<ISectionResponse>();
             ApiResponse<IEnumerable<SectionResponse>> apiResponse = new ApiResponse<IEnumerable<SectionResponse>>();

@@ -39,6 +39,7 @@ namespace Ezenity_Backend.Middleware
         /// <param name="logger">The logger factory.</param>
         /// <param name="encoder">The URL encoder.</param>
         /// <param name="clock">The system clock.</param>
+        /// <param name="context">The data context for database operations.</param>
         public CustomJwtAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             IOptions<AppSettings> appSettings,
@@ -85,12 +86,12 @@ namespace Ezenity_Backend.Middleware
                 var jwtToken = (JwtSecurityToken) validatedToken;
                 var accountId = int.Parse(jwtToken.Claims.First(x => x.Type == "id").Value);
 
+
                 var role = await GetRoleByAccountIdAsync(accountId);
 
-                //var claims = new[] { new Claim(ClaimTypes.NameIdentifier, accountId.ToString()) };
                 var claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.NameIdentifier, accountId.ToString()),
+                    new Claim("id", accountId.ToString()),
                     new Claim(ClaimTypes.Role, role.Name)
                 };
 
@@ -114,3 +115,4 @@ namespace Ezenity_Backend.Middleware
         }
     }
 }
+

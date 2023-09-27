@@ -2,6 +2,7 @@
 using Ezenity_Backend.Entities.EmailTemplates;
 using Ezenity_Backend.Entities.Sections;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace Ezenity_Backend.Helpers
 {
@@ -164,6 +165,44 @@ namespace Ezenity_Backend.Helpers
             {
                 entity.ToTable("EmailTemplates");
                 entity.HasKey(x => x.Id);
+
+
+                entity.HasData(
+                    new EmailTemplate
+                    {
+                        Id = 1,
+                        TemplateName = "alreadyRegistered",
+                        Subject = "Email Already Registered",
+                        Content = "Hello firstNameValue, This email is already registered.",
+                        IsDefault = true,
+                        IsDynamic = true,
+                        StartDate = new DateTime(2023, 8, 18),
+                        PlaceholderValuesJson = "{\"firstNameValue\": \"\"}"
+                    },
+                    new EmailTemplate
+                    {
+                        Id = 2,
+                        TemplateName = "verification",
+                        Subject = "Email Verification",
+                        Content = "Hello firstNameValue, please verify your email here: verificationUrl",
+                        IsDefault = true,
+                        IsDynamic = true,
+                        StartDate = new DateTime(2023, 8, 18),
+                        EndDate = new DateTime(2024, 8, 18),
+                        PlaceholderValuesJson = "{\"firstNameValue\": \"\", \"verificationUrl\": \"http://localhost/account/verify-email?token={token}\"}"
+                    },
+                    new EmailTemplate
+                    {
+                        Id = 3,
+                        TemplateName = "passwordReset",
+                        Subject = "Forgot Password - Reset Password",
+                        Content = "Hello firstNameValue, <br>please verify your email here: verificationUrl",
+                        IsDefault = true,
+                        IsDynamic = true,
+                        StartDate = new DateTime(2023, 8, 18),
+                        EndDate = new DateTime(2024, 8, 18),
+                        PlaceholderValuesJson = "{\"firstNameValue\": \"\", \"resetUrl\": \"http://localhost/account/reset-password?token={token}\"}"
+                    });
             });
         }
 

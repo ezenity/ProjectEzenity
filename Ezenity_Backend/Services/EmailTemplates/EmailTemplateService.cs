@@ -154,6 +154,15 @@ namespace Ezenity_Backend.Services.EmailTemplates
             return _mapper.Map<IList<EmailTemplateResponse>>(emailTemplate);
         }
 
+        public async Task<IEnumerable<EmailTemplateResponse>> GetAllAsync(string? name, string? searchQuery)
+        {
+            var emailTemplate = await _context.EmailTemplates
+                                    .ProjectTo<EmailTemplateResponse>(_mapper.ConfigurationProvider)
+                                    .ToListAsync();
+
+            return _mapper.Map<IList<EmailTemplateResponse>>(emailTemplate);
+        }
+
         /// <summary>
         /// Updates an existing email template.
         /// </summary>

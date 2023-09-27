@@ -342,10 +342,35 @@ namespace Ezenity_Backend.Services.Accounts
         /// <returns>A list of all accounts.</returns>
         public async Task<IEnumerable<AccountResponse>> GetAllAsync()
         {
-            var accounts = await _context.Accounts
+            return await _context.Accounts
                                     .ProjectTo<AccountResponse>(_mapper.ConfigurationProvider)
                                     .ToListAsync();
-            return accounts;
+        }
+
+        public async Task<IEnumerable<AccountResponse>> GetAllAsync(string? name, string? searchQuery)
+        {
+            if(string.IsNullOrEmpty(name) && string.IsNullOrWhiteSpace(searchQuery))
+                return await GetAllAsync();
+
+            var collection = _context.Accounts as IQueryable<AccountResponse>;
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                name = name.Trim();
+                collection = collection.Where(c => c.FirstName == name || c.LastName == name);
+            }
+
+            // TOD: Add search function for Lucen
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                searchQuery = searchQuery.Trim();
+                collection = collection.Where(a => a.FirstName.Contains(searchQuery) || a.LastName.Contains(searchQuery) || (a.Email != null && a.Email.Contains(searchQuery)) );
+            }
+
+
+            return await _context.Accounts
+                                    .ProjectTo<AccountResponse>(_mapper.ConfigurationProvider)
+                                    .ToListAsync();
         }
 
         /// <summary>
@@ -435,6 +460,44 @@ namespace Ezenity_Backend.Services.Accounts
 
             return _mapper.Map<AccountResponse>(account);
         }
+
+        /*public async Task<AccountResponse> UpdatePartiallyAsync(int id, UpdateAccountRequest model)
+        {
+            int currentUserId = _authService.GetCurrentUserId();
+            bool isAdmin = _authService.IsCurrentUserAdmin();
+            var account = await GetAccountAsync(id);
+
+            if (account == null)
+                throw new ResourceNotFoundException($"Account with ID {id} not found.");
+
+            if (id != currentUserId || !isAdmin)
+                throw new AuthorizationException("Current user is not authorized.");
+
+            // Validate
+            if (account.Email != model.Email && await _context.Accounts.AnyAsync(x => x.Email == model.Email))
+                throw new ResourceAlreadyExistsException($"Email, '{model.Email}', is already taken");
+
+            // Hash password if it was entered
+            if (!string.IsNullOrEmpty(model.Password))
+                account.PasswordHash = BC.HashPassword(model.Password);
+
+            try
+            {
+                var updateAccountPatch = _mapper.Map<UpdateAccountRequest>(account);
+
+                //model.ApplyTo(updateAccountPatch, ModelState); // required microsoft.aspnetcore.mvc
+
+                var accountResponse = _mapper.Map(updateAccountPatch, account);
+
+                await _context.SaveChangesAsync();
+
+                return accountResponse;
+            }
+            catch (Exception ex)
+            {
+                throw new DataAccessException("An error occurred while updating the resource.", ex);
+            }
+        }*/
 
         /// <summary>
         /// Asynchronously deletes an account with the given ID.

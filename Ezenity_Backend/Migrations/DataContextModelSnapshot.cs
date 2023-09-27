@@ -176,6 +176,46 @@ namespace Ezenity_Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("EmailTemplates", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Content = "Hello firstNameValue, This email is already registered.",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDefault = true,
+                            IsDynamic = true,
+                            PlaceholderValuesJson = "{\"firstNameValue\":\"\"}",
+                            StartDate = new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Subject = "Email Already Registered",
+                            TemplateName = "alreadyRegistered"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Content = "Hello firstNameValue, please verify your email here: verificationUrl",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EndDate = new DateTime(2024, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDefault = true,
+                            IsDynamic = true,
+                            PlaceholderValuesJson = "{\"firstNameValue\":\"\",\"verificationUrl\":\"http://localhost/account/verify-email?token={token}\"}",
+                            StartDate = new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Subject = "Email Verification",
+                            TemplateName = "verification"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Content = "Hello firstNameValue, <br>please verify your email here: verificationUrl",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EndDate = new DateTime(2024, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDefault = true,
+                            IsDynamic = true,
+                            PlaceholderValuesJson = "{\"firstNameValue\":\"\",\"resetUrl\":\"http://localhost/account/reset-password?token={token}\"}",
+                            StartDate = new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Subject = "Forgot Password - Reset Password",
+                            TemplateName = "passwordReset"
+                        });
                 });
 
             modelBuilder.Entity("Ezenity_Backend.Entities.Sections.Section", b =>
