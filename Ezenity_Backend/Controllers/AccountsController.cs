@@ -132,11 +132,13 @@ namespace Ezenity_Backend.Controllers
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
-        public override async Task<ActionResult<ApiResponse<IEnumerable<AccountResponse>>>> GetAllAsync()
+        public override async Task<ActionResult<ApiResponse<IEnumerable<AccountResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery)
         {
             try
             {
-                var accounts = await _accountService.GetAllAsync();
+                //var accounts = await _accountService.GetAllAsync();
+                //var accounts = await _accountService.GetAllAsync(name);
+                var accounts = await _accountService.GetAllAsync(name, searchQuery);
 
                 if (accounts == null)
                 {

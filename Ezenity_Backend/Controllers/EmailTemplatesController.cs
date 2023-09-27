@@ -204,7 +204,7 @@ namespace Ezenity_Backend.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<EmailTemplateResponse>>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
-        public override async Task<ActionResult<ApiResponse<IEnumerable<EmailTemplateResponse>>>> GetAllAsync()
+        public override async Task<ActionResult<ApiResponse<IEnumerable<EmailTemplateResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery)
         {
             ApiResponse<IEnumerable<EmailTemplateResponse>> apiResponse = new ApiResponse<IEnumerable<EmailTemplateResponse>>();
 
