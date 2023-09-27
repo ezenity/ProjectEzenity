@@ -89,10 +89,12 @@ jobs:
       shell: bash
       run: |
         ls -al /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/
+        chmod +x /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/Ezenity_Frontend/frontendBuildscript.sh
+        cd /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/Ezenity_Frontend
         echo "Run, Build Frontend using script"
-        /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/Ezenity_Frontend/frontendBuildscript.sh
+        ./frontendBuildscript.sh
       if: matrix.language == 'typescript'
-      ###if: matrix.language == 'javascript'typescript
+      ###if: matrix.language == 'javascript'
 
 
     - name: Perform CodeQL Analysis
