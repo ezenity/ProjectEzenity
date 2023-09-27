@@ -86,12 +86,12 @@ namespace Ezenity_Backend.Middleware
                 var jwtToken = (JwtSecurityToken) validatedToken;
                 var accountId = int.Parse(jwtToken.Claims.First(x => x.Type == "id").Value);
 
+
                 var role = await GetRoleByAccountIdAsync(accountId);
 
-                //var claims = new[] { new Claim(ClaimTypes.NameIdentifier, accountId.ToString()) };
                 var claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.NameIdentifier, accountId.ToString()),
+                    new Claim("id", accountId.ToString()),
                     new Claim(ClaimTypes.Role, role.Name)
                 };
 
@@ -115,3 +115,4 @@ namespace Ezenity_Backend.Middleware
         }
     }
 }
+
