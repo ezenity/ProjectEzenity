@@ -109,7 +109,7 @@
             <response code="500">Returns if an internal server error occurs.</response>
             <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
         </member>
-        <member name="M:Ezenity_Backend.Controllers.AccountsController.GetAllAsync">
+        <member name="M:Ezenity_Backend.Controllers.AccountsController.GetAllAsync(System.String,System.String)">
             <summary>
             Fetches all accounts from the database asynchronously.
             </summary>
@@ -389,7 +389,7 @@
             <param name="id">The identifier of the entity to be retrieved.</param>
             <returns>An action result containing an API response with the entity data.</returns>
         </member>
-        <member name="M:Ezenity_Backend.Controllers.BaseController`5.GetAllAsync">
+        <member name="M:Ezenity_Backend.Controllers.BaseController`5.GetAllAsync(System.String,System.String)">
             <summary>
             Retrieves all entities. Access restricted to Admin role.
             </summary>
@@ -479,7 +479,7 @@
             <exception cref="T:Ezenity_Backend.Helpers.Exceptions.DeletionFailedException">Thrown when the deletion operation fails.</exception>
             <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
         </member>
-        <member name="M:Ezenity_Backend.Controllers.EmailTemplatesController.GetAllAsync">
+        <member name="M:Ezenity_Backend.Controllers.EmailTemplatesController.GetAllAsync(System.String,System.String)">
             <summary>
             Asynchronously fetches all email templates.
             </summary>
@@ -587,7 +587,7 @@
             <exception cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException">Thrown when the requested section is not found.</exception>
             <exception cref="T:System.Exception">Thrown for generic server errors.</exception>
         </member>
-        <member name="M:Ezenity_Backend.Controllers.SectionsController.GetAllAsync">
+        <member name="M:Ezenity_Backend.Controllers.SectionsController.GetAllAsync(System.String,System.String)">
             <summary>
             Fetches all sections asynchronously.
             </summary>
@@ -644,22 +644,22 @@
         </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.Account.Title">
             <summary>
-            Gets or sets the account title.
+            Gets the account title. Cannot be null after the object is constructed.
             </summary>
         </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.Account.FirstName">
             <summary>
-            Gets or sets the first name of the account holder.
+            Gets the first name of the account holder. Cannot be null after the object is constructed.
             </summary>
         </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.Account.LastName">
             <summary>
-            Gets or sets the last name of the account holder.
+            Gets the last name of the account holder. Cannot be null after the object is constructed.
             </summary>
         </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.Account.Email">
             <summary>
-            Gets or sets the email of the account holder.
+            Gets the email of the account holder. Cannot be null after the object is constructed.
             </summary>
         </member>
         <member name="P:Ezenity_Backend.Entities.Accounts.Account.PasswordHash">
@@ -733,6 +733,18 @@
             </summary>
             <param name="token">The token to check ownership of.</param>
             <returns>true if the account owns the token, false otherwise.</returns>
+        </member>
+        <member name="M:Ezenity_Backend.Entities.Accounts.Account.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity_Backend.Entities.Accounts.Account"/> class.
+            Validates that Title, FirstName, LastName, and Email are not null.
+            Throws an ArgumentNullException for any null arguments.
+            </summary>
+            <param name="title">The title of the account holder.</param>
+            <param name="firstName">The first name of the account holder.</param>
+            <param name="lastName">The last name of the account holder.</param>
+            <param name="email">The email of the account holder.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown if any argument is null.</exception>
         </member>
         <member name="T:Ezenity_Backend.Entities.Accounts.RefreshToken">
             <summary>
@@ -1721,6 +1733,7 @@
             <param name="logger">The logger factory.</param>
             <param name="encoder">The URL encoder.</param>
             <param name="clock">The system clock.</param>
+            <param name="context">The data context for database operations.</param>
         </member>
         <member name="M:Ezenity_Backend.Middleware.CustomJwtAuthenticationHandler.HandleAuthenticateAsync">
             <summary>

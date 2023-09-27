@@ -25,7 +25,7 @@ namespace Ezenity_Backend.Controllers
         /// <param name="config">The application's current configuration.</param>
         public OperationsController(IConfiguration config)
         {
-            _config = config;
+            _config = config ?? throw new ArgumentNullException(nameof(config));
         }
 
         /// <summary>

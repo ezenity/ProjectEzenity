@@ -74,7 +74,7 @@ namespace Ezenity_Backend.Helpers
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, accountId.ToString())
+                new Claim("id", accountId.ToString())
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor

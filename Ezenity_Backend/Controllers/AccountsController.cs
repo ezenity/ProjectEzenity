@@ -48,7 +48,7 @@ namespace Ezenity_Backend.Controllers
         /// <param name="logger">The logger used for logging any events in this class.</param>
         public AccountsController(IAccountService accountService, ILogger<AccountsController> logger)
         {
-            _accountService = accountService;
+            _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -132,11 +132,13 @@ namespace Ezenity_Backend.Controllers
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
-        public override async Task<ActionResult<ApiResponse<IEnumerable<AccountResponse>>>> GetAllAsync()
+        public override async Task<ActionResult<ApiResponse<IEnumerable<AccountResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery)
         {
             try
             {
-                var accounts = await _accountService.GetAllAsync();
+                //var accounts = await _accountService.GetAllAsync();
+                //var accounts = await _accountService.GetAllAsync(name);
+                var accounts = await _accountService.GetAllAsync(name, searchQuery);
 
                 if (accounts == null)
                 {
@@ -188,7 +190,6 @@ namespace Ezenity_Backend.Controllers
         /// <response code="500">Returns if an internal server error occurs.</response>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [AuthorizeV2("Admin")]
-        [Consumes("application/json", "application/xml")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
@@ -253,7 +254,7 @@ namespace Ezenity_Backend.Controllers
         /// <exception cref="ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [AuthorizeV2]
-        [HttpPost(Name = "UpdateAccount")]
+        [HttpPatch(Name = "UpdateAccount")]
         [RequestHeaderMatchesMediaType("Content-Type",
             "application/json",
             "application/ezenity.api.updateaccount+json")]
@@ -359,10 +360,8 @@ namespace Ezenity_Backend.Controllers
         [Authorize(Policy = "RequireAdminRole")]
         [HttpPatch("{id:int}")]
         [RequestHeaderMatchesMediaType("Content-Type",
-            "application/json",
             "application/ezenity.api.updatepartialaccount+json")]
         [Consumes(
-            "application/json",
             "application/ezenity.api.updatepartialaccount+json")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status401Unauthorized)]

@@ -155,6 +155,13 @@ namespace Ezenity_Backend.Services.Sections
             return _mapper.Map<IList<SectionResponse>>(sections);
         }
 
+
+        public async Task<IEnumerable<SectionResponse>> GetAllAsync(string? name, string? searchQuery)
+        {
+            var sections = await _context.Sections.ToListAsync();
+            return _mapper.Map<IList<SectionResponse>>(sections);
+        }
+
         /// <summary>
         /// Updates an existing section.
         /// </summary>

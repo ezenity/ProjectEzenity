@@ -45,6 +45,8 @@ namespace Ezenity_Backend.Services
         /// </summary>
         public abstract Task<IEnumerable<TResponse>> GetAllAsync();
 
+        public abstract Task<IEnumerable<TResponse>> GetAllAsync(string? name, string? searchQuery);
+
         /// <summary>
         /// Gets an entity by its ID.
         /// </summary>

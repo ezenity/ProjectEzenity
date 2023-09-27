@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Ezenity_Backend.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class initialCreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -123,6 +123,21 @@ namespace Ezenity_Backend.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.InsertData(
+                table: "EmailTemplates",
+                columns: new[] { "Id", "Content", "CreatedAt", "EndDate", "IsDefault", "IsDynamic", "PlaceholderValuesJson", "StartDate", "Subject", "TemplateName", "UpdatedAt" },
+                values: new object[] { 1, "Hello firstNameValue, This email is already registered.", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, true, true, "{\"firstNameValue\":\"\"}", new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), "Email Already Registered", "alreadyRegistered", null });
+
+            migrationBuilder.InsertData(
+                table: "EmailTemplates",
+                columns: new[] { "Id", "Content", "CreatedAt", "EndDate", "IsDefault", "IsDynamic", "PlaceholderValuesJson", "StartDate", "Subject", "TemplateName", "UpdatedAt" },
+                values: new object[] { 2, "Hello firstNameValue, please verify your email here: verificationUrl", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2024, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), true, true, "{\"firstNameValue\":\"\",\"verificationUrl\":\"http://localhost/account/verify-email?token={token}\"}", new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), "Email Verification", "verification", null });
+
+            migrationBuilder.InsertData(
+                table: "EmailTemplates",
+                columns: new[] { "Id", "Content", "CreatedAt", "EndDate", "IsDefault", "IsDynamic", "PlaceholderValuesJson", "StartDate", "Subject", "TemplateName", "UpdatedAt" },
+                values: new object[] { 3, "Hello firstNameValue, <br>please verify your email here: verificationUrl", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2024, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), true, true, "{\"firstNameValue\":\"\",\"resetUrl\":\"http://localhost/account/reset-password?token={token}\"}", new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), "Forgot Password - Reset Password", "passwordReset", null });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Accounts_RoleId",

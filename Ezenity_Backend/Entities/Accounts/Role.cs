@@ -20,6 +20,6 @@ namespace Ezenity_Backend.Entities.Accounts
         /// <summary>
         /// Gets or sets the asociated accounts with the specified Role
         /// </summary>
-        public List<Account> Accounts { get; set; }
+        public List<Account> Accounts { get; set; } = new List<Account>();
     }
 }
