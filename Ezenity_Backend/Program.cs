@@ -122,6 +122,7 @@ services.Configure<MvcOptions>(options =>
 // Configure stringly typed settings objects
 services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
 
+// TODO: Add support for Azure Kay Vault
 var connectionString = configuration.GetConnectionString("WebApiDatabase");
 services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
 
@@ -325,11 +326,11 @@ app.UseEndpoints(
 // Migrate any database changes on startup (includes initial db creation)
 // Ensure to be used only for development. For production, run migrations 
 // manually incase of breaking changes in the database schema.
-/*if(app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
     dataContext.Database.Migrate();
-}*/
+}
 
 app.Run();
