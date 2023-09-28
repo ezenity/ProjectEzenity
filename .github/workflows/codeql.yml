@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'csharp', 'typescript' ]
+        language: [ 'csharp', 'javascript' ]
         # ###language: [ 'csharp', 'javascript' ]
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby', 'swift' ]
         # Use only 'java' to analyze code written in Java, Kotlin or both
@@ -93,8 +93,8 @@ jobs:
         cd /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/Ezenity_Frontend
         echo "Run, Build Frontend using script"
         ./frontendBuildscript.sh
-      if: matrix.language == 'typescript'
-      ###if: matrix.language == 'javascript'
+      ###if: matrix.language == 'typescript'
+      if: matrix.language == 'javascript'
 
 
     - name: Perform CodeQL Analysis
