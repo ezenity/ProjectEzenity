@@ -15,22 +15,22 @@ namespace Ezenity_Backend.Models.Accounts
         /// <summary>
         /// Gets or sets the title for the account holder.
         /// </summary>
-        public string Title { get; set; }
+        public string Title { get; private set; }
 
         /// <summary>
         /// Gets or sets the first name of the account holder.
         /// </summary>
-        public string FirstName { get; set; }
+        public string FirstName { get; private set; }
 
         /// <summary>
         /// Gets or sets the last name of the account holder.
         /// </summary>
-        public string LastName { get; set; }
+        public string LastName { get; private set; }
 
         /// <summary>
         /// Gets or sets the email of the account holder.
         /// </summary>
-        public string Email { get; set; }
+        public string Email { get; private set; }
 
         /// <summary>
         /// Gets or sets the role of the account holder.
@@ -51,5 +51,13 @@ namespace Ezenity_Backend.Models.Accounts
         /// Gets or sets a value indicating whether the email is verified.
         /// </summary>
         public bool IsVerified { get; set; }
+
+        public AccountResponse(string title, string firstName, string lastName, string email)
+        {
+            Title = title ?? throw new ArgumentNullException(nameof(title), "Title cannot be null");
+            FirstName = firstName ?? throw new ArgumentNullException(nameof(firstName), "First name cannot be null");
+            LastName = lastName ?? throw new ArgumentNullException(nameof(lastName), "Last name cannot be null");
+            Email = email ?? throw new ArgumentNullException(nameof(email), "Email cannot be null");
+        }
     }
 }

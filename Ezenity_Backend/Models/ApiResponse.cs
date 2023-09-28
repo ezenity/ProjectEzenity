@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Ezenity_Backend.Models.Pages;
+using System.Collections.Generic;
 
 namespace Ezenity_Backend.Models
 {
@@ -27,6 +28,8 @@ namespace Ezenity_Backend.Models
         /// Gets or sets the actual data payload returned by the API operation. This property can be null if the operation was unsuccessful.
         /// </summary>
         public T Data { get; set; }
+
+        public PaginationMetadata Pagination { get; set; }
 
         /// <summary>
         /// Gets or sets a list of errors that occurred during the API operation. This list is typically populated when the IsSuccess property is set to false.

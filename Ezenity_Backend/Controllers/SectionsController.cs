@@ -99,6 +99,8 @@ namespace Ezenity_Backend.Controllers
             }
         }
 
+        const int maxSectionsPageSize = 20;
+
         /// <summary>
         /// Fetches all sections asynchronously.
         /// </summary>
@@ -107,10 +109,13 @@ namespace Ezenity_Backend.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<SectionResponse>>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
-        public override async Task<ActionResult<ApiResponse<IEnumerable<SectionResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery)
+        public override async Task<ActionResult<ApiResponse<IEnumerable<SectionResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery, int pageNumber, int pageSize = 10)
         {
             //IApiResponse<ISectionResponse> apiResponse = new ApiResponse<ISectionResponse>();
             ApiResponse<IEnumerable<SectionResponse>> apiResponse = new ApiResponse<IEnumerable<SectionResponse>>();
+
+            if(pageSize > maxSectionsPageSize)
+                pageSize = maxSectionsPageSize;
 
 
             try

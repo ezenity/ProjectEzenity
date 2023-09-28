@@ -15,6 +15,7 @@ using Ezenity_Backend.Entities.Accounts;
 using Ezenity_Backend.Helpers.Exceptions;
 using Ezenity_Backend.Models;
 using Ezenity_Backend.Models.Accounts;
+using Ezenity_Backend.Models.Pages;
 
 namespace Ezenity_Backend.Services.Accounts
 {
@@ -347,12 +348,38 @@ namespace Ezenity_Backend.Services.Accounts
                                     .ToListAsync();
         }
 
-        public async Task<IEnumerable<AccountResponse>> GetAllAsync(string? name, string? searchQuery)
+        /// <summary>
+        /// Asynchronously retrieves a paginated list of accounts based on the given filtering and pagination parameters.
+        /// </summary>
+        /// <param name="name">Optional filter to match accounts with the given first name or last name. It is case-sensitive. Pass null to ignore this filter</param>
+        /// <param name="searchQuery">Optional search query to filter accounts based on partial matches in their first name, last name, or email. Pass null to ignore this filter</param>
+        /// <param name="pageNumber">The page number for pagination, starting from 1.</param>
+        /// <param name="pageSize">The number of records to be returned per page.</param>
+        /// <returns>
+        /// A Task representing the asynchronous operation, containing a <see cref="PagedResult{AccountResponse}"/> with the filtered and paginated list of accounts.
+        /// </returns>
+        /// <exception cref="AppException">Thrown when the page number or page size is less than 1.</exception>
+        /// <exception cref="AppException">Thrown when there is an error during data retrieval.</exception>
+        /// <remarks>
+        /// This method performs the following:
+        ///     1. Filters accounts based on the optional 'name' and 'searchQuery' parameters.
+        ///     2. Counts the total number of items that match the filters, for pagination metadata.
+        ///     3. Sorts the filtered accounts by their last name.
+        ///     4. Applies pagination by skipping records based on 'pageNumber' and 'pageSize'.
+        ///     5. Projects the resulting IQueryable Account to a list of AccountResponse objects using AutoMapper.
+        ///     6. Creates and populates the pagination metadata.
+        ///     7. Returns the paged list of AccountResponse objects along with pagination metadata.
+        /// </remarks>
+        public async Task<PagedResult<AccountResponse>> GetAllAsync(string? name, string? searchQuery, int pageNumber, int pageSize)
         {
-            if(string.IsNullOrEmpty(name) && string.IsNullOrWhiteSpace(searchQuery))
-                return await GetAllAsync();
+            if (pageNumber < 1 || pageSize < 1)
+            {
+                _logger.LogError("[ERROR] The Page Size or Page Number was less than zero.");
+                throw new AppException("PagedResult number and page size mut be greater than zero.");
+            }
 
-            var collection = _context.Accounts as IQueryable<AccountResponse>;
+            //var collection = _context.Accounts as IQueryable<AccountResponse>;
+            var collection = _context.Accounts.Include(a => a.Role).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(name))
             {
@@ -367,10 +394,34 @@ namespace Ezenity_Backend.Services.Accounts
                 collection = collection.Where(a => a.FirstName.Contains(searchQuery) || a.LastName.Contains(searchQuery) || (a.Email != null && a.Email.Contains(searchQuery)) );
             }
 
+            try
+            {
+                // For pagination metadata
+                var totalItemCount = await collection.CountAsync();
 
-            return await _context.Accounts
+                var data = await collection
+                                    .OrderBy(a => a.LastName)
+                                    .Skip(pageSize * (pageNumber - 1))
+                                    .Take(pageSize)
                                     .ProjectTo<AccountResponse>(_mapper.ConfigurationProvider)
                                     .ToListAsync();
+
+                // Create and populate the pagination metadata
+                var paginationMetadata = new PaginationMetadata(totalItemCount, pageSize, pageNumber);
+
+                var result = new PagedResult<AccountResponse>
+                {
+                    Data = data,
+                    Pagination = paginationMetadata
+                };
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical("[ERROR] There was an issue with fetching the list of accounts.");
+                throw new AppException("An error occurred while fetching accounts.", ex);
+            }
         }
 
         /// <summary>
