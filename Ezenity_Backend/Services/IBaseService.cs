@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Ezenity_Backend.Models.Pages;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Services
@@ -13,7 +14,7 @@ namespace Ezenity_Backend.Services
         /// Gets all entities.
         /// </summary>
         Task<IEnumerable<TResponse>> GetAllAsync();
-        Task<IEnumerable<TResponse>> GetAllAsync(string? name, string? searchQuery);
+        Task<PagedResult<TResponse>> GetAllAsync(string? name, string? searchQuery, int pageNumber, int pageSize);
 
         /// <summary>
         /// Gets an entity by its ID.

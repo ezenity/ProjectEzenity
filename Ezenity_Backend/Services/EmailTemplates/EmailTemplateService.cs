@@ -5,6 +5,7 @@ using Ezenity_Backend.Helpers;
 using Ezenity_Backend.Helpers.Exceptions;
 using Ezenity_Backend.Models;
 using Ezenity_Backend.Models.EmailTemplates;
+using Ezenity_Backend.Models.Pages;
 using Ezenity_Backend.Services.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -154,13 +155,9 @@ namespace Ezenity_Backend.Services.EmailTemplates
             return _mapper.Map<IList<EmailTemplateResponse>>(emailTemplate);
         }
 
-        public async Task<IEnumerable<EmailTemplateResponse>> GetAllAsync(string? name, string? searchQuery)
+        public async Task<PagedResult<EmailTemplateResponse>> GetAllAsync(string? name, string? searchQuery, int pageNumber, int pageSize)
         {
-            var emailTemplate = await _context.EmailTemplates
-                                    .ProjectTo<EmailTemplateResponse>(_mapper.ConfigurationProvider)
-                                    .ToListAsync();
-
-            return _mapper.Map<IList<EmailTemplateResponse>>(emailTemplate);
+            throw new NotImplementedException();
         }
 
         /// <summary>

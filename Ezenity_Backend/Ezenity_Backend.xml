@@ -109,7 +109,7 @@
             <response code="500">Returns if an internal server error occurs.</response>
             <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
         </member>
-        <member name="M:Ezenity_Backend.Controllers.AccountsController.GetAllAsync(System.String,System.String)">
+        <member name="M:Ezenity_Backend.Controllers.AccountsController.GetAllAsync(System.String,System.String,System.Int32,System.Int32)">
             <summary>
             Fetches all accounts from the database asynchronously.
             </summary>
@@ -389,7 +389,7 @@
             <param name="id">The identifier of the entity to be retrieved.</param>
             <returns>An action result containing an API response with the entity data.</returns>
         </member>
-        <member name="M:Ezenity_Backend.Controllers.BaseController`5.GetAllAsync(System.String,System.String)">
+        <member name="M:Ezenity_Backend.Controllers.BaseController`5.GetAllAsync(System.String,System.String,System.Int32,System.Int32)">
             <summary>
             Retrieves all entities. Access restricted to Admin role.
             </summary>
@@ -479,7 +479,7 @@
             <exception cref="T:Ezenity_Backend.Helpers.Exceptions.DeletionFailedException">Thrown when the deletion operation fails.</exception>
             <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
         </member>
-        <member name="M:Ezenity_Backend.Controllers.EmailTemplatesController.GetAllAsync(System.String,System.String)">
+        <member name="M:Ezenity_Backend.Controllers.EmailTemplatesController.GetAllAsync(System.String,System.String,System.Int32,System.Int32)">
             <summary>
             Asynchronously fetches all email templates.
             </summary>
@@ -587,7 +587,7 @@
             <exception cref="T:Ezenity_Backend.Helpers.Exceptions.ResourceNotFoundException">Thrown when the requested section is not found.</exception>
             <exception cref="T:System.Exception">Thrown for generic server errors.</exception>
         </member>
-        <member name="M:Ezenity_Backend.Controllers.SectionsController.GetAllAsync(System.String,System.String)">
+        <member name="M:Ezenity_Backend.Controllers.SectionsController.GetAllAsync(System.String,System.String,System.Int32,System.Int32)">
             <summary>
             Fetches all sections asynchronously.
             </summary>
@@ -2616,6 +2616,30 @@
             Retrieves all accounts.
             </summary>
             <returns>A list of all accounts.</returns>
+        </member>
+        <member name="M:Ezenity_Backend.Services.Accounts.AccountService.GetAllAsync(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Asynchronously retrieves a paginated list of accounts based on the given filtering and pagination parameters.
+            </summary>
+            <param name="name">Optional filter to match accounts with the given first name or last name. It is case-sensitive. Pass null to ignore this filter</param>
+            <param name="searchQuery">Optional search query to filter accounts based on partial matches in their first name, last name, or email. Pass null to ignore this filter</param>
+            <param name="pageNumber">The page number for pagination, starting from 1.</param>
+            <param name="pageSize">The number of records to be returned per page.</param>
+            <returns>
+            A Task representing the asynchronous operation, containing a <see cref="T:Ezenity_Backend.Models.Pages.PagedResult`1"/> with the filtered and paginated list of accounts.
+            </returns>
+            <exception cref="T:Ezenity_Backend.Helpers.Exceptions.AppException">Thrown when the page number or page size is less than 1.</exception>
+            <exception cref="T:Ezenity_Backend.Helpers.Exceptions.AppException">Thrown when there is an error during data retrieval.</exception>
+            <remarks>
+            This method performs the following:
+                1. Filters accounts based on the optional 'name' and 'searchQuery' parameters.
+                2. Counts the total number of items that match the filters, for pagination metadata.
+                3. Sorts the filtered accounts by their last name.
+                4. Applies pagination by skipping records based on 'pageNumber' and 'pageSize'.
+                5. Projects the resulting IQueryable Account to a list of AccountResponse objects using AutoMapper.
+                6. Creates and populates the pagination metadata.
+                7. Returns the paged list of AccountResponse objects along with pagination metadata.
+            </remarks>
         </member>
         <member name="M:Ezenity_Backend.Services.Accounts.AccountService.GetByIdAsync(System.Int32)">
             <summary>
