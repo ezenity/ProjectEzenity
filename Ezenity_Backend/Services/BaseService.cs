@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Ezenity_Backend.Helpers;
+using Ezenity_Backend.Models.Pages;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ namespace Ezenity_Backend.Services
         /// </summary>
         public abstract Task<IEnumerable<TResponse>> GetAllAsync();
 
-        public abstract Task<IEnumerable<TResponse>> GetAllAsync(string? name, string? searchQuery);
+        public abstract Task<PagedResult<TResponse>> GetAllAsync(string? name, string? searchQuery, int pageNumber, int pageSize);
 
         /// <summary>
         /// Gets an entity by its ID.

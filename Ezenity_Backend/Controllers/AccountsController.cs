@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Ezenity_Backend.Controllers
@@ -111,6 +113,8 @@ namespace Ezenity_Backend.Controllers
             }
         }
 
+        const int maxAccountsPageSize = 20;
+
         /// <summary>
         /// Fetches all accounts from the database asynchronously.
         /// </summary>
@@ -132,15 +136,23 @@ namespace Ezenity_Backend.Controllers
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
-        public override async Task<ActionResult<ApiResponse<IEnumerable<AccountResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery)
+        public override async Task<ActionResult<ApiResponse<IEnumerable<AccountResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery, int pageNumber, int pageSize = 10)
         {
+            if(pageSize > maxAccountsPageSize)
+                pageSize = maxAccountsPageSize;
+
             try
             {
                 //var accounts = await _accountService.GetAllAsync();
                 //var accounts = await _accountService.GetAllAsync(name);
-                var accounts = await _accountService.GetAllAsync(name, searchQuery);
+                //var accounts = await _accountService.GetAllAsync(name, searchQuery);
+                //var accounts = await _accountService.GetAllAsync(name, searchQuery, pageNumber, pageSize);
 
-                if (accounts == null)
+                var pagedResult = await _accountService.GetAllAsync(name, searchQuery, pageNumber, pageSize);
+                var accountData = pagedResult.Data;
+                var paginationMetaData = pagedResult.Pagination;
+
+                if (accountData == null)
                 {
                     _logger.LogInformation("No accounts were found/");
 
@@ -152,11 +164,15 @@ namespace Ezenity_Backend.Controllers
                     });
                 }
 
-                return Ok(new ApiResponse<AccountResponse>
+                Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetaData));
+
+                return Ok(new ApiResponse<IEnumerable<AccountResponse>>
                 {
                     StatusCode = 200,
                     IsSuccess = true,
-                    Message = "Accounts fetched successfully"
+                    Message = "Accounts fetched successfully",
+                    Data = accountData,
+                    Pagination = paginationMetaData
                 });
             }
             catch (Exception ex)

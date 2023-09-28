@@ -195,6 +195,7 @@ namespace Ezenity_Backend.Controllers
             }
 
         }
+        const int maxEmailTemplatesPageSize = 20;
 
         /// <summary>
         /// Asynchronously fetches all email templates.
@@ -204,9 +205,12 @@ namespace Ezenity_Backend.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<EmailTemplateResponse>>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
-        public override async Task<ActionResult<ApiResponse<IEnumerable<EmailTemplateResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery)
+        public override async Task<ActionResult<ApiResponse<IEnumerable<EmailTemplateResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery, int pageNumber, int pageSize = 10)
         {
             ApiResponse<IEnumerable<EmailTemplateResponse>> apiResponse = new ApiResponse<IEnumerable<EmailTemplateResponse>>();
+
+            if(pageSize > maxEmailTemplatesPageSize)
+                pageSize = maxEmailTemplatesPageSize;
 
             try
             {

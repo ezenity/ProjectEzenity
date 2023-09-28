@@ -5,6 +5,7 @@ using Ezenity_Backend.Entities.Sections;
 using Ezenity_Backend.Models.Accounts;
 using Ezenity_Backend.Models.EmailTemplates;
 using Ezenity_Backend.Models.Sections;
+using System;
 
 namespace Ezenity_Backend.Helpers
 {
@@ -21,7 +22,9 @@ namespace Ezenity_Backend.Helpers
         {
             // Accounts
             //  - Configures the mappings for Account-related objects.
-            CreateMap<Account, AccountResponse>();
+            CreateMap<Account, AccountResponse>()
+                //.ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.Name != null ? src.Role.Name : null));
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.Name));
             CreateMap<Account, AuthenticateResponse>();
             CreateMap<RegisterRequest, Account>();
             CreateMap<CreateAccountRequest, Account>();

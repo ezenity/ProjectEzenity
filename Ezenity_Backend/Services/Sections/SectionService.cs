@@ -3,6 +3,7 @@ using Ezenity_Backend.Entities.Sections;
 using Ezenity_Backend.Helpers;
 using Ezenity_Backend.Helpers.Exceptions;
 using Ezenity_Backend.Models;
+using Ezenity_Backend.Models.Pages;
 using Ezenity_Backend.Models.Sections;
 using Ezenity_Backend.Services.Common;
 using Microsoft.EntityFrameworkCore;
@@ -156,10 +157,9 @@ namespace Ezenity_Backend.Services.Sections
         }
 
 
-        public async Task<IEnumerable<SectionResponse>> GetAllAsync(string? name, string? searchQuery)
+        public async Task<PagedResult<SectionResponse>> GetAllAsync(string? name, string? searchQuery, int pageNumber, int pageSize)
         {
-            var sections = await _context.Sections.ToListAsync();
-            return _mapper.Map<IList<SectionResponse>>(sections);
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -200,6 +200,5 @@ namespace Ezenity_Backend.Services.Sections
                 throw new KeyNotFoundException("Section not found");
             return section;
         }
-
     }
 }
