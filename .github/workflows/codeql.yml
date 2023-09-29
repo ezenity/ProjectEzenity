@@ -91,7 +91,7 @@ jobs:
         ls -al /home/runner/work/ProjectEzenity/ProjectEzenity/
         chmod +x /home/runner/work/ProjectEzenity/ProjectEzenity/Ezenity_Frontend.Buildscript.sh
         echo "Run, Build Frontend using script"
-        cd /home/runner/work/ProjectEzenity/ProjectEzenity/Ezenity_Frontend.Buildscript.sh
+        /home/runner/work/ProjectEzenity/ProjectEzenity/Ezenity_Frontend.Buildscript.sh
       if: matrix.language == 'javascript'
 
 
