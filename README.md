@@ -1,12 +1,14 @@
 ## Table of Contents
-- [Backend API](#backend-api)
+- [Project Ezenity](#project-ezenity)
   - [Introduction](#introduction)
+  - [Architecture](#architecture)
   - [Features](#features)
-  - [Technologies Used](technologies-used)
+  - [Technologies Used](#technologies-used)
   - [Security](#security)
     - [SHA-512 Encryption](#sha-512-encryption)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
+  - [Database Migrations](#database-migrations)
   - [Configuration](#configuration)
   - [Usage](#usage)
     - [API Documentation](#api-documentation)
@@ -14,11 +16,11 @@
     - [Database Operations](#database-operations)
     - [Logging](#logging)
     - [Testing](#testing)
-  - [Future Enhancments](#future-enhancements)
+  - [Future Enhancements](#future-enhancements)
 - [Frontend](#frontend)
   - [Introduction](#introduction-1)
   - [Features](#features-1)
-  - [Technologies Used](technologies-used-1)
+  - [Technologies Used](#technologies-used-1)
   - [Installation](#installation-1)
   - [Configuration](#configuration-1)
   - [Usage](#usage-1)
@@ -26,11 +28,22 @@
 - [License](#license)
 ---
 
-# Backend API
+# Project Ezenity
 
 ### Introduction
 
-The Ezenity Backend API serves as a versatile backend for any frontend technology that can plug into it. It offers a range of features from account creation and management to customizable profiles and sections. The API is designed to be flexible, allowing for various use-cases including basic portfolio frontends.
+The Ezenity.API serves as a versatile backend for any frontend technology that can plug into it. It offers a range of features from account creation and management to customizable profiles and sections. The API is designed to be flexible, allowing for various use-cases including basic portfolio frontends.
+
+### Architecture
+
+The backend is organized into multiple class libraries, following the Clean Architecture pattern:
+
+- `Ezenity.API`: The API layer that exposes endpoints.
+- `Ezenity.Core`: Contains entities and core business logic.
+- `Ezenity.Infrastructure`: Houses the data access logic and other infrastructural concerns.
+- `Ezenity.DTOs`: Data Transfer Objects for communication between layers.
+
+The solution is housed under the name `ProjectEzenity` (Previously known as `Ezenity_VPN_Server`).
 
 ### Features
 
@@ -68,25 +81,41 @@ The application uses SHA-512 for enhanced security in JWT token handling and oth
 > Note: Default email templates and an admin account for basic functions will be available in a future release.
 
 1. Clone the repository:
+    ```bash
+    git clone https://github.com/ezenity/ProjectEzenity.git
     ```
-    git clone https://github.com/ezenity/Ezenity_VPN_Server.git
-    ```
-2. Navigate to the `Ezenity_Backend` folder:
-    ```
-    cd Ezenity_VPN_Server/Ezenity_Backend
+2. Navigate to the `ProjectEzenity` folder:
+    ```bash
+    cd ProjectEzenity/Ezenity.API
     ```
 3. Restore the NuGet packages:
-    ```
+    ```bash
     dotnet restore
     ```
 4. Build the project:
-    ```
+    ```bash
     dotnet build
     ```
 5. Run the project:
-    ```
+    ```bash
     dotnet run
     ```
+ 
+### Database Migrations 
+
+1. Navigate to Ezenity.API Project
+    ```bash
+    cd ProjectEzenity/Ezenity.API
+    ```
+2. Run the following command to create a new migration:
+    ```bash
+    dotnet ef migrations add InitialCreate --startup-project ../Ezenity.API --project ../Ezenity.Infrastructure --namespace Ezenity.Infrastructure.Data.Migrations
+    ```
+3. To apply the migration and update the database, run:
+    ```bash
+    dotnet ef database update --startup-project ../Ezenity.API --project ../Ezenity.Infrastructure
+    ```
+
 ### Configuration
 - **AppSettings**: Description of the properties in `appsettings.json` and their functions.
 - **Environment Variables**: You'll want to setup a **SECRET_KEY** or a file containing the Secret Key.
@@ -128,7 +157,7 @@ The Ezenity Frontend serves two main purposes:
 - to showcase the capabilities of the Ezenity Backend API
 - To act as a personal website.
 
-The project is in its early beta stages and is designed to be modular, configurable, and customizable.
+The project is in its early beta stages and is designed to be modular, configurable, and customizable. Future versions will include `Ezenity.React`, `Ezenity.Angular`, and potentially other frontend technologies.
 
 ### Features
 

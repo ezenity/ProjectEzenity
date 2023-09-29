@@ -77,23 +77,21 @@ jobs:
     #     echo "Run, Build Application using script"
     #     ./location_of_script_within_repo/buildscript.sh
 
-    - name: Run Backend Build Script
+    - name: Run Ezenity API Build Script
       shell: bash
       run: |
-        ls -al /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/
+        ls -al /home/runner/work/ProjectEzenity/ProjectEzenity/
         echo "Run, Build Backend using script"
-        /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/backendBuildscript.sh
+        /home/runner/work/ProjectEzenity/ProjectEzenity/Ezenity.API.Buildscript.sh
       if: matrix.language == 'csharp'
     
-    - name: Run Frontend Build Script
+    - name: Run Ezenity Frontend Build Script
       shell: bash
       run: |
-        ls -al /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/
-        chmod +x /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/Ezenity_Frontend/frontendBuildscript.sh
-        cd /home/runner/work/Ezenity_VPN_Server/Ezenity_VPN_Server/Ezenity_Frontend
+        ls -al /home/runner/work/ProjectEzenity/ProjectEzenity/
+        chmod +x /home/runner/work/ProjectEzenity/ProjectEzenity/Ezenity_Frontend.Buildscript.sh
         echo "Run, Build Frontend using script"
-        ./frontendBuildscript.sh
-      ###if: matrix.language == 'typescript'
+        cd /home/runner/work/ProjectEzenity/ProjectEzenity/Ezenity_Frontend.Buildscript.sh
       if: matrix.language == 'javascript'
 
 
