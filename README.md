@@ -115,7 +115,7 @@ The application uses SHA-512 for enhanced security in JWT token handling and oth
     ```bash
     dotnet ef database update --startup-project ../Ezenity.API --project ../Ezenity.Infrastructure
     ```
-    
+
 ### Configuration
 - **AppSettings**: Description of the properties in `appsettings.json` and their functions.
 - **Environment Variables**: You'll want to setup a **SECRET_KEY** or a file containing the Secret Key.
