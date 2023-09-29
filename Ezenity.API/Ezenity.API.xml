@@ -1,0 +1,760 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Ezenity.API</name>
+    </assembly>
+    <members>
+        <member name="T:Ezenity.API.API.Controllers.AccountsController">
+            <summary>
+            Handles HTTP requests and responses related to Account entities.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.API.Controllers.AccountsController._accountService">
+            <summary>
+            The service containing business logic for Account entities.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.API.Controllers.AccountsController._logger">
+            <summary>
+            Provides logging capabilities for this class.
+            </summary>
+        </member>
+        <member name="P:Ezenity.API.API.Controllers.AccountsController.CurrentAccount">
+            <summary>
+            Gets the current authenticated account.
+            </summary>
+            <value>The current authenticated account.</value>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.#ctor(Ezenity.Core.Services.Common.IAccountService,Microsoft.Extensions.Logging.ILogger{Ezenity.API.API.Controllers.AccountsController})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity.API.API.Controllers.AccountsController"/> class.
+            </summary>
+            <param name="accountService">The service to use for account-related operations.</param>
+            <param name="logger">The logger used for logging any events in this class.</param>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.GetByIdAsync(System.Int32)">
+            <summary>
+            Fetches an account by its ID asynchronously.
+            </summary>
+            <param name="id">The ID of the account to fetch.</param>
+            <returns>
+            An <see cref="T:Microsoft.AspNetCore.Mvc.ActionResult"/> containing an <see cref="T:Ezenity.DTOs.Models.ApiResponse`1"/>. 
+            The ApiResponse contains the status code, success flag, and a message indicating the result of the operation.
+            </returns>
+            <response code="200">Returns the account details if found.</response>
+            <response code="404">Returns a not found response if the account does not exist.</response>
+            <response code="500">Returns if an internal server error occurs.</response>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.GetAllAsync(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Fetches all accounts from the database asynchronously.
+            </summary>
+            <remarks>
+            This method fetches all accounts available in the database and returns them as a list. 
+            It is protected by an "Admin" authorization, meaning only admin users can access it.
+            </remarks>
+            <returns>
+            An <see cref="T:Microsoft.AspNetCore.Mvc.ActionResult"/> containing an <see cref="!:ApiResponse&lt;IEnumerable&lt;AccountResponse&gt;&gt;"/>.
+            The ApiResponse contains the status code, success flag, and a message indicating the result of the operation.
+            </returns>
+            <response code="200">Returns a list of all accounts if found.</response>
+            <response code="404">Returns a not found response if no accounts exist.</response>
+            <response code="500">Returns if an internal server error occurs.</response>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.CreateAsync(Ezenity.DTOs.Models.Accounts.CreateAccountRequest)">
+            <summary>
+            Creates a new account asynchronously.
+            </summary>
+            <param name="model">The <see cref="T:Ezenity.DTOs.Models.Accounts.CreateAccountRequest"/> model containing the account details to be created.</param>
+            <remarks>
+            This method creates a new account based on the provided CreateAccountRequest model.
+            The method is protected by "Admin" authorization, meaning only admin users can access it.
+            If the account with the given email already exists, a conflict response is returned.
+            </remarks>
+            <returns>
+            An <see cref="T:Microsoft.AspNetCore.Mvc.ActionResult"/> containing an <see cref="T:Ezenity.DTOs.Models.ApiResponse`1"/>.
+            The ApiResponse contains the status code, success flag, and a message indicating the result of the operation.
+            </returns>
+            <response code="201">Returns a created response if the account is successfully created.</response>
+            <response code="409">Returns a conflict response if an account with the given email already exists.</response>
+            <response code="500">Returns if an internal server error occurs.</response>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.UpdateAsync(System.Int32,Ezenity.DTOs.Models.Accounts.UpdateAccountRequest)">
+            <summary>
+            Asynchronously updates an existing account.
+            </summary>
+            <param name="id">The identifier of the account to be updated.</param>
+            <param name="model">The <see cref="T:Ezenity.DTOs.Models.Accounts.UpdateAccountRequest"/> model containing the new account details.</param>
+            <remarks>
+            This method updates an existing account based on the provided identifier and UpdateAccountRequest model.
+            It is authorized for use by any authenticated user.
+            Multiple error conditions are handled, such as resource not found, authorization failure, or conflict with existing resources.
+            </remarks>
+            <returns>
+            An <see cref="T:Microsoft.AspNetCore.Mvc.ActionResult"/> containing an <see cref="T:Ezenity.DTOs.Models.ApiResponse`1"/>.
+            The ApiResponse contains the status code, success flag, the updated account data, and a message indicating the result of the operation.
+            </returns>
+            <response code="200">Returns an OK response if the account is successfully updated.</response>
+            <response code="404">Returns a not found response if the account with the specified ID does not exist.</response>
+            <response code="401">Returns an unauthorized response if the caller lacks necessary permissions.</response>
+            <response code="409">Returns a conflict response if updating the account would cause a conflict.</response>
+            <response code="500">Returns an internal server error if an unexpected error occurs.</response>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the account with the specified ID does not exist.</exception>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.AuthorizationException">Thrown when the caller lacks necessary permissions.</exception>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.UpdatePartialAsync(System.Int32,Microsoft.AspNetCore.JsonPatch.JsonPatchDocument{Ezenity.DTOs.Models.Accounts.UpdateAccountRequest})">
+            <summary>
+            Asynchronously updates partially on an existing account.
+            </summary>
+            <param name="id">The identifier of the account to be updated partially.</param>
+            <param name="model">The <see cref="T:Ezenity.DTOs.Models.Accounts.UpdateAccountRequest"/> model containing the new account details.</param>
+            <remarks>
+            This method partially updates an existing account based on the provided identifier and UpdateAccountRequest model.    
+                
+            This request updates the account's **First Name**:    
+                
+                PATCH /api/accounts/{id} \
+                { \
+                    "Title": "Mr.", \
+                    "FirstName": "John", \
+                    "LastName": "Doe" \
+                } \
+                 
+            **Note**: All fields are optional and can be patched individually. The update is partial; fields not provided will not be updated.    
+                
+            It is authorized for use by any authenticated user who are the Role Admin.    
+            Multiple error conditions are handled, such as resource not found, authorization failure, or conflict with existing resources.
+            </remarks>
+            <returns>
+            An <see cref="T:Microsoft.AspNetCore.Mvc.ActionResult"/> containing an <see cref="T:Ezenity.DTOs.Models.ApiResponse`1"/>.
+            The ApiResponse contains the status code, success flag, the updated account data, and a message indicating the result of the operation.
+            </returns>
+            <response code="200">Returns an OK response if the account is successfully updated.</response>
+            <response code="404">Returns a not found response if the account with the specified ID does not exist.</response>
+            <response code="401">Returns an unauthorized response if the caller lacks necessary permissions.</response>
+            <response code="409">Returns a conflict response if updating the account would cause a conflict.</response>
+            <response code="500">Returns an internal server error if an unexpected error occurs.</response>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the account with the specified ID does not exist.</exception>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.AuthorizationException">Thrown when the caller lacks necessary permissions.</exception>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.DeleteAsync(System.Int32,System.Int32)">
+            <summary>
+            Asynchronously deletes an account.
+            </summary>
+            <param name="DeleteAccountId">The identifier of the account to be deleted.</param>
+            <param name="DeletedById">The identifier of the account performing the deletion.</param>
+            <remarks>
+            This method deletes an existing account with the given identifier (DeleteAccountId) and logs who performed the deletion (DeletedById).
+            The function is authorized for use by any authenticated user.
+            Multiple error conditions are handled, such as resource not found, authorization failure, or deletion failure.
+            </remarks>
+            <returns>
+            An <see cref="T:Microsoft.AspNetCore.Mvc.ActionResult"/> containing an <see cref="T:Ezenity.DTOs.Models.ApiResponse`1"/>.
+            The ApiResponse contains the status code, success flag, a message indicating the result of the operation, and a DeleteResponse object.
+            </returns>
+            <response code="200">Returns an OK response if the account is successfully deleted.</response>
+            <response code="404">Returns a not found response if the account with the specified ID does not exist.</response>
+            <response code="401">Returns an unauthorized response if the caller lacks necessary permissions.</response>
+            <response code="400">Returns a bad request response if the deletion fails for some specific reason.</response>
+            <response code="500">Returns an internal server error if an unexpected error occurs.</response>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the account with the specified ID does not exist.</exception>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.AuthorizationException">Thrown when the caller lacks necessary permissions.</exception>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.DeletionFailedException">Thrown if the deletion fails for some specific reason.</exception>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.AuthenticateAsync(Ezenity.DTOs.Models.Accounts.AuthenticateRequest)">
+            <summary>
+            Asynchronously authenticates a user account.
+            </summary>
+            <param name="model">The authentication request model containing the credentials.</param>
+            <remarks>
+            This endpoint is used to authenticate a user based on the provided credentials.
+            If authentication is successful, a refresh token is set in a cookie.
+            The method handles various conditions like account not found or any unexpected server errors.
+            The endpoint is accessible via POST to "authenticate".
+            </remarks>
+            <returns>
+            An <see cref="T:Microsoft.AspNetCore.Mvc.ActionResult"/> containing an <see cref="T:Ezenity.DTOs.Models.ApiResponse`1"/>.
+            The ApiResponse contains the status code, success flag, a message indicating the result of the operation, and an AuthenticateResponse object.
+            </returns>
+            <response code="200">Returns an OK response if authentication is successful, along with the authentication response data.</response>
+            <response code="404">Returns a not found response if the account associated with the credentials does not exist.</response>
+            <response code="500">Returns an internal server error if an unexpected error occurs.</response>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the account associated with the provided credentials does not exist.</exception>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.RefreshTokenAsync">
+            <summary>
+            Asynchronously refreshes the JWT token.
+            </summary>
+            <remarks>
+            This endpoint is accessed via POST to "refresh-token".
+            The method attempts to fetch the refresh token from the cookie, and if it exists,
+            it interacts with the account service to obtain a new JWT token.
+            </remarks>
+            <returns>
+            An <see cref="T:Microsoft.AspNetCore.Mvc.ActionResult"/> containing an <see cref="T:Ezenity.DTOs.Models.ApiResponse`1"/>.
+            The ApiResponse will have status code, success flag, and a message indicating the result of the operation, 
+            along with an AuthenticateResponse object.
+            </returns>
+            <response code="200">Returns OK if the token is successfully refreshed, along with the authentication response data.</response>
+            <response code="400">Returns BadRequest if the refresh token is missing or invalid.</response>
+            <response code="500">Returns Internal Server Error if any unexpected error occurs.</response>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the refresh token is missing or invalid.</exception>
+            <exception cref="T:System.Exception">Thrown when any unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.RevokeTokenAsync(Ezenity.DTOs.Models.Accounts.RevokeTokenRequest)">
+            <summary>
+            Asynchronously revokes a JWT token.
+            </summary>
+            <remarks>
+            This endpoint is accessed via POST to "revoke-token" and is authorized only for Admin roles.
+            A service filter for loading the account is applied before executing this method.
+            The method first validates the input model for the presence of the token either in the model or in cookies.
+            The token is then checked against the loaded account to ensure it is owned by the same account.
+            Finally, the token is revoked using the account service.
+            </remarks>
+            <param name="model">The <see cref="T:Ezenity.DTOs.Models.Accounts.RevokeTokenRequest"/> containing the token to be revoked.</param>
+            <returns>
+            An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> that indicates the result of the token revocation.
+            </returns>
+            <response code="200">Returns OK with a message indicating that the token has been successfully revoked.</response>
+            <response code="400">Returns BadRequest if the token is not provided.</response>
+            <response code="401">Returns Unauthorized if the token is not owned by the loaded account.</response>
+            <exception cref="T:System.Exception">Thrown when any unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.RegisterAsync(Ezenity.DTOs.Models.Accounts.RegisterRequest)">
+            <summary>
+            Asynchronously registers a new account.
+            </summary>
+            <remarks>
+            This endpoint is accessed via POST to "register".
+            The method attempts to register a new account using the provided model and origin header.
+            If the registration is successful, a 200 OK status code is returned with a success message.
+            </remarks>
+            <param name="model">The <see cref="T:Ezenity.DTOs.Models.Accounts.RegisterRequest"/> containing the account registration details.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> that indicates the result of the registration.</returns>
+            <response code="200">Returns OK with a message indicating successful registration.</response>
+            <response code="409">Returns Conflict if the account already exists.</response>
+            <response code="400">Returns BadRequest if the request parameters are not valid.</response>
+            <response code="500">Returns a StatusCode of 500 if an unexpected error occurs.</response>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.VerfiyEmailAsync(Ezenity.DTOs.Models.Accounts.VerifyEmailRequest)">
+            <summary>
+            Asynchronously verifies the email address of an account.
+            </summary>
+            <remarks>
+            This endpoint is accessed via POST to "verify-email".
+            The method attempts to verify the email address using a token provided in the request model.
+            If the verification is successful, a 200 OK status code is returned with a success message.
+            </remarks>
+            <param name="model">The <see cref="T:Ezenity.DTOs.Models.Accounts.VerifyEmailRequest"/> containing the email verification token.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> that indicates the result of the email verification.</returns>
+            <response code="200">Returns OK with a message indicating successful email verification.</response>
+            <response code="500">Returns a StatusCode of 500 if the token is invalid or an unexpected error occurs.</response>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.ForgotPasswordAsync(Ezenity.DTOs.Models.Accounts.ForgotPasswordRequest)">
+            <summary>
+            Initiates the password reset process by sending a password reset token to the user's email.
+            </summary>
+            <param name="model">A <see cref="T:Ezenity.DTOs.Models.Accounts.ForgotPasswordRequest"/> object containing the email of the account to reset.</param>
+            <returns>A message indicating that a password reset instruction has been sent to the user's email.</returns>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.ValidateResetTokenAsync(Ezenity.DTOs.Models.Accounts.ValidateResetTokenRequest)">
+            <summary>
+            Validates the provided password reset token.
+            </summary>
+            <param name="model">A <see cref="T:Ezenity.DTOs.Models.Accounts.ValidateResetTokenRequest"/> object containing the reset token to be validated.</param>
+            <returns>A message indicating the validity of the provided reset token.</returns>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.ResetPasswordAsync(Ezenity.DTOs.Models.Accounts.ResetPasswordRequest)">
+            <summary>
+            Resets the account's password using the provided reset token and new password.
+            </summary>
+            <param name="model">A <see cref="T:Ezenity.DTOs.Models.Accounts.ResetPasswordRequest"/> object containing the reset token and new password.</param>
+            <returns>A message indicating the password has been reset and the user can now login.</returns>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.setTokenCookie(System.String)">
+            //////////////////
+            Helper Methods ///
+            //////////////////
+            <summary>
+            Sets a cookie that holds the provided token, with options for security and expiration.
+            </summary>
+            <param name="token">The token to be stored in the cookie.</param>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.ipAddress">
+            <summary>
+            Retrieves the client's IP address from the HTTP request headers or connection information.
+            </summary>
+            <returns>The client's IP address as a string.</returns>
+        </member>
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.IsTokenOwner(System.String)">
+            <summary>
+            Checks if the current account owns the provided token.
+            </summary>
+            <param name="token">The token to be checked for ownership.</param>
+            <returns>A boolean value indicating whether the current account owns the token.</returns>
+        </member>
+        <member name="T:Ezenity.API.Controllers.BaseController`5">
+            <summary>
+            Provides a generic base controller to encapsulate CRUD operations.
+            This controller is designed to be extended by other controllers that require CRUD functionalities.
+            </summary>
+            <typeparam name="TEntity">The type representing the data model of the entity.</typeparam>
+            <typeparam name="TResponse">The type representing the response data shape.</typeparam>
+            <typeparam name="TCreateRequest">The type representing the creation request model.</typeparam>
+            <typeparam name="TUpdateRequest">The type representing the update request model.</typeparam>
+            <typeparam name="TDeleteResponse">The type representing the delete response model.</typeparam>
+        </member>
+        <member name="P:Ezenity.API.Controllers.BaseController`5.Entity">
+            <summary>
+            Gets the entity object associated with the current HTTP context.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Controllers.BaseController`5.GetByIdAsync(System.Int32)">
+            <summary>
+            Retrieves a single entity by its identifier.
+            </summary>
+            <param name="id">The identifier of the entity to be retrieved.</param>
+            <returns>An action result containing an API response with the entity data.</returns>
+        </member>
+        <member name="M:Ezenity.API.Controllers.BaseController`5.GetAllAsync(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Retrieves all entities. Access restricted to Admin role.
+            </summary>
+            <returns>An action result containing an API response with a list of entities.</returns>
+        </member>
+        <member name="M:Ezenity.API.Controllers.BaseController`5.CreateAsync(`2)">
+            <summary>
+            Creates a new entity based on the provided creation model. Access restricted to Admin role.
+            </summary>
+            <param name="model">The creation model for the new entity.</param>
+            <returns>An action result containing an API response with the created entity data.</returns>
+        </member>
+        <member name="M:Ezenity.API.Controllers.BaseController`5.UpdateAsync(System.Int32,`3)">
+            <summary>
+            Updates an existing entity with the provided data.
+            </summary>
+            <param name="id">The identifier of the entity to be updated.</param>
+            <param name="model">The update model containing the new data.</param>
+            <returns>An action result containing an API response with the updated entity data.</returns>
+        </member>
+        <member name="M:Ezenity.API.Controllers.BaseController`5.DeleteAsync(System.Int32,System.Int32)">
+            <summary>
+            Deletes an existing entity identified by the given identifier.
+            </summary>
+            <param name="DeleteAccountId">The identifier of the entity to be deleted.</param>
+            <param name="DeletedById">The identifier of the user who is deleting the entity.</param>
+            <returns>An action result containing an API response with the status of the deletion operation.</returns>
+        </member>
+        <member name="T:Ezenity.API.Controllers.EmailTemplatesController">
+            <summary>
+            Controller for managing email templates. Inherits from the BaseController class to provide CRUD operations.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.Controllers.EmailTemplatesController._emailTemplateService">
+            <summary>
+            Service responsible for email template related functionalities.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.Controllers.EmailTemplatesController._authService">
+            <summary>
+            Service responsible for authentication related functionalities.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.Controllers.EmailTemplatesController._accountService">
+            <summary>
+            Service responsible for account related functionalities.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.Controllers.EmailTemplatesController._logger">
+            <summary>
+            Logger instance for logging important or error information.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Controllers.EmailTemplatesController.#ctor(Ezenity.Core.Services.Common.IEmailTemplateService,Ezenity.Core.Services.Common.IAuthService,Ezenity.Core.Services.Common.IAccountService,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Controllers.EmailTemplatesController})">
+            <summary>
+            Initializes a new instance of the EmailTemplatesController class.
+            </summary>
+            <param name="emailTemplateService">The email template service.</param>
+            <param name="authService">The authentication service.</param>
+            <param name="accountService">The account service.</param>
+            <param name="logger">The logger service.</param>
+        </member>
+        <member name="M:Ezenity.API.Controllers.EmailTemplatesController.CreateAsync(Ezenity.DTOs.Models.EmailTemplates.CreateEmailTemplateRequest)">
+            <summary>
+            Asynchronously creates a new email template.
+            </summary>
+            <param name="model">The email template creation model.</param>
+            <returns>An action result containing the created email template.</returns>
+        </member>
+        <member name="M:Ezenity.API.Controllers.EmailTemplatesController.CreateAsyncTest(Ezenity.DTOs.Models.EmailTemplates.CreateEmailTemplateRequest)">
+            <summary>
+            Asynchronously creates a new email template
+             - This is a test method which requires no Authentication.
+            </summary>
+            <param name="model">The email template creation model.</param>
+            <returns>An action result containing the created email template.</returns>
+        </member>
+        <member name="M:Ezenity.API.Controllers.EmailTemplatesController.DeleteAsync(System.Int32,System.Int32)">
+            <summary>
+            Asynchronously deletes an existing email template.
+            </summary>
+            <param name="DeleteEmailTemplateId">The ID of the email template to delete.</param>
+            <param name="DeletedById">The ID of the user performing the deletion.</param>
+            <returns>An action result containing information about the deletion.</returns>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the email template is not found.</exception>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.AuthorizationException">Thrown when the user is unauthorized to perform this action.</exception>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.DeletionFailedException">Thrown when the deletion operation fails.</exception>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.Controllers.EmailTemplatesController.GetAllAsync(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Asynchronously fetches all email templates.
+            </summary>
+            <returns>An action result containing a list of email templates.</returns>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.Controllers.EmailTemplatesController.GetByIdAsync(System.Int32)">
+            <summary>
+            Asynchronously fetches an email template by its ID.
+            </summary>
+            <param name="id">The ID of the email template to fetch.</param>
+            <returns>An action result containing the fetched email template.</returns>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the email template is not found.</exception>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.Controllers.EmailTemplatesController.GetNonDynamicByIdAsync(System.Int32)">
+            <summary>
+            Retrieves a non-dynamic email template by its ID asynchronously.
+            </summary>
+            <param name="id">The ID of the email template.</param>
+            <returns>An API response containing the requested email template.</returns>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown if the email template does not exist.</exception>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="M:Ezenity.API.Controllers.EmailTemplatesController.UpdateAsync(System.Int32,Ezenity.DTOs.Models.EmailTemplates.UpdateEmailTemplateRequest)">
+            <summary>
+            Asynchronously updates an existing email template.
+            </summary>
+            <param name="id">The ID of the email template to update.</param>
+            <param name="model">The email template update model.</param>
+            <returns>An action result containing the updated email template.</returns>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the email template is not found.</exception>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.AuthorizationException">Thrown when the user is unauthorized to perform this action.</exception>
+            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
+        </member>
+        <member name="T:Ezenity.API.Controllers.OperationsController">
+            <summary>
+            Provides an API controller for system operations like reloading configurations.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.Controllers.OperationsController._config">
+            <summary>
+            Represents the application's current configuration as a set of key-value pairs.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Controllers.OperationsController.#ctor(Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity.API.Controllers.OperationsController"/> class.
+            </summary>
+            <param name="config">The application's current configuration.</param>
+        </member>
+        <member name="M:Ezenity.API.Controllers.OperationsController.ReloadConfig">
+            <summary>
+            Reloads the application's configuration settings from all registered providers.
+            </summary>
+            <returns>
+            A status code representing the result of the operation.
+            - Ok (HTTP 200) if the operation succeeds.
+            - Internal Server Error (HTTP 500) if an exception occurs.
+            </returns>
+            <remarks>
+            Make an HTTP OPTIONS request to this endpoint to reload the application's configuration.
+            </remarks>
+            <exception cref="T:System.Exception">Thrown when an error occurs during configuration reload.</exception>
+        </member>
+        <member name="T:Ezenity.API.Controllers.RolesController">
+            <summary>
+            Handles API operations related to roles within the system.
+            </summary>
+        </member>
+        <member name="T:Ezenity.API.Controllers.SectionsController">
+            <summary>
+            Provides an API controller for managing sections.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.Controllers.SectionsController._sectionService">
+            <summary>
+            Service to handle section-related business logic.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.Controllers.SectionsController._accountService">
+            <summary>
+            Service to handle account-related business logic.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.Controllers.SectionsController._logger">
+            <summary>
+            Logger for capturing runtime information.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Controllers.SectionsController.#ctor(Ezenity.Core.Services.Common.ISectionService,Ezenity.Core.Services.Common.IAccountService,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Controllers.SectionsController})">
+            <summary>
+            Initializes a new instance of the SectionsController class.
+            </summary>
+            <param name="sectionService">Service for section-related business logic.</param>
+            <param name="accountService">Service for account-related business logic.</param>
+            <param name="logger">Logger instance for capturing runtime logs.</param>
+        </member>
+        <member name="M:Ezenity.API.Controllers.SectionsController.GetByIdAsync(System.Int32)">
+            <summary>
+            Fetches a section by its ID asynchronously.
+            </summary>
+            <param name="id">The ID of the section to fetch.</param>
+            <returns>A wrapped API response containing the section data or errors.</returns>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the requested section is not found.</exception>
+            <exception cref="T:System.Exception">Thrown for generic server errors.</exception>
+        </member>
+        <member name="M:Ezenity.API.Controllers.SectionsController.GetAllAsync(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Fetches all sections asynchronously.
+            </summary>
+            <returns>A wrapped API response containing the list of sections or errors.</returns>
+            <exception cref="T:System.Exception">Thrown for generic server errors.</exception>
+        </member>
+        <member name="M:Ezenity.API.Controllers.SectionsController.CreateAsync(Ezenity.DTOs.Models.Sections.CreateSectionRequest)">
+            <summary>
+            Creates a new section based on the provided request model.
+            </summary>
+            <param name="model">The request model containing the data to create a new section.</param>
+            <returns>A wrapped API response containing the created section or errors.</returns>
+            <exception cref="T:System.Exception">Thrown for generic server errors.</exception>
+        </member>
+        <member name="M:Ezenity.API.Controllers.SectionsController.CreateWithAdditionalAsync(Ezenity.DTOs.Models.Sections.CreateSectionWithAdditonalRequest)">
+            <summary>
+            Creates a new section with additional properties asynchronously.
+            </summary>
+            <param name="model">The model containing data for the new section.</param>
+            <returns>An API response containing the created section.</returns>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.AppException">Thrown if the section title already exists.</exception>
+        </member>
+        <member name="M:Ezenity.API.Controllers.SectionsController.UpdateAsync(System.Int32,Ezenity.DTOs.Models.Sections.UpdateSectionRequest)">
+            <summary>
+            Updates an existing section based on the provided ID and request model.
+            </summary>
+            <param name="id">The ID of the section to update.</param>
+            <param name="model">The request model containing the data to update the section.</param>
+            <returns>A wrapped API response containing the updated section or errors.</returns>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the requested section is not found.</exception>
+            <exception cref="T:System.Exception">Thrown for generic server errors.</exception>
+        </member>
+        <member name="M:Ezenity.API.Controllers.SectionsController.DeleteAsync(System.Int32,System.Int32)">
+            <summary>
+            Deletes an existing section based on the provided ID and the ID of the user performing the deletion.
+            </summary>
+            <param name="DeleteSectionId">The ID of the section to delete.</param>
+            <param name="DeletedById">The ID of the user performing the deletion.</param>
+            <returns>A wrapped API response containing the deletion status or errors.</returns>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the requested section or user is not found.</exception>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.AuthorizationException">Thrown when the user is not authorized to perform the deletion.</exception>
+            <exception cref="T:Ezenity.Core.Helpers.Exceptions.DeletionFailedException">Thrown when deletion fails due to server or validation errors.</exception>
+            <exception cref="T:System.Exception">Thrown for generic server errors.</exception>
+        </member>
+        <member name="T:Ezenity.API.Filters.ApiExceptionFilter">
+            <summary>
+            Provides global exception handling for API responses by capturing any thrown exceptions
+            and converting them into a standardized JSON response format.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Filters.ApiExceptionFilter.OnException(Microsoft.AspNetCore.Mvc.Filters.ExceptionContext)">
+            <summary>
+            Called when an exception occurs in the application. Overrides the base method to provide
+            a custom response in case of an exception.
+            </summary>
+            <param name="context">
+            The <see cref="T:Microsoft.AspNetCore.Mvc.Filters.ExceptionContext"/> encapsulating the exception details and other 
+            contextual information.
+            </param>
+        </member>
+        <member name="T:Ezenity.API.Filters.CreateEmailTemplateFilter">
+            <summary>
+            Operation filter for modifying Swagger documentation related to the 'CreateEmailTemplate' operation.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Filters.CreateEmailTemplateFilter.Apply(Microsoft.OpenApi.Models.OpenApiOperation,Swashbuckle.AspNetCore.SwaggerGen.OperationFilterContext)">
+            <summary>
+            Applies modifications to the OpenAPI operation for the 'CreateEmailTemplate' endpoint.
+            </summary>
+            <param name="operation">The OpenAPI operation object.</param>
+            <param name="context">Context that provides schema and other information.</param>
+        </member>
+        <member name="T:Ezenity.API.Filters.CreateSectionFilter">
+            <summary>
+            Operation filter for modifying Swagger documentation related to the 'CreateSection' operation.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Filters.CreateSectionFilter.Apply(Microsoft.OpenApi.Models.OpenApiOperation,Swashbuckle.AspNetCore.SwaggerGen.OperationFilterContext)">
+            <summary>
+            Applies modifications to the OpenAPI operation for the 'CreateSection' endpoint.
+            </summary>
+            <param name="operation">The OpenAPI operation object.</param>
+            <param name="context">Context that provides schema and other information.</param>
+        </member>
+        <member name="T:Ezenity.API.Filters.GetEmailTemplateFilter">
+            <summary>
+            Operation filter for modifying Swagger documentation related to the 'GetEmailTemplate' operation.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Filters.GetEmailTemplateFilter.Apply(Microsoft.OpenApi.Models.OpenApiOperation,Swashbuckle.AspNetCore.SwaggerGen.OperationFilterContext)">
+            <summary>
+            Applies modifications to the OpenAPI operation for the 'GetEmailTemplate' endpoint.
+            </summary>
+            <param name="operation">The OpenAPI operation object.</param>
+            <param name="context">Context that provides schema and other information.</param>
+        </member>
+        <member name="T:Ezenity.API.Filters.LoadAccountFilter">
+            <summary>
+            Represents a filter that loads an account from the database based on the "Account" HTTP header.
+            This class implements the <see cref="T:Microsoft.AspNetCore.Mvc.Filters.IAsyncActionFilter"/> interface.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.Filters.LoadAccountFilter._context">
+            <summary>
+            The database context used for retrieving the account data.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Filters.LoadAccountFilter.#ctor(Ezenity.Infrastructure.Helpers.DataContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity.API.Filters.LoadAccountFilter"/> class.
+            </summary>
+            <param name="context">The database context.</param>
+        </member>
+        <member name="M:Ezenity.API.Filters.LoadAccountFilter.OnActionExecutionAsync(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext,Microsoft.AspNetCore.Mvc.Filters.ActionExecutionDelegate)">
+            <summary>
+            Executes the action filter asynchronously.
+            </summary>
+            <param name="context">The context for the action, including the HTTP context and action arguments.</param>
+            <param name="next">The delegate for executing the next stage in the filter pipeline.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the result of the asynchronous operation.</returns>
+            <remarks>
+            This method tries to parse the "Account" HTTP header into an integer (account ID),
+            and then queries the database for the corresponding account. If the account exists,
+            it is stored in the HttpContext.Items dictionary for later use.
+            </remarks>
+        </member>
+        <member name="T:Ezenity.API.Filters.UpdateAccountFilter">
+            <summary>
+            Operation filter for modifying Swagger documentation related to the 'CreateSection' operation.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Filters.UpdateAccountFilter.Apply(Microsoft.OpenApi.Models.OpenApiOperation,Swashbuckle.AspNetCore.SwaggerGen.OperationFilterContext)">
+            <summary>
+            Applies modifications to the OpenAPI operation for the 'UpdateAccount' endpoint.
+            </summary>
+            <param name="operation">The OpenAPI operation object.</param>
+            <param name="context">Context that provides schema and other information.</param>
+        </member>
+        <member name="T:Ezenity.API.Middleware.CustomJwtAuthenticationHandler">
+            <summary>
+            Custom authentication handler for handling JSON Web Tokens (JWT).
+            </summary>
+            <remarks>
+            This class extends the <see cref="T:Microsoft.AspNetCore.Authentication.AuthenticationHandler`1"/> to provide custom JWT authentication.
+            It validates the JWT token from the "Authorization" header and sets the user principal accordingly.
+            </remarks>
+        </member>
+        <member name="F:Ezenity.API.Middleware.CustomJwtAuthenticationHandler._appSettings">
+            <summary>
+            Application settings for configuring JWT.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Middleware.CustomJwtAuthenticationHandler.#ctor(Microsoft.Extensions.Options.IOptionsMonitor{Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions},Microsoft.Extensions.Options.IOptions{Ezenity.Infrastructure.Helpers.AppSettings},Microsoft.Extensions.Logging.ILoggerFactory,System.Text.Encodings.Web.UrlEncoder,Microsoft.AspNetCore.Authentication.ISystemClock,Ezenity.Infrastructure.Helpers.DataContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity.API.Middleware.CustomJwtAuthenticationHandler"/> class.
+            </summary>
+            <param name="options">The options monitor for the authentication scheme options.</param>
+            <param name="appSettings">The application settings for JWT.</param>
+            <param name="logger">The logger factory.</param>
+            <param name="encoder">The URL encoder.</param>
+            <param name="clock">The system clock.</param>
+            <param name="context">The data context for database operations.</param>
+        </member>
+        <member name="M:Ezenity.API.Middleware.CustomJwtAuthenticationHandler.HandleAuthenticateAsync">
+            <summary>
+            Handles the authentication asynchronously.
+            </summary>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation, containing the <see cref="T:Microsoft.AspNetCore.Authentication.AuthenticateResult"/>.</returns>
+            <remarks>
+            This method attempts to authenticate the user by validating the JWT token from the "Authorization" header.
+            If the token is valid, it sets the user principal accordingly and returns a successful authentication result.
+            </remarks>
+        </member>
+        <member name="T:Ezenity.API.Middleware.ErrorHandlerMiddleware">
+            <summary>
+            Middleware for handling exceptions and converting them into appropriate HTTP responses.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Middleware.ErrorHandlerMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Middleware.ErrorHandlerMiddleware})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity.API.Middleware.ErrorHandlerMiddleware"/> class.
+            </summary>
+            <param name="next">The delegate for the next middleware in the pipeline.</param>
+            <param name="logger">The logger to write diagnostic messages to.</param>
+        </member>
+        <member name="M:Ezenity.API.Middleware.ErrorHandlerMiddleware.Invoke(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Invokes the middleware.
+            </summary>
+            <param name="context">The HTTP context for the current request and response.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="T:Ezenity.API.Middleware.JwtMiddleware">
+            <summary>
+            Middleware for handling JSON Web Tokens (JWT) in the system.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.Middleware.JwtMiddleware._next">
+            <summary>
+            The delegate for the next middleware in the pipeline.
+            </summary>
+        </member>
+        <member name="F:Ezenity.API.Middleware.JwtMiddleware._appSettings">
+            <summary>
+            Application settings for configuring JWT.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Middleware.JwtMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Microsoft.Extensions.Options.IOptions{Ezenity.Infrastructure.Helpers.AppSettings})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity.API.Middleware.JwtMiddleware"/> class.
+            </summary>
+            <param name="next">The delegate for the next middleware in the pipeline.</param>
+            <param name="appSettings">Application settings for configuring JWT.</param>
+        </member>
+        <member name="M:Ezenity.API.Middleware.JwtMiddleware.Invoke(Microsoft.AspNetCore.Http.HttpContext,Ezenity.Infrastructure.Helpers.DataContext)">
+            <summary>
+            Invokes the middleware.
+            </summary>
+            <param name="context">The HTTP context for the current request and response.</param>
+            <param name="dataContext">The database context to query for accounts.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="M:Ezenity.API.Middleware.JwtMiddleware.attachAccountToContext(Microsoft.AspNetCore.Http.HttpContext,Ezenity.Infrastructure.Helpers.DataContext,System.String)">
+            <summary>
+            Attaches the account associated with a valid JWT to the HTTP context.
+            </summary>
+            <param name="context">The HTTP context for the current request and response.</param>
+            <param name="dataContext">The database context to query for accounts.</param>
+            <param name="token">The JWT to validate and extract account information from.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+    </members>
+</doc>
