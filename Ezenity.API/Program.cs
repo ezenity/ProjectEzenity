@@ -27,6 +27,8 @@ using Ezenity.Infrastructure.Services.Emails;
 using Ezenity.Infrastructure.Services.EmailTemplates;
 using Ezenity.Infrastructure.Services.Sections;
 using Ezenity.API.Middleware;
+using Ezenity.Core.Interfaces;
+using Microsoft.Extensions.Options;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -138,6 +140,8 @@ services.AddScoped<IEmailService, EmailService>();
 services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 services.AddScoped<ISectionService, SectionService>();
 services.AddScoped<IAuthService, AuthService>();
+services.AddScoped<IDataContext, DataContext>();
+services.AddScoped<ITokenHelper, TokenHelper>();
 // Filter DI
 services.AddScoped<LoadAccountFilter>();
 
@@ -147,7 +151,13 @@ if (builder.Environment.IsDevelopment())
 else
     secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? System.IO.File.ReadAllText("./secret/key.txt").Trim(); // TODO: Insert correct location once on server
 
-services.AddScoped(sp => new TokenHelper(secretKey));
+// Register AppSettings with the updated secretKey
+var appSettings = configuration.GetSection("AppSettings").Get<AppSettings>();
+appSettings.Secret = secretKey;
+
+services.AddSingleton(appSettings);
+services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
+
 services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 

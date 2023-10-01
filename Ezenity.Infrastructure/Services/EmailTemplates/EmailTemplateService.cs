@@ -2,6 +2,7 @@
 using AutoMapper.QueryableExtensions;
 using Ezenity.Core.Entities.EmailTemplates;
 using Ezenity.Core.Helpers.Exceptions;
+using Ezenity.Core.Interfaces;
 using Ezenity.Core.Services.Common;
 using Ezenity.DTOs.Models;
 using Ezenity.DTOs.Models.EmailTemplates;
@@ -25,7 +26,7 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
         /// <summary>
         /// Provides data access to the application's data store.
         /// </summary>
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
         /// <summary>
         /// Provides object-object mapping functionality.
@@ -45,7 +46,7 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
         /// <summary>
         /// Provides token generation and validation services.
         /// </summary>
-        private readonly TokenHelper _tokenHelper;
+        private readonly ITokenHelper _tokenHelper;
 
         /// <summary>
         /// Provides user authentication services.
@@ -61,7 +62,7 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
         /// <param name="logger">Provides logging capabilities.</param>
         /// <param name="tokenHelper">Provides token generation and validation services.</param>
         /// <param name="authService">Provides user authentication services.</param>
-        public EmailTemplateService(DataContext context, IMapper mapper, IOptions<AppSettings> appSettings, ILogger<IEmailTemplateService> logger, TokenHelper tokenHelper, IAuthService authService)
+        public EmailTemplateService(IDataContext context, IMapper mapper, IOptions<AppSettings> appSettings, ILogger<IEmailTemplateService> logger, ITokenHelper tokenHelper, IAuthService authService)
         {
             _context = context;
             _mapper = mapper;

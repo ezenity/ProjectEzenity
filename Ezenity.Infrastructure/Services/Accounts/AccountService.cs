@@ -3,6 +3,7 @@ using AutoMapper.QueryableExtensions;
 using Ezenity.Core.Entities.Accounts;
 using Ezenity.Core.Entities.Emails;
 using Ezenity.Core.Helpers.Exceptions;
+using Ezenity.Core.Interfaces;
 using Ezenity.Core.Services.Common;
 using Ezenity.DTOs.Models;
 using Ezenity.DTOs.Models.Accounts;
@@ -20,13 +21,14 @@ namespace Ezenity.Infrastructure.Services.Accounts
     /// </summary>
     public class AccountService : IAccountService
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
         private readonly IMapper _mapper;
         private readonly AppSettings _appSettings;
         private readonly IEmailService _emailService;
         private readonly ILogger<AccountService> _logger;
-        private readonly TokenHelper _tokenHelper;
+        private readonly ITokenHelper _tokenHelper;
         private readonly IAuthService _authService;
+        private readonly IPasswordService _passwordService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AccountService"/> class with required dependencies.
@@ -38,7 +40,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <param name="logger">The logger for logging information.</param>
         /// <param name="tokenHelper">The helper for generating tokens.</param>
         /// <param name="authService">The service for authentication-related tasks.</param>
-        public AccountService(DataContext context, IMapper mapper, IOptions<AppSettings> appSettings, IEmailService emailService, ILogger<AccountService> logger, TokenHelper tokenHelper, IAuthService authService)
+        public AccountService(IDataContext context, IMapper mapper, IOptions<AppSettings> appSettings, IEmailService emailService, ILogger<AccountService> logger, ITokenHelper tokenHelper, IAuthService authService, IPasswordService passwordService)
         {
             _context = context;
             _mapper = mapper;
@@ -47,6 +49,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
             _logger = logger;
             _tokenHelper = tokenHelper;
             _authService = authService;
+            _passwordService = passwordService;
         }
 
         /// <summary>
@@ -61,7 +64,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
         {
             var account = await FindAndValidateAccountAsync(model.Email);
 
-            if (!BC.Verify(model.Password, account.PasswordHash))
+            if (!_passwordService.VerifyPassword(model.Password, account.PasswordHash))
                 throw new AppException("The 'password' provided is incorrect");
 
             var jwtToken = _tokenHelper.GenerateJwtToken(account.Id);
@@ -89,7 +92,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <exception cref="Exception">Thrown when the token refresh fails.</exception>
         public async Task<AuthenticateResponse> RefreshTokenAsync(string token, string ipAddress)
         {
-            using(var transaction = _context.Database.BeginTransaction())
+            using(var transaction = _context.BeginTransaction())
             {
                 try
                 {
@@ -157,7 +160,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
             {
                 EmailMessage alreadyRegisteredEmail = new EmailMessage
                 {
-                    To = model?.Email,
+                    To = model.Email,
                     TemplateName = "alreadyRegistered",
                     DynamicValues = new Dictionary<string, string>
                     {
@@ -220,7 +223,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
             // Send email
             EmailMessage verifyEmail = new EmailMessage
             {
-                To = model?.Email,
+                To = model.Email,
                 TemplateName = "verification",
                 DynamicValues = new Dictionary<string, string>
                 {
