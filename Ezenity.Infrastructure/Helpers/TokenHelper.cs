@@ -10,6 +10,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Ezenity.Core.Interfaces;
 
 namespace Ezenity.Infrastructure.Helpers
 {
@@ -22,22 +23,17 @@ namespace Ezenity.Infrastructure.Helpers
     /// the single request lifecycle but will not keep the state longer
     /// than that.
     /// </summary>
-    public class TokenHelper
+    public class TokenHelper : ITokenHelper
     {
         /// <summary>
         /// Data context for database interaction.
         /// </summary>
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
         /// <summary>
         /// Application-specific settings.
         /// </summary>
         private readonly AppSettings _appSettings;
-
-        /// <summary>
-        /// Secret key for token generation.
-        /// </summary>
-        private readonly string _secret;
 
 
         /// <summary>
@@ -46,21 +42,20 @@ namespace Ezenity.Infrastructure.Helpers
         /// <param name="context">The data context for database interaction.</param>
         /// <param name="appSettings">Application-specific settings.</param>
         /// <param name="secret">Secret key for token generation.</param>
-        public TokenHelper(DataContext context, IOptions<AppSettings> appSettings, string secret)
+        public TokenHelper(IDataContext context, IOptions<AppSettings> appSettings)
         {
             _context = context;
             _appSettings = appSettings.Value;
-            _secret = secret;
         }
 
         /// <summary>
         /// Initializes a new instance of the TokenHelper class with only a secret string.
         /// </summary>
         /// <param name="secret">Secret key for token generation.</param>
-        public TokenHelper(string secret)
+/*        public TokenHelper(string secret)
         {
             _secret = secret;
-        }
+        }*/
 
         /// <summary>
         /// Generates a JWT token for a given account ID.
@@ -70,7 +65,7 @@ namespace Ezenity.Infrastructure.Helpers
         public string GenerateJwtToken(int accountId)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_secret);
+            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
 
             var claims = new[]
             {

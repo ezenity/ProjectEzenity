@@ -3,6 +3,8 @@ using Ezenity.Core.Entities.EmailTemplates;
 using Ezenity.Core.Entities.Sections;
 using Ezenity.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 
 namespace Ezenity.Infrastructure.Helpers
@@ -223,6 +225,11 @@ namespace Ezenity.Infrastructure.Helpers
                 entity.ToTable("Sections");
                 entity.HasKey(x => x.Id);
             });
+        }
+
+        public IDbContextTransaction BeginTransaction()
+        {
+            return this.Database.BeginTransaction();
         }
     }
 }
