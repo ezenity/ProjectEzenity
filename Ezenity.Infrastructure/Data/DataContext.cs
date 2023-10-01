@@ -1,7 +1,10 @@
 ﻿using Ezenity.Core.Entities.Accounts;
 using Ezenity.Core.Entities.EmailTemplates;
 using Ezenity.Core.Entities.Sections;
+using Ezenity.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 
 namespace Ezenity.Infrastructure.Helpers
@@ -9,7 +12,7 @@ namespace Ezenity.Infrastructure.Helpers
     /// <summary>
     /// Represents the Entity Framework Core database context for the application.
     /// </summary>
-    public class DataContext : DbContext
+    public class DataContext : DbContext, IDataContext
     {
         /// <summary>
         /// Initializes a new instance of the "DataContext" class.
@@ -222,6 +225,11 @@ namespace Ezenity.Infrastructure.Helpers
                 entity.ToTable("Sections");
                 entity.HasKey(x => x.Id);
             });
+        }
+
+        public IDbContextTransaction BeginTransaction()
+        {
+            return this.Database.BeginTransaction();
         }
     }
 }
