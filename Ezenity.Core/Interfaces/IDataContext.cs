@@ -2,6 +2,8 @@
 using Ezenity.Core.Entities.EmailTemplates;
 using Ezenity.Core.Entities.Sections;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Ezenity.Core.Interfaces
 {
@@ -14,5 +16,11 @@ namespace Ezenity.Core.Interfaces
 
         int SaveChanges();
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+        // Transaction Support
+        IDbContextTransaction BeginTransaction();
+
+        // Update Method Support
+        EntityEntry Update(object entity);
     }
 }
