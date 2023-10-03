@@ -27,7 +27,8 @@ namespace Ezenity.Infrastructure.Helpers
                 .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.Name));
             CreateMap<Account, AuthenticateResponse>();
             CreateMap<RegisterRequest, Account>();
-            CreateMap<CreateAccountRequest, Account>();
+            CreateMap<CreateAccountRequest, Account>()
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => new Role {  Name = src.Role }));
             CreateMap<UpdateAccountRequest, Account>()
                 .ForAllMembers(x => x.Condition(
                     (src, dest, prop) =>
