@@ -110,7 +110,8 @@ namespace Ezenity.API.Middleware
         private async Task<Role> GetRoleByAccountIdAsync(int accountId)
         {
             var account = await _context.Accounts.FindAsync(accountId);
-            return await _context.Roles.FindAsync(account.Id);
+            var accountRole = await _context.Roles.FindAsync(account.RoleId);
+            return accountRole;
         }
     }
 }
