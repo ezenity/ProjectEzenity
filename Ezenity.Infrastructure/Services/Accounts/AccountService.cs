@@ -451,14 +451,19 @@ namespace Ezenity.Infrastructure.Services.Accounts
 
             // Map model to new account object
             var account = _mapper.Map<Account>(model);
+
+            Role role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == model.Role);
+
+            if (role == null || role.Name.ToLower() != model.Role.ToLower())
+                throw new NotFoundException($"There is no Role named {model.Role} available.");
+
+            account.Role = role;
             account.Created = DateTime.UtcNow;
             account.Verified = DateTime.UtcNow;
+            account.PasswordHash = BC.HashPassword(model.Password); // Hash password
 
-            // Hash password
-            account.PasswordHash = BC.HashPassword(model.Password);
-
-            // Save account
             _context.Accounts.Add(account);
+
             await _context.SaveChangesAsync();
 
             return _mapper.Map<AccountResponse>(account);
