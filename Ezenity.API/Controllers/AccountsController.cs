@@ -217,26 +217,28 @@ namespace Ezenity.API.API.Controllers
             {
                 var account = await _accountService.CreateAsync(model);
 
-                if (account.Email == model.Email)
-                {
-                    return Conflict(new ApiResponse<AccountResponse>
-                    {
-                        StatusCode = 409,
-                        IsSuccess = false,
-                        Message = "An Account with this email already exists."
-                    });
-                }
-
                 return Created(""/* TODO: input API endpoint to get account details (URL) */, new ApiResponse<AccountResponse>
                 {
                     StatusCode = 201,
                     IsSuccess = true,
-                    Message = "Account created successfully"
+                    Message = "Account created successfully",
+                    Data = account
+                });
+            }
+            catch(ResourceAlreadyExistsException ex)
+            {
+                _logger.LogError("An Account with this email already exists: {0}", ex);
+
+                return Conflict(new ApiResponse<AccountResponse>
+                {
+                    StatusCode = 409,
+                    IsSuccess = false,
+                    Message = "An Account with this email already exists."
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError("[Error] Accounts created unsuccessfully: {0}", ex);
+                _logger.LogCritical("Accounts created unsuccessfully: {0}", ex);
 
                 return StatusCode(500, new ApiResponse<AccountResponse>
                 {

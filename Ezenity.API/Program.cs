@@ -139,6 +139,7 @@ services.AddScoped<IAccountService, AccountService>();
 services.AddScoped<IEmailService, EmailService>();
 services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 services.AddScoped<ISectionService, SectionService>();
+services.AddScoped<IPasswordService, PasswordService>();
 services.AddScoped<IAuthService, AuthService>();
 services.AddScoped<IDataContext, DataContext>();
 services.AddScoped<ITokenHelper, TokenHelper>();
