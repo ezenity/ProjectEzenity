@@ -42,14 +42,14 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <param name="authService">The service for authentication-related tasks.</param>
         public AccountService(IDataContext context, IMapper mapper, IOptions<AppSettings> appSettings, IEmailService emailService, ILogger<AccountService> logger, ITokenHelper tokenHelper, IAuthService authService, IPasswordService passwordService)
         {
-            _context = context;
-            _mapper = mapper;
-            _appSettings = appSettings.Value;
-            _emailService = emailService;
-            _logger = logger;
-            _tokenHelper = tokenHelper;
-            _authService = authService;
-            _passwordService = passwordService;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _appSettings = appSettings.Value ?? throw new ArgumentNullException(nameof(appSettings));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _tokenHelper = tokenHelper ?? throw new ArgumentNullException(nameof(tokenHelper));
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+            _passwordService = passwordService ?? throw new ArgumentNullException(nameof(passwordService));
         }
 
         /// <summary>
