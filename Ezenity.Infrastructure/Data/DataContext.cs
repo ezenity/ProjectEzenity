@@ -227,9 +227,22 @@ namespace Ezenity.Infrastructure.Helpers
             });
         }
 
+        /// <summary>
+        /// Begins a new transaction synchronously.
+        /// </summary>
+        /// <returns>A transaction object representing the new transaction.</returns>
         public IDbContextTransaction BeginTransaction()
         {
             return this.Database.BeginTransaction();
+        }
+
+        /// <summary>
+        /// Begins a new transaction asynchronously.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the new transaction object.</returns>
+        public Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return this.Database.BeginTransactionAsync();
         }
     }
 }
