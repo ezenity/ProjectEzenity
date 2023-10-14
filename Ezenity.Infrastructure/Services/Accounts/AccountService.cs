@@ -53,6 +53,53 @@ namespace Ezenity.Infrastructure.Services.Accounts
         }
 
         /// <summary>
+        /// Generates a JWT token based on the given account ID.
+        /// </summary>
+        /// <param name="accountId">The ID of the account.</param>
+        /// <returns>The JWT token as a string.</returns>
+        private string GenerateJwtToken(int accountId)
+        {
+            return _tokenHelper.GenerateJwtToken(accountId);
+        }
+
+        /// <summary>
+        /// Generates a new refresh token based on the given IP address.
+        /// </summary>
+        /// <param name="ipAddress">The IP address of the request origin.</param>
+        /// <returns>A RefreshToken object.</returns>
+        private RefreshToken GenerateNewRefreshToken(string ipAddress)
+        {
+            return _tokenHelper.GenerateNewRefreshToken(ipAddress);
+        }
+
+        /// <summary>
+        /// Updates the given account with the provided refresh token.
+        /// </summary>
+        /// <param name="account">The account to be updated.</param>
+        /// <param name="refreshToken">The refresh token to be added to the account.</param>
+        private void UpdateAccountWithRefreshToken(Account account, RefreshToken refreshToken)
+        {
+            account.RefreshTokens.Add(refreshToken);
+            _tokenHelper.RemoveOldRefreshTokens(account);
+            _context.Update(account);
+        }
+
+        /// <summary>
+        /// Generates an authentication response based on the given account and tokens.
+        /// </summary>
+        /// <param name="account">The authenticated account.</param>
+        /// <param name="jwtToken">The JWT token.</param>
+        /// <param name="refreshToken">The refresh token.</param>
+        /// <returns>An AuthenticateResponse object containing the authentication details.</returns>
+        private AuthenticateResponse GenerateAuthenticateResponse(Account account, string jwtToken, string refreshToken)
+        {
+            var response = _mapper.Map<AuthenticateResponse>(account);
+            response.JwtToken = jwtToken;
+            response.RefreshToken = refreshToken;
+            return response;
+        }
+
+        /// <summary>
         /// Authenticates a user and returns an authentication response.
         /// </summary>
         /// <param name="model">The authentication request model containing the user credentials.</param>
@@ -62,25 +109,36 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <exception cref="AppException">Thrown when the password is incorrect.</exception>
         public async Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model, string ipAddress)
         {
-            var account = await FindAndValidateAccountAsync(model.Email);
+            using (var transaction = await _context.BeginTransactionAsync())
+            {
+                try
+                {
+                    var account = await FindAndValidateAccountAsync(model.Email);
 
-            if (!_passwordService.VerifyPassword(model.Password, account.PasswordHash))
-                throw new AppException("The 'password' provided is incorrect");
+                    if (!_passwordService.VerifyPassword(model.Password, account.PasswordHash))
+                    {
+                        _logger.LogWarning($"Authnetication failed for email: {model.Email}");
+                        throw new AppException("The 'password' provided is incorrect");
+                    }
 
-            var jwtToken = _tokenHelper.GenerateJwtToken(account.Id);
-            var refreshToken = _tokenHelper.GenerateNewRefreshToken(ipAddress);
+                    var jwtToken = GenerateJwtToken(account.Id);
+                    var refreshToken = GenerateNewRefreshToken(ipAddress);
 
-            account.RefreshTokens.Add(refreshToken);
-            _tokenHelper.RemoveOldRefreshTokens(account);
+                    UpdateAccountWithRefreshToken(account, refreshToken);
+                    await _context.SaveChangesAsync();
 
-            _context.Update(account);
-            await _context.SaveChangesAsync();
+                    transaction.Commit();
+                    _logger.LogInformation($"Successfully authenticated user with email: {model.Email}");
 
-            var response = _mapper.Map<AuthenticateResponse>(account);
-            response.JwtToken = jwtToken;
-            response.RefreshToken = refreshToken.Token;
-
-            return response;
+                    return GenerateAuthenticateResponse(account, jwtToken, refreshToken.Token);
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _logger.LogError(ex, $"an error occurred while authenticating the user with email: {model.Email}");
+                    throw;
+                }
+            }
         }
 
         /// <summary>
