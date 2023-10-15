@@ -55,7 +55,7 @@ namespace Ezenity.Core.Interfaces
         /// Begins a new transaction asynchronously.
         /// </summary>
         /// <returns>A task that represents the asynchronous operation. The task result contains the new transaction object.</returns>
-        Task<IDbContextTransaction> BeginTransactionAsync();
+        Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Marks the given entity as modified.

@@ -18,6 +18,8 @@ using Ezenity.Core.Interfaces;
 using System.Linq;
 using System.Collections.Generic;
 using Moq.EntityFrameworkCore;
+using Ezenity.Tests.Mocks;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Ezenity.Tests.AccountTests
 {
@@ -25,8 +27,10 @@ namespace Ezenity.Tests.AccountTests
     public class AccountServiceTests
     {
         private Mock<IDataContext> mockContext;
+        private MockDbTransaction mockTransaction;
         private Mock<IMapper> mockMapper;
-        private Mock<IOptions<AppSettings>> mockAppSettings;
+        //private Mock<IOptions<AppSettings>> mockAppSettings;
+        private Mock<IAppSettings> mockAppSettings;
         private Mock<IEmailService> mockEmailService;
         private Mock<ILogger<AccountService>> mockLogger;
         private Mock<ITokenHelper> mockTokenHelper;
@@ -39,12 +43,25 @@ namespace Ezenity.Tests.AccountTests
         {
             // Initialize other mocks
             mockMapper = new Mock<IMapper>();
-            mockAppSettings = new Mock<IOptions<AppSettings>>();
+            //mockAppSettings = new Mock<IOptions<AppSettings>>();
+            mockAppSettings = new Mock<IAppSettings>();
             mockEmailService = new Mock<IEmailService>();
             mockLogger = new Mock<ILogger<AccountService>>();
             mockTokenHelper = new Mock<ITokenHelper>();
             mockAuthService = new Mock<IAuthService>();
             mockPasswordService = new Mock<IPasswordService>();
+
+            // Mocking the application settings
+            mockAppSettings.Setup(m => m.BaseUrl).Returns("http://test.com");
+            mockAppSettings.Setup(m => m.Secret).Returns("testSecret");
+            mockAppSettings.Setup(m => m.RefreshTokenTTL).Returns(7);
+            mockAppSettings.Setup(m => m.EmailFrom).Returns("test@ezenity.com");
+            mockAppSettings.Setup(m => m.SmtpHost).Returns("smtp.gmail.com");
+            mockAppSettings.Setup(m => m.SmtpPort).Returns(465);
+            mockAppSettings.Setup(m => m.SmtpUser).Returns("test@ezenity.com");
+            mockAppSettings.Setup(m => m.SmtpPass).Returns("test12345");
+            mockAppSettings.Setup(m => m.SmtpEnableSsl).Returns(true);
+            mockAppSettings.Setup(m => m.AccessToken).Returns("testAccessToken");
 
             // Mock the IMapper to return a non-null Account object
             var account = new Account("Mr.", "Tony", "Mac", "test@ezenity.com")
@@ -85,6 +102,11 @@ namespace Ezenity.Tests.AccountTests
             mockContext = new Mock<IDataContext>();
             mockContext.Setup(c => c.Accounts).ReturnsDbSet(mockAccountSet);
             mockContext.Setup(c => c.Roles).ReturnsDbSet(mockRoleSet);
+
+            mockTransaction = new MockDbTransaction();
+
+            mockContext.Setup(c => c.BeginTransactionAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult((IDbContextTransaction)mockTransaction));
 
             // Create a MapperConfiguration by adding the profile
             var config = new MapperConfiguration(cfg => cfg.AddProfile(new AutoMapperProfile()));

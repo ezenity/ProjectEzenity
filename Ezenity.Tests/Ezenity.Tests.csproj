@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <Folder Include="IntegrationTests\Database\" />
-    <Folder Include="Mocks\" />
     <Folder Include="UnitTests\API\Controllers\" />
     <Folder Include="UnitTests\Core\Entities\" />
     <Folder Include="Utilities\" />

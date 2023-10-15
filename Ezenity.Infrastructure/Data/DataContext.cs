@@ -240,9 +240,9 @@ namespace Ezenity.Infrastructure.Helpers
         /// Begins a new transaction asynchronously.
         /// </summary>
         /// <returns>A task that represents the asynchronous operation. The task result contains the new transaction object.</returns>
-        public Task<IDbContextTransaction> BeginTransactionAsync()
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
         {
-            return this.Database.BeginTransactionAsync();
+            return this.Database.BeginTransactionAsync(cancellationToken);
         }
     }
 }

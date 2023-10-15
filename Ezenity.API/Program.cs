@@ -122,6 +122,7 @@ services.Configure<MvcOptions>(options =>
 
 // Configure stringly typed settings objects
 services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
+services.AddSingleton<IAppSettings, AppSettingsWrapper>();
 
 // TODO: Add support for Azure Kay Vault
 var connectionString = configuration.GetConnectionString("WebApiDatabase");

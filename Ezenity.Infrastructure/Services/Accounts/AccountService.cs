@@ -23,7 +23,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
     {
         private readonly IDataContext _context;
         private readonly IMapper _mapper;
-        private readonly AppSettings _appSettings;
+        private readonly IAppSettings _appSettings;
         private readonly IEmailService _emailService;
         private readonly ILogger<AccountService> _logger;
         private readonly ITokenHelper _tokenHelper;
@@ -40,11 +40,11 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <param name="logger">The logger for logging information.</param>
         /// <param name="tokenHelper">The helper for generating tokens.</param>
         /// <param name="authService">The service for authentication-related tasks.</param>
-        public AccountService(IDataContext context, IMapper mapper, IOptions<AppSettings> appSettings, IEmailService emailService, ILogger<AccountService> logger, ITokenHelper tokenHelper, IAuthService authService, IPasswordService passwordService)
+        public AccountService(IDataContext context, IMapper mapper, IAppSettings appSettings, IEmailService emailService, ILogger<AccountService> logger, ITokenHelper tokenHelper, IAuthService authService, IPasswordService passwordService)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _appSettings = appSettings.Value ?? throw new ArgumentNullException(nameof(appSettings));
+            _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _tokenHelper = tokenHelper ?? throw new ArgumentNullException(nameof(tokenHelper));
