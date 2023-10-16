@@ -29,6 +29,7 @@ using Ezenity.Infrastructure.Services.Sections;
 using Ezenity.API.Middleware;
 using Ezenity.Core.Interfaces;
 using Microsoft.Extensions.Options;
+using Ezenity.Infrastructure.Factories;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -120,14 +121,6 @@ services.Configure<MvcOptions>(options =>
     }
 });
 
-// Configure stringly typed settings objects
-services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
-services.AddSingleton<IAppSettings, AppSettingsWrapper>();
-
-// TODO: Add support for Azure Kay Vault
-var connectionString = configuration.GetConnectionString("WebApiDatabase");
-services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
-
 // Make the data repository available for dependency injection. Whenever an interface is 
 // referenced in a constructor, substitute an instace of the class.
 //
@@ -147,18 +140,24 @@ services.AddScoped<ITokenHelper, TokenHelper>();
 // Filter DI
 services.AddScoped<LoadAccountFilter>();
 
+
 string secretKey;
 if (builder.Environment.IsDevelopment())
     secretKey = configuration.GetSection("AppSettings")["Secret"];
 else
     secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? System.IO.File.ReadAllText("./secret/key.txt").Trim(); // TODO: Insert correct location once on server
 
-// Register AppSettings with the updated secretKey
-var appSettings = configuration.GetSection("AppSettings").Get<AppSettings>();
-appSettings.Secret = secretKey;
+// Populate AppSettings from configuration and update the secret
+var appSettings = AppSettingsFactory.Create(configuration, secretKey);
+var connectionStringSettings = ConnectionStringSettingsFactory.Create(configuration);
 
-services.AddSingleton(appSettings);
-services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
+services.AddSingleton<IAppSettings>(appSettings);
+services.AddSingleton<IConnectionStringSettings>(connectionStringSettings);
+
+var connectionString = connectionStringSettings.WebApiDatabase;
+services.AddDbContext<DataContext>(option => option.UseSqlServer(connectionString));
+// TODO: Add support for Azure Kay Vault
+
 
 services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);

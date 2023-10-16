@@ -1,10 +1,26 @@
-﻿namespace Ezenity.Infrastructure.Helpers
+﻿using Ezenity.Core.Interfaces;
+
+namespace Ezenity.Infrastructure.Helpers
 {
     /// <summary>
     /// Contains settings for the application.
     /// </summary>
-    public class AppSettings
+    public class AppSettings : IAppSettings
     {
+        public AppSettings(string baseUrl, string secret, int refreshTokenTTL, string emailFrom, string smtpHost, int smtpPort, string smtpUser, string smtpPass, bool smtpEnableSsl, string accessToken)
+        {
+            BaseUrl = baseUrl;
+            Secret = secret;
+            RefreshTokenTTL = refreshTokenTTL;
+            EmailFrom = emailFrom;
+            SmtpHost = smtpHost;
+            SmtpPort = smtpPort;
+            SmtpUser = smtpUser;
+            SmtpPass = smtpPass;
+            SmtpEnableSsl = smtpEnableSsl;
+            AccessToken = accessToken;
+        }
+
         /// <summary>
         /// Gets the base URL of the application.
         /// </summary>
