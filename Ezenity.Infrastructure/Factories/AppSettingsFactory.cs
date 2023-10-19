@@ -29,7 +29,7 @@ namespace Ezenity.Infrastructure.Factories
             var smtpPort = int.Parse(configuration["AppSettings:SmtpPort"]);
             var smtpUser = configuration["AppSettings:SmtpUser"];
             var smtpPass = configuration["AppSettings:SmtpPass"];
-            var smtpEnableSsl = bool.Parse(configuration["AppSettings:SmtpEnableSsl"]);
+            var smtpEnabledSsl = bool.Parse(configuration["AppSettings:SmtpEnabledSsl"]);
             var accessToken = configuration["AppSettings:AccessToken"];
 
             return new AppSettingsWrapper(
@@ -42,7 +42,7 @@ namespace Ezenity.Infrastructure.Factories
                     smtpPort,
                     smtpUser,
                     smtpPass,
-                    smtpEnableSsl,
+                    smtpEnabledSsl,
                     accessToken
                     )
                 );

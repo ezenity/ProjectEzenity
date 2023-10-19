@@ -1,4 +1,5 @@
 ﻿using Ezenity.Core.Entities.Accounts;
+using Ezenity.Core.Interfaces;
 using Ezenity.Infrastructure.Helpers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
@@ -27,7 +28,7 @@ namespace Ezenity.API.Middleware
         /// <summary>
         /// Application settings for configuring JWT.
         /// </summary>
-        private readonly AppSettings _appSettings;
+        private readonly IAppSettings _appSettings;
         private readonly DataContext _context;
 
         /// <summary>
@@ -41,14 +42,14 @@ namespace Ezenity.API.Middleware
         /// <param name="context">The data context for database operations.</param>
         public CustomJwtAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
-            IOptions<AppSettings> appSettings,
+            IAppSettings appSettings,
             ILoggerFactory logger,
             UrlEncoder encoder,
             ISystemClock clock,
             DataContext context)
             : base(options, logger, encoder, clock)
         {
-            _appSettings = appSettings.Value;
+            _appSettings = appSettings;
             _context = context;
         }
 
