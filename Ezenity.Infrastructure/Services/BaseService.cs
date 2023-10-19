@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Ezenity.Core.Interfaces;
 using Ezenity.Core.Services;
 using Ezenity.DTOs.Models.Pages;
 using Ezenity.Infrastructure.Helpers;
@@ -27,7 +28,7 @@ namespace Ezenity.Infrastructure.Services
         /// <summary>
         /// The application settings.
         /// </summary>
-        protected readonly AppSettings _appSettings;
+        protected readonly IAppSettings _appSettings;
 
         /// <summary>
         /// Initializes a new instance of the BaseService class.
@@ -35,11 +36,11 @@ namespace Ezenity.Infrastructure.Services
         /// <param name="context">The data context.</param>
         /// <param name="mapper">The AutoMapper instance.</param>
         /// <param name="appSettings">The application settings.</param>
-        public BaseService(DataContext context, IMapper mapper, IOptions<AppSettings> appSettings)
+        public BaseService(DataContext context, IMapper mapper, IAppSettings appSettings)
         {
-            _context = context;
-            _mapper = mapper;
-            _appSettings = appSettings.Value;
+            _context = context ?? throw new ArgumentException(nameof(context));
+            _mapper = mapper ?? throw new ArgumentException(nameof(mapper));
+            _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
         }
 
         /// <summary>

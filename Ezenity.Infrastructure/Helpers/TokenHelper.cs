@@ -33,7 +33,7 @@ namespace Ezenity.Infrastructure.Helpers
         /// <summary>
         /// Application-specific settings.
         /// </summary>
-        private readonly AppSettings _appSettings;
+        private readonly IAppSettings _appSettings;
 
 
         /// <summary>
@@ -42,10 +42,10 @@ namespace Ezenity.Infrastructure.Helpers
         /// <param name="context">The data context for database interaction.</param>
         /// <param name="appSettings">Application-specific settings.</param>
         /// <param name="secret">Secret key for token generation.</param>
-        public TokenHelper(IDataContext context, IOptions<AppSettings> appSettings)
+        public TokenHelper(IDataContext context, IAppSettings appSettings)
         {
-            _context = context;
-            _appSettings = appSettings.Value;
+            _context = context ?? throw new ArgumentException(nameof(context));
+            _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
         }
 
         /// <summary>

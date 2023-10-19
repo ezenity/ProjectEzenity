@@ -36,7 +36,7 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
         /// <summary>
         /// Provides access to application settings.
         /// </summary>
-        private readonly AppSettings _appSettings;
+        private readonly IAppSettings _appSettings;
 
         /// <summary>
         /// Provides logging capabilities.
@@ -62,14 +62,14 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
         /// <param name="logger">Provides logging capabilities.</param>
         /// <param name="tokenHelper">Provides token generation and validation services.</param>
         /// <param name="authService">Provides user authentication services.</param>
-        public EmailTemplateService(IDataContext context, IMapper mapper, IOptions<AppSettings> appSettings, ILogger<IEmailTemplateService> logger, ITokenHelper tokenHelper, IAuthService authService)
+        public EmailTemplateService(IDataContext context, IMapper mapper, IAppSettings appSettings, ILogger<IEmailTemplateService> logger, ITokenHelper tokenHelper, IAuthService authService)
         {
-            _context = context;
-            _mapper = mapper;
-            _appSettings = appSettings.Value;
-            _logger = logger;
-            _tokenHelper = tokenHelper;
-            _authService = authService;
+            _context = context ?? throw new ArgumentException(nameof(context));
+            _mapper = mapper ?? throw new ArgumentException(nameof(mapper));
+            _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
+            _logger = logger ?? throw new ArgumentException(nameof(logger));
+            _tokenHelper = tokenHelper ?? throw new ArgumentException(nameof(tokenHelper));
+            _authService = authService ?? throw new ArgumentException(nameof(authService));
         }
 
         /// <summary>
