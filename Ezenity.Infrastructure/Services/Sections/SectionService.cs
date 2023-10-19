@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Ezenity.Core.Entities.Sections;
 using Ezenity.Core.Helpers.Exceptions;
+using Ezenity.Core.Interfaces;
 using Ezenity.Core.Services.Common;
 using Ezenity.DTOs.Models;
 using Ezenity.DTOs.Models.Pages;
@@ -34,7 +35,7 @@ namespace Ezenity.Infrastructure.Services.Sections
         /// <summary>
         /// Provides access to application settings.
         /// </summary>
-        private readonly AppSettings _appSettings;
+        private readonly IAppSettings _appSettings;
 
         /// <summary>
         /// Provides logging capabilities.
@@ -48,12 +49,12 @@ namespace Ezenity.Infrastructure.Services.Sections
         /// <param name="mapper">Object mapper for model transformation.</param>
         /// <param name="appSettings">Application settings.</param>
         /// <param name="logger">Logger instance.</param>
-        public SectionService(DataContext context, IMapper mapper, IOptions<AppSettings> appSettings, ILogger<ISectionService> logger)
+        public SectionService(DataContext context, IMapper mapper, IAppSettings appSettings, ILogger<ISectionService> logger)
         {
-            _context = context;
-            _mapper = mapper;
-            _appSettings = appSettings.Value;
-            _logger = logger;
+            _context = context ?? throw new ArgumentException(nameof(context));
+            _mapper = mapper ?? throw new ArgumentException(nameof(mapper));
+            _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
+            _logger = logger ?? throw new ArgumentException(nameof(logger));
         }
 
         /// <summary>

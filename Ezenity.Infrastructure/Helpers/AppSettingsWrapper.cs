@@ -5,11 +5,11 @@ namespace Ezenity.Infrastructure.Helpers
 {
     public class AppSettingsWrapper : IAppSettings
     {
-        private readonly AppSettings _appSettings;
+        private readonly IAppSettings _appSettings;
 
-        public AppSettingsWrapper(AppSettings appSettings)
+        public AppSettingsWrapper(IAppSettings appSettings)
         {
-            _appSettings = appSettings;
+            _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
         }
 
         public string BaseUrl => _appSettings.BaseUrl;

@@ -1,5 +1,6 @@
 ﻿using Ezenity.Core.Entities.Emails;
 using Ezenity.Core.Helpers.Exceptions;
+using Ezenity.Core.Interfaces;
 using Ezenity.Core.Services.Common;
 using Ezenity.Infrastructure.Helpers;
 using MailKit.Net.Smtp;
@@ -23,7 +24,7 @@ namespace Ezenity.Infrastructure.Services.Emails
         /// <summary>
         /// Holds the application settings.
         /// </summary>
-        private readonly AppSettings _appSettings;
+        private readonly IAppSettings _appSettings;
 
         /// <summary>
         /// The data context used for database operations.
@@ -41,11 +42,11 @@ namespace Ezenity.Infrastructure.Services.Emails
         /// <param name="appSettings">Application settings.</param>
         /// <param name="context">Data context for database operations.</param>
         /// <param name="env">Web hosting environment details.</param>
-        public EmailService(IOptions<AppSettings> appSettings, DataContext context, IWebHostEnvironment env)
+        public EmailService(IAppSettings appSettings, DataContext context, IWebHostEnvironment env)
         {
-            _appSettings = appSettings.Value;
-            _context = context;
-            _env = env;
+            _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
+            _context = context ?? throw new ArgumentException(nameof(context));
+            _env = env ?? throw new ArgumentException(nameof(env));
         }
 
         /// <summary>
