@@ -25,7 +25,7 @@ namespace Ezenity.Infrastructure.Services.Sections
         /// <summary>
         /// Provides data access to the application's data store.
         /// </summary>
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
         /// <summary>
         /// Provides object-object mapping functionality.
@@ -49,7 +49,7 @@ namespace Ezenity.Infrastructure.Services.Sections
         /// <param name="mapper">Object mapper for model transformation.</param>
         /// <param name="appSettings">Application settings.</param>
         /// <param name="logger">Logger instance.</param>
-        public SectionService(DataContext context, IMapper mapper, IAppSettings appSettings, ILogger<ISectionService> logger)
+        public SectionService(IDataContext context, IMapper mapper, IAppSettings appSettings, ILogger<ISectionService> logger)
         {
             _context = context ?? throw new ArgumentException(nameof(context));
             _mapper = mapper ?? throw new ArgumentException(nameof(mapper));

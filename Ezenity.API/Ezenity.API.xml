@@ -677,7 +677,7 @@
             Application settings for configuring JWT.
             </summary>
         </member>
-        <member name="M:Ezenity.API.Middleware.CustomJwtAuthenticationHandler.#ctor(Microsoft.Extensions.Options.IOptionsMonitor{Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions},Microsoft.Extensions.Options.IOptions{Ezenity.Infrastructure.Helpers.AppSettings},Microsoft.Extensions.Logging.ILoggerFactory,System.Text.Encodings.Web.UrlEncoder,Microsoft.AspNetCore.Authentication.ISystemClock,Ezenity.Infrastructure.Helpers.DataContext)">
+        <member name="M:Ezenity.API.Middleware.CustomJwtAuthenticationHandler.#ctor(Microsoft.Extensions.Options.IOptionsMonitor{Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions},Ezenity.Core.Interfaces.IAppSettings,Microsoft.Extensions.Logging.ILoggerFactory,System.Text.Encodings.Web.UrlEncoder,Microsoft.AspNetCore.Authentication.ISystemClock,Ezenity.Infrastructure.Helpers.DataContext)">
             <summary>
             Initializes a new instance of the <see cref="T:Ezenity.API.Middleware.CustomJwtAuthenticationHandler"/> class.
             </summary>
@@ -732,8 +732,7 @@
             Application settings for configuring JWT.
             </summary>
         </member>
-
-        <member name="M:Ezenity.API.Middleware.JwtMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Microsoft.Ext        <member name="M:Ezenity.API.Middleware.JwtMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Ezenity.Core.Interfaces.IAppSettings)">
+        <member name="M:Ezenity.API.Middleware.JwtMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Ezenity.Core.Interfaces.IAppSettings)">
             <summary>
             Initializes a new instance of the <see cref="T:Ezenity.API.Middleware.JwtMiddleware"/> class.
             </summary>
