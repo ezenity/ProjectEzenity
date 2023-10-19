@@ -1,4 +1,5 @@
 ﻿using Ezenity.Core.Entities.EmailTemplates;
+using Ezenity.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,7 +65,7 @@ namespace Ezenity.Infrastructure.Helpers
         /// <param name="templateName">Name of the template.</param>
         /// <param name="context">The data context.</param>
         /// <returns>The EmailTemplate object if found; otherwise, null.</returns>
-        public static EmailTemplate GetEmailTemplateByName(string templateName, DataContext context)
+        public static EmailTemplate GetEmailTemplateByName(string templateName, IDataContext context)
         {
             return context.EmailTemplates.FirstOrDefault(t => t.TemplateName == templateName);
         }
