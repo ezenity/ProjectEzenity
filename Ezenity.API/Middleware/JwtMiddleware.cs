@@ -43,7 +43,7 @@ namespace Ezenity.API.Middleware
         /// <param name="context">The HTTP context for the current request and response.</param>
         /// <param name="dataContext">The database context to query for accounts.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public async Task Invoke(HttpContext context, DataContext dataContext)
+        public async Task Invoke(HttpContext context, IDataContext dataContext)
         {
             var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
@@ -60,7 +60,7 @@ namespace Ezenity.API.Middleware
         /// <param name="dataContext">The database context to query for accounts.</param>
         /// <param name="token">The JWT to validate and extract account information from.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task attachAccountToContext(HttpContext context, DataContext dataContext, string token)
+        private async Task attachAccountToContext(HttpContext context, IDataContext dataContext, string token)
         {
             try
             {

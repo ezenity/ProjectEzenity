@@ -29,7 +29,7 @@ namespace Ezenity.API.Middleware
         /// Application settings for configuring JWT.
         /// </summary>
         private readonly IAppSettings _appSettings;
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CustomJwtAuthenticationHandler"/> class.
@@ -46,7 +46,7 @@ namespace Ezenity.API.Middleware
             ILoggerFactory logger,
             UrlEncoder encoder,
             ISystemClock clock,
-            DataContext context)
+            IDataContext context)
             : base(options, logger, encoder, clock)
         {
             _appSettings = appSettings;
