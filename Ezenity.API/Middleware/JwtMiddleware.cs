@@ -1,4 +1,5 @@
-﻿using Ezenity.Infrastructure.Helpers;
+﻿using Ezenity.Core.Interfaces;
+using Ezenity.Infrastructure.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -23,17 +24,17 @@ namespace Ezenity.API.Middleware
         /// <summary>
         /// Application settings for configuring JWT.
         /// </summary>
-        private readonly AppSettings _appSettings;
+        private readonly IAppSettings _appSettings;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JwtMiddleware"/> class.
         /// </summary>
         /// <param name="next">The delegate for the next middleware in the pipeline.</param>
         /// <param name="appSettings">Application settings for configuring JWT.</param>
-        public JwtMiddleware(RequestDelegate next, IOptions<AppSettings> appSettings)
+        public JwtMiddleware(RequestDelegate next, IAppSettings appSettings)
         {
-            _next = next;
-            _appSettings = appSettings.Value;
+            _next = next ?? throw new ArgumentException(nameof(next));
+            _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
         }
 
         /// <summary>
