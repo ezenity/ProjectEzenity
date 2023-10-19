@@ -1,4 +1,4 @@
-﻿using Ezenity.Infrastructure.Helpers;
+﻿using Ezenity.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
@@ -14,13 +14,13 @@ namespace Ezenity.API.Filters
         /// <summary>
         /// The database context used for retrieving the account data.
         /// </summary>
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LoadAccountFilter"/> class.
         /// </summary>
         /// <param name="context">The database context.</param>
-        public LoadAccountFilter(DataContext context)
+        public LoadAccountFilter(IDataContext context)
         {
             _context = context;
         }
