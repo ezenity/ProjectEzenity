@@ -18,7 +18,7 @@ namespace Ezenity.Infrastructure.Services
         /// <summary>
         /// The data context used for database operations.
         /// </summary>
-        protected readonly DataContext _context;
+        protected readonly IDataContext _context;
 
         /// <summary>
         /// The AutoMapper instance used for object-object mapping.
@@ -36,7 +36,7 @@ namespace Ezenity.Infrastructure.Services
         /// <param name="context">The data context.</param>
         /// <param name="mapper">The AutoMapper instance.</param>
         /// <param name="appSettings">The application settings.</param>
-        public BaseService(DataContext context, IMapper mapper, IAppSettings appSettings)
+        public BaseService(IDataContext context, IMapper mapper, IAppSettings appSettings)
         {
             _context = context ?? throw new ArgumentException(nameof(context));
             _mapper = mapper ?? throw new ArgumentException(nameof(mapper));

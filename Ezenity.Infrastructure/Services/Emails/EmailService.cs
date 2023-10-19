@@ -29,7 +29,7 @@ namespace Ezenity.Infrastructure.Services.Emails
         /// <summary>
         /// The data context used for database operations.
         /// </summary>
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
         /// <summary>
         /// Provides details about the web hosting environment an application is running in.
@@ -42,7 +42,7 @@ namespace Ezenity.Infrastructure.Services.Emails
         /// <param name="appSettings">Application settings.</param>
         /// <param name="context">Data context for database operations.</param>
         /// <param name="env">Web hosting environment details.</param>
-        public EmailService(IAppSettings appSettings, DataContext context, IWebHostEnvironment env)
+        public EmailService(IAppSettings appSettings, IDataContext context, IWebHostEnvironment env)
         {
             _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
             _context = context ?? throw new ArgumentException(nameof(context));
