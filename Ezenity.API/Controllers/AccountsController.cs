@@ -642,7 +642,10 @@ namespace Ezenity.API.API.Controllers
                 apiResponse.IsSuccess = true;
                 apiResponse.Data = response;
 
-                _logger.LogInformation("Token refreshed successfully for IP: {0}", ipAddress());
+                // Sanitize the IP address by removing new lines and non-numeric or common characters
+                string sanitizedIp = System.Text.RegularExpressions.Regex.Replace(ipAddress(), "[^0-9.]", "");
+
+                _logger.LogInformation($"Token refreshed successfully for IP: {sanitizedIp}");
 
                 return Ok(apiResponse);
             }
