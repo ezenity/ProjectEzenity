@@ -1,25 +1,25 @@
 ﻿using Ezenity.Core.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Ezenity.Infrastructure.Helpers
 {
     /// <summary>
-    /// Contains settings for the applications connection strings
+    /// Represents the connection string settings used within the application. 
+    /// Implements the IConnectionStringSettings interface to provide a standardized way to access connection strings.
     /// </summary>
     public class ConnectionStringSettings : IConnectionStringSettings
     {
         /// <summary>
-        /// Gets the SQL Connection details.
+        /// Initializes a new instance of the ConnectionStringSettings class with the specified database connection string.
         /// </summary>
-        public string WebApiDatabase { get; }
-
+        /// <param name="webApiDatabase">The connection string for the Web API database.</param>
         public ConnectionStringSettings(string webApiDatabase)
         {
-            WebApiDatabase = webApiDatabase;
+            WebApiDatabase = webApiDatabase ?? throw new ArgumentNullException(nameof(webApiDatabase), "Database connection string cannot be null.");
         }
+
+        /// <summary>
+        /// Gets the connection string for the Web API database.
+        /// </summary>
+        public string WebApiDatabase { get; }
     }
 }
