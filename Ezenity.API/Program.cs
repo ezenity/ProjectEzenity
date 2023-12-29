@@ -150,11 +150,11 @@ else
 
 // Configure AppSettings
 var appSettings = AppSettingsFactory.Create(configuration, secretKey);
-services.AddSingleton<IAppSettings>(new AppSettingsWrapper(appSettings);
+services.AddSingleton<IAppSettings>(new AppSettingsWrapper(appSettings));
 
 // Configure ConnectionStringSettings
 var connectionStringSettings = ConnectionStringSettingsFactory.Create(configuration);
-services.AddSingleton<IConnectionStringSettings>(new ConnectionStringSettingsWrapper(connectionStringSettings);
+services.AddSingleton<IConnectionStringSettings>(new ConnectionStringSettingsWrapper(connectionStringSettings));
 
 // Configure SensitivePropertiesSettings
 var sensitivePropsConfig = SensitivePropertiesSettingsFactory.Create(configuration);
