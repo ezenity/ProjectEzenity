@@ -30,6 +30,7 @@ using Ezenity.API.Middleware;
 using Ezenity.Core.Interfaces;
 using Microsoft.Extensions.Options;
 using Ezenity.Infrastructure.Factories;
+using System.Collections.Generic;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -147,12 +148,17 @@ if (builder.Environment.IsDevelopment())
 else
     secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? System.IO.File.ReadAllText("./secret/key.txt").Trim(); // TODO: Insert correct location once on server
 
-// Populate AppSettings from configuration and update the secret
+// Configure AppSettings
 var appSettings = AppSettingsFactory.Create(configuration, secretKey);
-var connectionStringSettings = ConnectionStringSettingsFactory.Create(configuration);
+services.AddSingleton<IAppSettings>(new AppSettingsWrapper(appSettings);
 
-services.AddSingleton<IAppSettings>(appSettings);
-services.AddSingleton<IConnectionStringSettings>(connectionStringSettings);
+// Configure ConnectionStringSettings
+var connectionStringSettings = ConnectionStringSettingsFactory.Create(configuration);
+services.AddSingleton<IConnectionStringSettings>(new ConnectionStringSettingsWrapper(connectionStringSettings);
+
+// Configure SensitivePropertiesSettings
+var sensitivePropsConfig = SensitivePropertiesSettingsFactory.Create(configuration);
+services.AddSingleton<ISensitivePropertiesSettings>(new SensitivePropertiesSettingsWrapper(sensitivePropsConfig));
 
 var connectionString = connectionStringSettings.WebApiDatabase;
 services.AddDbContext<DataContext>(option => option.UseSqlServer(connectionString));

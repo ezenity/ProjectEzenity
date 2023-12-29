@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ezenity.Core.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace Ezenity.Infrastructure.Helpers
 {
-    public class ConnectionStringSettingsWrapper
+    public class ConnectionStringSettingsWrapper : IConnectionStringSettings
     {
-        private readonly ConnectionStringSettings _connectionString;
+        private readonly IConnectionStringSettings _connectionString;
 
-        public ConnectionStringSettingsWrapper(ConnectionStringSettings connectionString)
+        public ConnectionStringSettingsWrapper(IConnectionStringSettings connectionStringSettings)
         {
-            _connectionString = connectionString;
+            _connectionString = connectionStringSettings ?? throw new ArgumentNullException(nameof(connectionStringSettings));
         }
 
         public string WebApiDatabase => _connectionString.WebApiDatabase;
