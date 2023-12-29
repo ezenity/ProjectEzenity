@@ -2,12 +2,22 @@
 using Ezenity.Core.Interfaces;
 using Ezenity.Infrastructure.Helpers;
 using Microsoft.Extensions.Configuration;
-using System.Collections.Generic;
 
 namespace Ezenity.Infrastructure.Factories
 {
+    /// <summary>
+    /// A factory class for creating instances of ISensitivePropertiesSettings. 
+    /// Retrieves the sensitive property settings from the application configuration and encapsulates them in a SensitivePropertiesSettingsWrapper.
+    /// </summary>
     public static class SensitivePropertiesSettingsFactory
     {
+        /// <summary>
+        /// Creates an instance of ISensitivePropertiesSettings based on the provided application configuration.
+        /// Retrieves the list of sensitive properties and wraps them for secure and centralized access.
+        /// </summary>
+        /// <param name="configuration">The application configuration containing the sensitive properties.</param>
+        /// <returns>An ISensitivePropertiesSettings implementation with sensitive properties initialized.</returns>
+        /// <exception cref="NotFoundException">Thrown if the 'SensitiveErrorProperties' section is missing in the configuration.</exception>
         public static ISensitivePropertiesSettings Create(IConfiguration configuration)
         {
             // Get the sensitive proeprties list from the configuration
