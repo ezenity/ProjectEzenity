@@ -398,7 +398,7 @@ FodyWeavers.xsd
 *.sln.iml
 
 # Sensitive Data Files
-# appsettings.json
-# appsettings.Development.json
-# appsettings.Production.json
+appsettings.json
+appsettings.Development.json
+appsettings.Production.json
 client_secret.json
