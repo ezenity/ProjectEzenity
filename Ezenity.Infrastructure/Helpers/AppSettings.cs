@@ -3,10 +3,24 @@
 namespace Ezenity.Infrastructure.Helpers
 {
     /// <summary>
-    /// Contains settings for the application.
+    /// Represents the application-specific settings used throughout the application. 
+    /// Holds configuration details like base URL, SMTP settings, tokens, and other critical settings.
     /// </summary>
     public class AppSettings : IAppSettings
     {
+        /// <summary>
+        /// Initializes a new instance of the AppSettings class with the specified settings values.
+        /// </summary>
+        /// <param name="baseUrl">The base URL of the application.</param>
+        /// <param name="secret">The secret key used for cryptographic operations.</param>
+        /// <param name="refreshTokenTTL">The Time-To-Live (TTL) for refresh tokens, in days.</param>
+        /// <param name="emailFrom">The email address that will be used as the 'From' address in outgoing emails.</param>
+        /// <param name="smtpHost">The host name for the SMTP server used for sending emails.</param>
+        /// <param name="smtpPort">The port number for the SMTP server.</param>
+        /// <param name="smtpUser">The username for authentication with the SMTP server.</param>
+        /// <param name="smtpPass">The password for authentication with the SMTP server.</param>
+        /// <param name="smtpEnableSsl">A value indicating whether SSL is enabled for SMTP communications.</param>
+        /// <param name="accessToken">The access token used for some third-party services or internal processes.</param>
         public AppSettings(string baseUrl, string secret, int refreshTokenTTL, string emailFrom, string smtpHost, int smtpPort, string smtpUser, string smtpPass, bool smtpEnableSsl, string accessToken)
         {
             BaseUrl = baseUrl;
