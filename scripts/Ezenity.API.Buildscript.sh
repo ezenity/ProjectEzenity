@@ -4,7 +4,7 @@
 cd ..
 
 # Navigate to Ezenity.API
-cd Ezenity.API
+cd ./Ezenity.API
 
 # Restore dependencies
 dotnet restore

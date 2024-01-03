@@ -38,21 +38,21 @@ jobs:
 
     - name: Run Backend Build Script on Linux
       shell: bash
-      run: scripts/Ezenity.API.Buildscript.sh
+      run: /home/runner/work/ProjectEzenity/ProjectEzenity/scripts/Ezenity.API.Buildscript.sh
       if: matrix.os == 'ubuntu-latest' && matrix.language == 'csharp'
       
     - name: Run Backend Build Script on Windows
       if: matrix.os == 'windows-latest' && matrix.language == 'csharp'
-      run: scripts/Ezenity.API.Buildscript.bat
+      run: /home/runner/work/ProjectEzenity/ProjectEzenity/scripts/Ezenity.API.Buildscript.bat
     
     - name: Run Frontend Build Script on Linux
       shell: bash
-      run: scripts/Ezenity_Frontend.Buildscript.sh
+      run: /home/runner/work/ProjectEzenity/ProjectEzenity/scripts/Ezenity_Frontend.Buildscript.sh
       if: matrix.os == 'ubuntu-latest' && matrix.language == 'javascript-typescript'
 
     - name: Run Frontend Build Script on Windows
       if: matrix.os == 'windows-latest' && matrix.language == 'javascript-typescript'
-      run: scripts/Ezenity_Frontend.Buildscript.bat
+      run: /home/runner/work/ProjectEzenity/ProjectEzenity/scripts/Ezenity_Frontend.Buildscript.bat
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

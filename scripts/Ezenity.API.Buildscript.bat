@@ -4,7 +4,7 @@ REM Navigate up to the root directory
 cd ..
 
 REM Navigate to Ezenity.API
-cd Ezenity.API
+cd ./Ezenity.API
 
 REM Restore dependencies
 dotnet restore
