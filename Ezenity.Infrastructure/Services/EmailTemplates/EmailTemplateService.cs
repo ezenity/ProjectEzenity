@@ -7,14 +7,8 @@ using Ezenity.Core.Services.Common;
 using Ezenity.DTOs.Models;
 using Ezenity.DTOs.Models.EmailTemplates;
 using Ezenity.DTOs.Models.Pages;
-using Ezenity.Infrastructure.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Ezenity.Infrastructure.Services.EmailTemplates
 {
@@ -136,6 +130,14 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
         public async Task<DeleteResponse> DeleteAsync(int id)
         {
             var emailTemplate = await GetEmailTemplate(id);
+
+            // TODO: Implement deleted data information
+            /*deleteResponse.Message = "Email Template delet succesfully";
+            deleteResponse.StatusCode = 200;
+            deleteResponse.DeletedBy = account;
+            deleteResponse.DeletedAt = DateTime.UtcNow;
+            deleteResponse.ResourceId = DeleteEmailTemplateId.ToString();
+            deleteResponse.IsSuccess = true;*/
 
             _context.EmailTemplates.Remove(emailTemplate);
             _context.SaveChanges();

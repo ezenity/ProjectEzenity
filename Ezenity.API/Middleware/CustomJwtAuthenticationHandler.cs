@@ -49,8 +49,8 @@ namespace Ezenity.API.Middleware
             IDataContext context)
             : base(options, logger, encoder, clock)
         {
-            _appSettings = appSettings;
-            _context = context;
+            _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
+            _context = context ?? throw new ArgumentException(nameof(context));
         }
 
         /// <summary>
