@@ -1,8 +1,5 @@
 @echo off
 
-REM Navigate up to the root directory
-cd ..
-
 REM Navigate to Ezenity.API
 cd ./Ezenity.API
 
