@@ -99,7 +99,6 @@ services.AddSingleton<ISensitivePropertiesSettings>(new SensitivePropertiesSetti
 var connectionString = connectionStringSettings.WebApiDatabase;
 services.AddDbContext<DataContext>(option => option.UseSqlServer(connectionString));
 // TODO: Add support for Azure Kay Vault
-
 // Make the data repository available for dependency injection. Whenever an interface is 
 // referenced in a constructor, substitute an instace of the class.
 //
