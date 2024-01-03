@@ -35,12 +35,16 @@ namespace Ezenity.API.Middleware
         public ErrorHandlerMiddleware(
             RequestDelegate next,
             ILogger<ErrorHandlerMiddleware> logger,
-            IOptions<IAppSettings> appSettings,
+            // IOptions<IAppSettings> appSettings, // Causing a 'MissingMethodException'
+            // IOptionsSnapshot<IAppSettings> appSettings, // Can update configuration data when the application reads the data.
+            // IOptionsMonitor<IAppSettings> appSettings, // Provides a change notification when the 'IAppSettings' data changes.
+            IAppSettings appSettings, // Directly injecting IAppSetings
             ISensitivePropertiesSettings sensitivePropertiesSettings)
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _appSettings = appSettings?.Value ?? throw new ArgumentNullException(nameof(appSettings));
+            // _appSettings = appSettings?.Value ?? throw new ArgumentNullException(nameof(appSettings)); Used for IOptions...
+            _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
             _sensitivePropertiesSettings = sensitivePropertiesSettings ?? throw new ArgumentNullException(nameof(sensitivePropertiesSettings));
         }
 
