@@ -10,6 +10,7 @@ using Ezenity.DTOs.Models.Accounts;
 using Ezenity.DTOs.Models.Pages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Web;
 using BC = BCrypt.Net.BCrypt;
 
 namespace Ezenity.Infrastructure.Services.Accounts
@@ -133,7 +134,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
             catch (Exception ex)
             {
                 transaction.Rollback();
-                _logger.LogError(ex, $"an error occurred while authenticating the user with email: {model.Email}");
+                _logger.LogError(ex, "an error occurred while authenticating the user with email: {Email}", HttpUtility.HtmlEncode(model.Email));
                 throw;
             }
         }
