@@ -649,7 +649,7 @@
             JSON:API compliant HTTP responses. It logs errors and provides a consistent error handling strategy.
             </summary>
         </member>
-        <member name="M:Ezenity.API.Middleware.ErrorHandlerMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Middleware.ErrorHandlerMiddleware},Microsoft.Extensions.Options.IOptions{Ezenity.Core.Interfaces.IAppSettings},Ezenity.Core.Interfaces.ISensitivePropertiesSettings)">
+        <member name="M:Ezenity.API.Middleware.ErrorHandlerMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Middleware.ErrorHandlerMiddleware},Ezenity.Core.Interfaces.IAppSettings,Ezenity.Core.Interfaces.ISensitivePropertiesSettings)">
             <summary>
             Initializes a new instance of the ErrorHandlerMiddleware class with dependencies.
             </summary>
