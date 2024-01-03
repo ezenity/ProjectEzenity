@@ -1,6 +1,7 @@
 ﻿using Ezenity.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Threading.Tasks;
 
 namespace Ezenity.API.Filters
@@ -22,7 +23,7 @@ namespace Ezenity.API.Filters
         /// <param name="context">The database context.</param>
         public LoadAccountFilter(IDataContext context)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentException(nameof(context));
         }
 
         /// <summary>
