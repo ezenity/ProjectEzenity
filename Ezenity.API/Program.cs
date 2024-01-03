@@ -78,6 +78,51 @@ configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: t
 // Add serices to the container
 var services = builder.Services;
 
+string secretKey;
+if (builder.Environment.IsDevelopment())
+    secretKey = configuration.GetSection("AppSettings")["Secret"];
+else
+    secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? System.IO.File.ReadAllText("./secret/key.txt").Trim(); // TODO: Insert correct location once on server
+
+// Configure AppSettings
+var appSettings = AppSettingsFactory.Create(configuration, secretKey);
+services.AddSingleton<IAppSettings>(new AppSettingsWrapper(appSettings));
+
+// Configure ConnectionStringSettings
+var connectionStringSettings = ConnectionStringSettingsFactory.Create(configuration);
+services.AddSingleton<IConnectionStringSettings>(new ConnectionStringSettingsWrapper(connectionStringSettings));
+
+// Configure SensitivePropertiesSettings
+var sensitivePropsConfig = SensitivePropertiesSettingsFactory.Create(configuration);
+services.AddSingleton<ISensitivePropertiesSettings>(new SensitivePropertiesSettingsWrapper(sensitivePropsConfig));
+
+var connectionString = connectionStringSettings.WebApiDatabase;
+services.AddDbContext<DataContext>(option => option.UseSqlServer(connectionString));
+// TODO: Add support for Azure Kay Vault
+// Make the data repository available for dependency injection. Whenever an interface is 
+// referenced in a constructor, substitute an instace of the class.
+//
+// AddScope: Only one instance of the class is created in a given HTTP request (Last for whole HTTP request)
+// AddTransient: Generate a new instance of the class each time it is requested
+//      Good for lightwieght stateless services
+// AddSingleton: Geernate only one class instance for the lifetime of the whole app
+// configure Dependecy Injection for application services
+services.AddScoped<IAccountService, AccountService>();
+services.AddScoped<IEmailService, EmailService>();
+services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+services.AddScoped<ISectionService, SectionService>();
+services.AddScoped<IPasswordService, PasswordService>();
+services.AddScoped<IAuthService, AuthService>();
+services.AddScoped<IDataContext, DataContext>();
+services.AddScoped<ITokenHelper, TokenHelper>();
+// Filter DI
+services.AddScoped<LoadAccountFilter>();
+
+services.AddSingleton<FileExtensionContentTypeProvider>();
+
+services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+
 services.AddControllers(options =>
 {
     // Ensure the API returns a 406 Not Acceptable status code if the requested content type is not supported.
@@ -142,52 +187,6 @@ services.Configure<MvcOptions>(options =>
         }
     }
 });
-
-// Make the data repository available for dependency injection. Whenever an interface is 
-// referenced in a constructor, substitute an instace of the class.
-//
-// AddScope: Only one instance of the class is created in a given HTTP request (Last for whole HTTP request)
-// AddTransient: Generate a new instance of the class each time it is requested
-//      Good for lightwieght stateless services
-// AddSingleton: Geernate only one class instance for the lifetime of the whole app
-// configure Dependecy Injection for application services
-services.AddScoped<IAccountService, AccountService>();
-services.AddScoped<IEmailService, EmailService>();
-services.AddScoped<IEmailTemplateService, EmailTemplateService>();
-services.AddScoped<ISectionService, SectionService>();
-services.AddScoped<IPasswordService, PasswordService>();
-services.AddScoped<IAuthService, AuthService>();
-services.AddScoped<IDataContext, DataContext>();
-services.AddScoped<ITokenHelper, TokenHelper>();
-// Filter DI
-services.AddScoped<LoadAccountFilter>();
-
-
-string secretKey;
-if (builder.Environment.IsDevelopment())
-    secretKey = configuration.GetSection("AppSettings")["Secret"];
-else
-    secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? System.IO.File.ReadAllText("./secret/key.txt").Trim(); // TODO: Insert correct location once on server
-
-// Configure AppSettings
-var appSettings = AppSettingsFactory.Create(configuration, secretKey);
-services.AddSingleton<IAppSettings>(new AppSettingsWrapper(appSettings));
-
-// Configure ConnectionStringSettings
-var connectionStringSettings = ConnectionStringSettingsFactory.Create(configuration);
-services.AddSingleton<IConnectionStringSettings>(new ConnectionStringSettingsWrapper(connectionStringSettings));
-
-// Configure SensitivePropertiesSettings
-var sensitivePropsConfig = SensitivePropertiesSettingsFactory.Create(configuration);
-services.AddSingleton<ISensitivePropertiesSettings>(new SensitivePropertiesSettingsWrapper(sensitivePropsConfig));
-
-var connectionString = connectionStringSettings.WebApiDatabase;
-services.AddDbContext<DataContext>(option => option.UseSqlServer(connectionString));
-// TODO: Add support for Azure Kay Vault
-
-
-services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 
 services.AddCors(options =>
 {
@@ -310,9 +309,6 @@ if (builder.Environment.IsDevelopment())
     });
 }
 
-services.AddSingleton<FileExtensionContentTypeProvider>();
-
-
 services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = "CustomJwt";
@@ -323,8 +319,6 @@ services.AddAuthorization(options =>
 {
     options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
 });
-
-
 
 // Build the application
 var app = builder.Build();
