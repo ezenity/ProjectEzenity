@@ -8,10 +8,8 @@ using Ezenity.Core.Services.Common;
 using Ezenity.DTOs.Models;
 using Ezenity.DTOs.Models.Accounts;
 using Ezenity.DTOs.Models.Pages;
-using Ezenity.Infrastructure.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using BC = BCrypt.Net.BCrypt;
 
 namespace Ezenity.Infrastructure.Services.Accounts
@@ -109,35 +107,34 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <exception cref="AppException">Thrown when the password is incorrect.</exception>
         public async Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model, string ipAddress)
         {
-            using (var transaction = await _context.BeginTransactionAsync())
+            using var transaction = await _context.BeginTransactionAsync();
+
+            try
             {
-                try
+                var account = await FindAndValidateAccountAsync(model.Email);
+
+                if (!_passwordService.VerifyPassword(model.Password, account.PasswordHash))
                 {
-                    var account = await FindAndValidateAccountAsync(model.Email);
-
-                    if (!_passwordService.VerifyPassword(model.Password, account.PasswordHash))
-                    {
-                        _logger.LogWarning($"Authnetication failed for email: {model.Email}");
-                        throw new AppException("The 'password' provided is incorrect");
-                    }
-
-                    var jwtToken = GenerateJwtToken(account.Id);
-                    var refreshToken = GenerateNewRefreshToken(ipAddress);
-
-                    UpdateAccountWithRefreshToken(account, refreshToken);
-                    await _context.SaveChangesAsync();
-
-                    transaction.Commit();
-                    _logger.LogInformation($"Successfully authenticated user with email: {model.Email}");
-
-                    return GenerateAuthenticateResponse(account, jwtToken, refreshToken.Token);
+                    _logger.LogWarning($"Authentication failed for: {model.Email}");
+                    throw new AuthenticationException("The 'password' provided is incorrect");
                 }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    _logger.LogError(ex, $"an error occurred while authenticating the user with email: {model.Email}");
-                    throw;
-                }
+
+                var jwtToken = GenerateJwtToken(account.Id);
+                var refreshToken = GenerateNewRefreshToken(ipAddress);
+
+                UpdateAccountWithRefreshToken(account, refreshToken);
+                await _context.SaveChangesAsync();
+
+                transaction.Commit();
+                _logger.LogInformation($"Successfully authenticated user with email: {model.Email}");
+
+                return GenerateAuthenticateResponse(account, jwtToken, refreshToken.Token);
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                _logger.LogError(ex, $"an error occurred while authenticating the user with email: {model.Email}");
+                throw;
             }
         }
 
@@ -456,12 +453,21 @@ namespace Ezenity.Infrastructure.Services.Accounts
                 // For pagination metadata
                 var totalItemCount = await collection.CountAsync();
 
+                if (totalItemCount == 0)
+                {
+                    _logger.LogInformation("No accounts were found.");
+                    throw new ResourceNotFoundException("No accounts were found.");
+
+                    // Optional: Could return an empty list if no acounts is valid - at the discretion of forking developer
+                    // return new PagedResult<AccountResponse. { Data = new List<AccountResponse>(), Pagination = new PaginationMetadata(0, pageSize, pageNumber) };
+                }
+
                 var data = await collection
-                                    .OrderBy(a => a.LastName)
-                                    .Skip(pageSize * (pageNumber - 1))
-                                    .Take(pageSize)
-                                    .ProjectTo<AccountResponse>(_mapper.ConfigurationProvider)
-                                    .ToListAsync();
+                    .OrderBy(a => a.LastName)
+                    .Skip(pageSize * (pageNumber - 1))
+                    .Take(pageSize)
+                    .ProjectTo<AccountResponse>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
 
                 // Create and populate the pagination metadata
                 var paginationMetadata = new PaginationMetadata(totalItemCount, pageSize, pageNumber);
@@ -492,6 +498,14 @@ namespace Ezenity.Infrastructure.Services.Accounts
                                     .Where(x => x.Id == id)
                                     .ProjectTo<AccountResponse>(_mapper.ConfigurationProvider)
                                     .SingleOrDefaultAsync();
+
+            if (account == null)
+            {
+                _logger.LogInformation($"Account with id {id} wasn't found when accessing accounts.");
+
+                throw new ResourceNotFoundException($"Account with id {id} not found.");
+            }
+
             return account;
         }
 
@@ -503,25 +517,30 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <exception cref="ResourceAlreadyExistsException">Thrown when an account with the provided email already exists.</exception>
         public async Task<AccountResponse> CreateAsync(CreateAccountRequest model)
         {
-            // Validate
+            // Validate if the email is already registered
             if (await _context.Accounts.AnyAsync(x => x.Email == model.Email))
                 throw new ResourceAlreadyExistsException($"Email '{model.Email}' is already registered");
 
-            // Map model to new account object
-            var account = _mapper.Map<Account>(model);
+            // Check if the Role is provided
+            if (string.IsNullOrEmpty(model.Role))
+            {
+                throw new ValidationException("Role is required.");
+            }
 
+            // Validate the role
             Role role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == model.Role);
-
             if (role == null || role.Name.ToLower() != model.Role.ToLower())
                 throw new NotFoundException($"There is no Role named {model.Role} available.");
 
+            // Map model to new account object and set properties
+            var account = _mapper.Map<Account>(model);
             account.Role = role;
             account.Created = DateTime.UtcNow;
             account.Verified = DateTime.UtcNow;
             account.PasswordHash = BC.HashPassword(model.Password); // Hash password
 
+            // Save the account
             _context.Accounts.Add(account);
-
             await _context.SaveChangesAsync();
 
             return _mapper.Map<AccountResponse>(account);
@@ -624,25 +643,41 @@ namespace Ezenity.Infrastructure.Services.Accounts
         {
             int currentUserId = _authService.GetCurrentUserId();
             bool isAdmin = _authService.IsCurrentUserAdmin();
-            var account = await GetAccountAsync(id);
 
-            if (account == null)
-                throw new ResourceNotFoundException($"Account with ID {id} was not found");
-
+            // Ensure the current user is authorized to delete the account
             if (id != currentUserId || !isAdmin)
                 throw new AuthorizationException("Current user is not authorized.");
 
+            // Retrieve the account to be deleted
+            var accountToDelete = await GetAccountAsync(id);
+            if (accountToDelete == null)
+                throw new ResourceNotFoundException($"Account with ID {id} was not found");
+
+            // retreive the account of the user performing the deletion
+            var deletingAccount = await GetAccountAsync(currentUserId);
+            if(deletingAccount == null)
+                throw new ResourceNotFoundException($"Deleter's with ID {currentUserId} was not found");
+
+            // Prepare the response before deletion
+            var deleteResponse = _mapper.Map<DeleteResponse>(accountToDelete);
+            deleteResponse.DeletedBy = _mapper.Map<AccountResponse>(deletingAccount);
+
             try
             {
-                _context.Accounts.Remove(account);
+                // Perform the deletion
+                _context.Accounts.Remove(accountToDelete);
                 await _context.SaveChangesAsync();
+
+                // set additional details
+                deleteResponse.DeletedAt = DateTime.UtcNow;
+                deleteResponse.Message = "Account deleted successfully";
             }
             catch (Exception ex)
             {
                 throw new DeletionFailedException($"Failed to delete account with ID {id}", ex);
             }
 
-            return _mapper.Map<DeleteResponse>(account);
+            return deleteResponse;
         }
 
         /// //////////////////

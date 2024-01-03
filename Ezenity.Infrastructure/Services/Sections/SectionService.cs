@@ -6,14 +6,8 @@ using Ezenity.Core.Services.Common;
 using Ezenity.DTOs.Models;
 using Ezenity.DTOs.Models.Pages;
 using Ezenity.DTOs.Models.Sections;
-using Ezenity.Infrastructure.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Ezenity.Infrastructure.Services.Sections
 {
@@ -141,6 +135,15 @@ namespace Ezenity.Infrastructure.Services.Sections
         public async Task<DeleteResponse> DeleteAsync(int id)
         {
             var section = await GetSection(id);
+
+            // TODO: Implement deleted details information
+            /*deleteResponse.Message = "Section deleted succesfully";
+            deleteResponse.StatusCode = 200;
+            deleteResponse.DeletedBy = account;
+            deleteResponse.DeletedAt = DateTime.UtcNow;
+            deleteResponse.ResourceId = DeleteSectionId.ToString();
+            deleteResponse.IsSuccess = true;*/
+
             _context.Sections.Remove(section);
             await _context.SaveChangesAsync();
 

@@ -83,9 +83,6 @@ services.AddControllers(options =>
     // Ensure the API returns a 406 Not Acceptable status code if the requested content type is not supported.
     options.ReturnHttpNotAcceptable = true;
 
-    // Custom exception filter for handling API exceptions uniformly.
-    options.Filters.Add<ApiExceptionFilter>();
-
     // options.Filters.Add(typeof(LoadAccountFilter));
 
     // Global filters for standard HTTP status codes:
