@@ -2,10 +2,9 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "main", "dev", "feature/*" ]
+    branches: [ "main", "dev" ]
   pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ "master", "dev" ]
+    branches: [ "*" ]
   schedule:
     # - cron: '15 0 * * 0'
     - cron: '42 13 * * 6'
@@ -52,7 +51,7 @@ jobs:
 
     - name: Run Frontend Build Script on Windows
       if: matrix.os == 'windows-latest' && matrix.language == 'javascript-typescript'
-      run: /home/runner/work/ProjectEzenity/ProjectEzenity/scripts/Ezenity_Frontend.Buildscript.bat
+      run: scripts/Ezenity_Frontend.Buildscript.bat
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
