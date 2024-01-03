@@ -31,16 +31,16 @@ namespace Ezenity.DTOs.Models
         public PaginationMetadata Pagination { get; set; }
 
         /// <summary>
-        /// Gets or sets a list of errors that occurred during the API operation. This list is typically populated when the IsSuccess property is set to false.
+        /// Gets or sets a list of errors that occurred during the API operation. This list is populated with detailed error information adhering to the JSON:API v1.0 specification when the operation is unsuccessful.
         /// </summary>
-        public List<string> Errors { get; set; }
+        public List<JsonApiErrors> Errors { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiResponse{T}"/> class, setting the Errors list to an empty list.
         /// </summary>
         public ApiResponse()
         {
-            Errors = new List<string>();
+            Errors = new List<JsonApiErrors>();
         }
     }
 }
