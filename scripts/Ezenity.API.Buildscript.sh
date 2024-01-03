@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Navigate up to the root directory
-cd ..
-
 # Navigate to Ezenity.API
 cd ./Ezenity.API
 
