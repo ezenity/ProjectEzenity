@@ -8,12 +8,10 @@ using Ezenity.DTOs.Models.Accounts;
 using Ezenity.Infrastructure.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -72,46 +70,22 @@ namespace Ezenity.API.API.Controllers
         /// <response code="500">Returns if an internal server error occurs.</response>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<AccountResponse>>> GetByIdAsync(int id)
         {
-            try
+            var account = await _accountService.GetByIdAsync(id);
+            return Ok(new ApiResponse<AccountResponse>
             {
-                var account = await _accountService.GetByIdAsync(id);
-
-                if (account == null)
-                {
-                    _logger.LogInformation($"Account with id {id} wasn't found when accessing accounts.");
-
-                    return NotFound(new ApiResponse<AccountResponse>
-                    {
-                        StatusCode = 404,
-                        IsSuccess = false,
-                        Message = "Account not found."
-                    });
-                }
-
-                return Ok(new ApiResponse<AccountResponse>
-                {
-                    StatusCode = 200,
-                    IsSuccess = true,
-                    Message = "Account fetched successfully",
-                    Data = account
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical("Account fetched unsuccessfully: {0}", ex);
-
-                return StatusCode(500, new ApiResponse<AccountResponse>
-                {
-                    StatusCode = 500,
-                    IsSuccess = false,
-                    Message = "An error occurred while fetching the Account."
-                });
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Account fetched successfully",
+                Data = account
+            });
         }
 
         const int maxAccountsPageSize = 20;
@@ -139,54 +113,29 @@ namespace Ezenity.API.API.Controllers
         [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<IEnumerable<AccountResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery, int pageNumber, int pageSize = 10)
         {
-            if(pageSize > maxAccountsPageSize)
-                pageSize = maxAccountsPageSize;
+            pageSize = Math.Min(pageSize, maxAccountsPageSize);
 
-            try
+            //var accounts = await _accountService.GetAllAsync();
+
+            //var pagedResult = await _accountService.GetAllAsync(name);
+            //var pagedResult = await _accountService.GetAllAsync(name, searchQuery);
+            //var pagedResult = await _accountService.GetAllAsync(name, searchQuery, pageNumber, pageSize);
+            var pagedResult = await _accountService.GetAllAsync(name, searchQuery, pageNumber, pageSize);
+
+            var accountData = pagedResult.Data;
+            var paginationMetaData = pagedResult.Pagination;
+
+            // Add pagination metadata to the response headers
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetaData));
+
+            return Ok(new ApiResponse<IEnumerable<AccountResponse>>
             {
-                //var accounts = await _accountService.GetAllAsync();
-                //var accounts = await _accountService.GetAllAsync(name);
-                //var accounts = await _accountService.GetAllAsync(name, searchQuery);
-                //var accounts = await _accountService.GetAllAsync(name, searchQuery, pageNumber, pageSize);
-
-                var pagedResult = await _accountService.GetAllAsync(name, searchQuery, pageNumber, pageSize);
-                var accountData = pagedResult.Data;
-                var paginationMetaData = pagedResult.Pagination;
-
-                if (accountData == null)
-                {
-                    _logger.LogInformation("No accounts were found/");
-
-                    return NotFound(new ApiResponse<AccountResponse>
-                    {
-                        StatusCode = 404,
-                        IsSuccess = false,
-                        Message = "Accounts not found."
-                    });
-                }
-
-                Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetaData));
-
-                return Ok(new ApiResponse<IEnumerable<AccountResponse>>
-                {
-                    StatusCode = 200,
-                    IsSuccess = true,
-                    Message = "Accounts fetched successfully",
-                    Data = accountData,
-                    Pagination = paginationMetaData
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Accounts fetched unsuccessfully: {0}", ex);
-
-                return StatusCode(500, new ApiResponse<AccountResponse>
-                {
-                    StatusCode = 500,
-                    IsSuccess = false,
-                    Message = "An error occurred while fetching the Accounts."
-                });
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Accounts fetched successfully",
+                Data = accountData,
+                Pagination = paginationMetaData
+            });
         }
 
         /// <summary>
@@ -203,50 +152,32 @@ namespace Ezenity.API.API.Controllers
         /// The ApiResponse contains the status code, success flag, and a message indicating the result of the operation.
         /// </returns>
         /// <response code="201">Returns a created response if the account is successfully created.</response>
+        /// <response code="404">Returns a not found response if the specified role is not found and/or available.</response>
         /// <response code="409">Returns a conflict response if an account with the given email already exists.</response>
+        /// <response code="422">Returns a unprocessable entity response if a role is proivded as a null.</response>
         /// <response code="500">Returns if an internal server error occurs.</response>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [AuthorizeV2("Admin")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status422UnprocessableEntity)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<AccountResponse>>> CreateAsync(CreateAccountRequest model)
         {
-            try
-            {
-                var account = await _accountService.CreateAsync(model);
+            var account = await _accountService.CreateAsync(model);
 
-                return Created(""/* TODO: input API endpoint to get account details (URL) */, new ApiResponse<AccountResponse>
-                {
-                    StatusCode = 201,
-                    IsSuccess = true,
-                    Message = "Account created successfully",
-                    Data = account
-                });
-            }
-            catch(ResourceAlreadyExistsException ex)
-            {
-                _logger.LogError("An Account with this email already exists: {0}", ex);
+            // Using the URL Helper to generate the location header.
+            var locationUri = Url.Action("GetByIdAsync", new { id = account.Id });
 
-                return Conflict(new ApiResponse<AccountResponse>
-                {
-                    StatusCode = 409,
-                    IsSuccess = false,
-                    Message = "An Account with this email already exists."
-                });
-            }
-            catch (Exception ex)
+            return Created(locationUri, new ApiResponse<AccountResponse>
             {
-                _logger.LogCritical("Accounts created unsuccessfully: {0}", ex);
-
-                return StatusCode(500, new ApiResponse<AccountResponse>
-                {
-                    StatusCode = 500,
-                    IsSuccess = false,
-                    Message = "An error occurred while creating the Account."
-                });
-            }
+                StatusCode = 201,
+                IsSuccess = true,
+                Message = "Account created successfully",
+                Data = account
+            });
         }
 
         /// <summary>
@@ -275,73 +206,36 @@ namespace Ezenity.API.API.Controllers
         [AuthorizeV2]
         [HttpPatch(Name = "UpdateAccount")]
         [RequestHeaderMatchesMediaType("Content-Type",
-            "application/json",
-            "application/Ezenity.api.updateaccount+json")]
+            "application/vnd.api+json", // JSON:API media type - Default
+            "application/json", // Standard JSON media type, if you want to support it
+            "application/Ezenity.api.updateaccount+json")] // Custom media type for this specific action
         [Consumes(
-            "application/json",
-            "application/Ezenity.api.updateaccount+json")]
+            "application/vnd.api+json", // JSON:API media type
+            "application/json", // Standard JSON media type
+            "application/Ezenity.api.updateaccount+json")] // Custom media type
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status503ServiceUnavailable)]
         [ProducesDefaultResponseType]
+        // public abstract Task<ActionResult<ApiResponse<TResponse>>> UpdateAsync(int id, TUpdateRequest model);
         public override async Task<ActionResult<ApiResponse<AccountResponse>>> UpdateAsync(int id, UpdateAccountRequest model)
         {
-            try
-            {
-                var account = await _accountService.UpdateAsync(id, model);
+            var account = await _accountService.UpdateAsync(id, model);
 
-                return Ok(new ApiResponse<AccountResponse>
-                {
-                    StatusCode = 200,
-                    IsSuccess = true,
-                    Data = account,
-                    Message = "Account created successfully"
-                });
-            }
-            catch (ResourceNotFoundException ex)
+            return Ok(new ApiResponse<AccountResponse>
             {
-                return NotFound(new ApiResponse<AccountResponse>
-                {
-                    StatusCode = 404,
-                    IsSuccess = false,
-                    Message = ex.Message
-                });
-            }
-            catch (AuthorizationException ex)
-            {
-                return Unauthorized(new ApiResponse<AccountResponse>
-                {
-                    StatusCode = 401,
-                    IsSuccess = false,
-                    Message = ex.Message
-                });
-            }
-            catch (ResourceAlreadyExistsException ex)
-            {
-                return Conflict(new ApiResponse<AccountResponse>
-                {
-                    StatusCode = 409,
-                    IsSuccess = false,
-                    Message = ex.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Accounts created unsuccessfully: {0}", ex);
-
-                return StatusCode(500, new ApiResponse<AccountResponse>
-                {
-                    StatusCode = 500,
-                    IsSuccess = false,
-                    Message = "An error occurred while creating the Account."
-                });
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Data = account,
+                Message = "Account created successfully"
+            });
         }
 
 
-        /// <summary>
+        /*/// <summary>
         /// Asynchronously updates partially on an existing account.
         /// </summary>
         /// <param name="id">The identifier of the account to be updated partially.</param>
@@ -379,9 +273,13 @@ namespace Ezenity.API.API.Controllers
         [Authorize(Policy = "RequireAdminRole")]
         [HttpPatch("{id:int}")]
         [RequestHeaderMatchesMediaType("Content-Type",
-            "application/Ezenity.api.updatepartialaccount+json")]
+            "application/vnd.api+json", // JSON:API media type - Default
+            "application/json", // Standard JSON media type, if you want to support it
+            "application/Ezenity.api.updatepartialaccount+json")] // Custom media type for this specific action
         [Consumes(
-            "application/Ezenity.api.updatepartialaccount+json")]
+            "application/vnd.api+json", // JSON:API media type
+            "application/json", // Standard JSON media type
+            "application/Ezenity.api.updatepartialaccount+json")] // Custom media type
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status404NotFound)]
@@ -441,13 +339,12 @@ namespace Ezenity.API.API.Controllers
                     Message = "An error occurred while creating the Account."
                 });
             }
-        }
+        }*/
 
         /// <summary>
         /// Asynchronously deletes an account.
         /// </summary>
         /// <param name="DeleteAccountId">The identifier of the account to be deleted.</param>
-        /// <param name="DeletedById">The identifier of the account performing the deletion.</param>
         /// <remarks>
         /// This method deletes an existing account with the given identifier (DeleteAccountId) and logs who performed the deletion (DeletedById).
         /// The function is authorized for use by any authenticated user.
@@ -473,65 +370,17 @@ namespace Ezenity.API.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
-        public override async Task<ActionResult<ApiResponse<DeleteResponse>>> DeleteAsync(int DeleteAccountId, int DeletedById)
+        public override async Task<ActionResult<ApiResponse<DeleteResponse>>> DeleteAsync(int DeleteAccountId)
         {
-            try
-            {
-                var account = await _accountService.GetByIdAsync(DeletedById);
-                var deletionResult = await _accountService.DeleteAsync(DeleteAccountId);
+            var deletedAccountData = await _accountService.DeleteAsync(DeleteAccountId);
 
-                DeleteResponse deleteResponse = new DeleteResponse
-                {
-                    Message = "Account deleted successfully",
-                    DeletedBy = account,
-                    DeletedAt = DateTime.UtcNow
-                };
-
-                return Ok(new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = 200,
-                    IsSuccess = true,
-                    Message = "Account deleted successfully",
-                    Data = deleteResponse
-                });
-
-            }
-            catch (ResourceNotFoundException ex)
+            return Ok(new ApiResponse<DeleteResponse>
             {
-                return NotFound(new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = 404,
-                    IsSuccess = false,
-                    Message = ex.Message
-                });
-            }
-            catch (AuthorizationException ex)
-            {
-                return Unauthorized(new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = 401,
-                    IsSuccess = false,
-                    Message = ex.Message
-                });
-            }
-            catch (DeletionFailedException ex)
-            {
-                return BadRequest(new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = 400,
-                    IsSuccess = false,
-                    Message = ex.Message
-                });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = 500,
-                    IsSuccess = false,
-                    Message = "An unexpected error occurred"
-                });
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Account deleted successfully",
+                Data = deletedAccountData
+            });
         }
 
         /*
@@ -559,44 +408,24 @@ namespace Ezenity.API.API.Controllers
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [HttpPost("authenticate")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<AuthenticateResponse>), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse<AuthenticateResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<AuthenticateResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
         public async Task<ActionResult<ApiResponse<AuthenticateResponse>>> AuthenticateAsync(AuthenticateRequest model)
         {
-            ApiResponse<AuthenticateResponse> apiResponse = new ApiResponse<AuthenticateResponse>();
+            var response = await _accountService.AuthenticateAsync(model, ipAddress());
+            setTokenCookie(response.RefreshToken);
 
-            try
+            var apiResponse = new ApiResponse<AuthenticateResponse>
             {
-                var response = await _accountService.AuthenticateAsync(model, ipAddress());
+                StatusCode = 200,
+                Message = "Authentication successful.",
+                IsSuccess = true,
+                Data = response
+            };
 
-                setTokenCookie(response.RefreshToken);
-
-                apiResponse.StatusCode = 200;
-                apiResponse.Message = "Authentication successfull.";
-                apiResponse.IsSuccess = true;
-                apiResponse.Data = response;
-
-                return Ok(apiResponse);
-            }
-            catch (ResourceNotFoundException ex)
-            {
-                apiResponse.StatusCode = 404;
-                apiResponse.Message = ex.Message;
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return NotFound(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                apiResponse.StatusCode = 500;
-                apiResponse.Message = "An unexpected error occurred.";
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return StatusCode(500, apiResponse);
-            }
+            return Ok(apiResponse);
         }
 
         /// <summary>
@@ -624,53 +453,27 @@ namespace Ezenity.API.API.Controllers
         [ProducesDefaultResponseType]
         public async Task<ActionResult<ApiResponse<AuthenticateResponse>>> RefreshTokenAsync()
         {
-            ApiResponse<AuthenticateResponse> apiResponse = new ApiResponse<AuthenticateResponse>();
+            var refreshToken = Request.Cookies["refreshToken"];
+            if (string.IsNullOrEmpty(refreshToken))
+                throw new ResourceNotFoundException("Refresh token is missing.");
+            var response = await _accountService.RefreshTokenAsync(refreshToken, ipAddress());
+            setTokenCookie(response.RefreshToken);
 
-            try
+            var apiResponse = new ApiResponse<AuthenticateResponse>
             {
-                var refreshToken = Request.Cookies["refreshToken"];
+                StatusCode = 200,
+                Message = "Token refreshed successfully.",
+                IsSuccess = true,
+                Data = response
+            };
 
-                if (string.IsNullOrEmpty(refreshToken))
-                    throw new ResourceNotFoundException("Refresh token is missing.");
+            // Sanitize the IP address by removing new lines and non-numeric or common characters
+            string sanitizedIp = System.Text.RegularExpressions.Regex.Replace(ipAddress(), "[^0-9.]", "");
 
-                var response = await _accountService.RefreshTokenAsync(refreshToken, ipAddress());
+            _logger.LogInformation($"Token refreshed successfully for IP: {sanitizedIp}");
 
-                setTokenCookie(response.RefreshToken);
+            return Ok(apiResponse);
 
-                apiResponse.StatusCode = 200;
-                apiResponse.Message = "Token refreshed successfully.";
-                apiResponse.IsSuccess = true;
-                apiResponse.Data = response;
-
-                // Sanitize the IP address by removing new lines and non-numeric or common characters
-                string sanitizedIp = System.Text.RegularExpressions.Regex.Replace(ipAddress(), "[^0-9.]", "");
-
-                _logger.LogInformation($"Token refreshed successfully for IP: {sanitizedIp}");
-
-                return Ok(apiResponse);
-            }
-            catch (ResourceNotFoundException ex)
-            {
-                _logger.LogError("Failed to refresh token: {0}", ex.Message);
-
-                apiResponse.StatusCode = 400;
-                apiResponse.Message = ex.Message;
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return BadRequest(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("An unexpected error occurred: {0}", ex.Message);
-
-                apiResponse.StatusCode = 500;
-                apiResponse.Message = "An unexpected error occurred.";
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return StatusCode(500, apiResponse);
-            }
         }
 
         /// <summary>
@@ -751,48 +554,17 @@ namespace Ezenity.API.API.Controllers
         [ProducesDefaultResponseType]
         public async Task<IActionResult> RegisterAsync(RegisterRequest model)
         {
-            ApiResponse<object> apiResponse = new ApiResponse<object>();
+            await _accountService.RegisterAsync(model, Request.Headers["origin"]);
 
-            try
+            var apiResponse = new ApiResponse<object>
             {
-                await _accountService.RegisterAsync(model, Request.Headers["origin"]);
+                StatusCode = 200,
+                Message = "Registration successful, please check your email for verification instructions.",
+                IsSuccess = true,
+                //Data = response
+            };
 
-                apiResponse.StatusCode = 200;
-                apiResponse.Message = "Registration successful, please check your email for verification instructions.";
-                apiResponse.IsSuccess = true;
-                //apiResponse.Data = response;
-
-                return Ok(apiResponse);
-            }
-            catch (ResourceAlreadyExistsException ex)
-            {
-                return Conflict(new ApiResponse<object>
-                {
-                    StatusCode = 409,
-                    IsSuccess = false,
-                    Message = ex.Message
-                });
-            }
-            catch (ResourceNotFoundException ex)
-            {
-                return BadRequest(new ApiResponse<object>
-                {
-                    StatusCode = 400,
-                    IsSuccess = false,
-                    Message = ex.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Account registered unsuccessfully: {0}", ex);
-
-                return StatusCode(500, new ApiResponse<object>
-                {
-                    StatusCode = 500,
-                    IsSuccess = false,
-                    Message = "An error occurred while creating the Account."
-                });
-            }
+            return Ok(apiResponse);
         }
 
         /// <summary>
@@ -813,38 +585,16 @@ namespace Ezenity.API.API.Controllers
         [ProducesDefaultResponseType]
         public async Task<IActionResult> VerfiyEmailAsync(VerifyEmailRequest model)
         {
-            ApiResponse<object> apiResponse = new ApiResponse<object>();
+            await _accountService.VerifyEmailAsync(model.Token);
 
-            try
+            var apiResponse = new ApiResponse<object>
             {
-                await _accountService.VerifyEmailAsync(model.Token);
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Verification successful, you can now login."
+            };
 
-                apiResponse.StatusCode = 200;
-                apiResponse.IsSuccess = true;
-                apiResponse.Message = "Verification successful, you can now login.";
-
-                return Ok(apiResponse);
-            }
-            catch(InvalidVerificationTokenException ex)
-            {
-                _logger.LogError("[Error] Account verification failed: {0}", ex);
-
-                apiResponse.StatusCode = 500;
-                apiResponse.IsSuccess = false;
-                apiResponse.Message = ex.Message;
-
-                return StatusCode(500, apiResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Account verification unsuccessfully: {0}", ex);
-
-                apiResponse.StatusCode = 500;
-                apiResponse.IsSuccess = false;
-                apiResponse.Message = ex.Message;
-
-                return StatusCode(500, apiResponse);
-            }
+            return Ok(apiResponse);
         }
 
         /// <summary>

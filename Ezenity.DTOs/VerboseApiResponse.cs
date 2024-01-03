@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ezenity.DTOs.Models.Pages;
+using System;
 using System.Collections.Generic;
 
 namespace Ezenity.DTOs.Models
@@ -13,27 +14,34 @@ namespace Ezenity.DTOs.Models
         /// Gets or sets the HTTP status code indicating the result of the operation.
         /// </summary>
         public int StatusCode { get; set; }
+
         /// <summary>
         /// Gets or sets a human-readable message describing the outcome of the operation.
         /// </summary>
         public string Message { get; set; }
+
         /// <summary>
         /// Gets or sets a value indicating whether the operation was successful.
         /// </summary>
         public bool IsSuccess { get; set; }
+
         /// <summary>
         /// Gets or sets the actual data payload returned by the API operation.
         /// </summary>
         public T Data { get; set; }
+
+        public PaginationMetadata Pagination { get; set; }
+
         /// <summary>
         /// Gets or sets a list of errors that occurred during the API operation.
         /// </summary>
-        public List<string> Errors { get; set; }
+        public List<JsonApiErrors> Errors { get; set; }
 
         /// <summary>
         /// Gets or sets additional debug information.
         /// </summary>
         public string DebugInfo { get; set; }
+
         /// <summary>
         /// Gets or sets the UTC time when the response was generated.
         /// </summary>
@@ -44,7 +52,7 @@ namespace Ezenity.DTOs.Models
         /// </summary>
         public VerboseApiResponse()
         {
-            Errors = new List<string>();
+            Errors = new List<JsonApiErrors>();
             TimeGenerated = DateTime.UtcNow;
         }
 
