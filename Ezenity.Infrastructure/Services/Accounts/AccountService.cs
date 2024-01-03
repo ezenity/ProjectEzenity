@@ -127,7 +127,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
                 await _context.SaveChangesAsync();
 
                 transaction.Commit();
-                _logger.LogInformation($"Successfully authenticated user with email: {model.Email}");
+                _logger.LogInformation("Successfully authenticated user with email: {Email}", HttpUtility.HtmlEncode(model.Email));
 
                 return GenerateAuthenticateResponse(account, jwtToken, refreshToken.Token);
             }
