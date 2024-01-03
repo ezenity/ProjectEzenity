@@ -80,26 +80,47 @@ var services = builder.Services;
 
 services.AddControllers(options =>
 {
-    // This will return a 406 when the return type is not acceptable
+    // Ensure the API returns a 406 Not Acceptable status code if the requested content type is not supported.
     options.ReturnHttpNotAcceptable = true;
 
-    options.Filters.Add<ApiExceptionFilter>();
-    // options.Filters.Add(typeof(LoadAccountFilter)); // Registers this filter globally
-    /*options.Filters.Add(
-        new ProducesResponseTypeAttribute(
-            StatusCodes.Status200OK));*/
-    options.Filters.Add(
-        new ProducesResponseTypeAttribute(
-            StatusCodes.Status400BadRequest));
-    options.Filters.Add(
-        new ProducesResponseTypeAttribute(
-            StatusCodes.Status401Unauthorized));
-    options.Filters.Add(
-        new ProducesResponseTypeAttribute(
-            StatusCodes.Status406NotAcceptable));
-    options.Filters.Add(
-        new ProducesResponseTypeAttribute(
-            StatusCodes.Status500InternalServerError));
+    // options.Filters.Add(typeof(LoadAccountFilter));
+
+    // Global filters for standard HTTP status codes:
+
+    // 400 Bad Request - Indicates that the server cannot process the request due to a client error (e.g., malformed request syntax).
+    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status400BadRequest));
+
+    // 401 Unauthorized - Indicates that the request lacks valid authentication credentials for the target resource.
+    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status401Unauthorized));
+
+    // 403 Forbidden - Indicates that the server understood the request but refuses to authorize it.
+    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status403Forbidden));
+
+    // 404 Not Found - Indicates that the server can't find the requested resource. Links that lead to a 404 page are often called broken or dead links.
+    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status404NotFound));
+
+    // 406 Not Acceptable - Indicates that the server cannot produce a response matching the list of acceptable values defined in the request's proactive content negotiation headers.
+    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status406NotAcceptable));
+
+    // 409 Conflict - Indicates a request conflict with the current state of the target resource (e.g., conflicts in the current state of the resource).
+    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status409Conflict));
+
+    // 422 Unprocessable Entity - Indicates that the server understands the content type of the request entity, and the syntax of the request entity is correct but it was unable to process the contained instructions.
+    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status422UnprocessableEntity));
+
+    // 429 Too Many Requests - Indicates the user has sent too many requests in a given amount of time ("rate limiting").
+    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status429TooManyRequests));
+
+    // 500 Internal Server Error - Indicates a generic error message when an unexpected condition was encountered and no more specific message is suitable.
+    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status500InternalServerError));
+
+    // 501 Not Implemented - The server does not support the functionality required to fulfill the request. This can indicate an unrecognized or unsupported request method or feature.
+    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status501NotImplemented));
+
+    // 503 Service Unavailable - The server is not ready to handle the request, often used for maintenance or overloaded servers. It signifies temporary unavailability, suggesting clients may retry the request after some time.
+    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status503ServiceUnavailable));
+
+
 }).AddNewtonsoftJson(setupAction =>
 {
     setupAction.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();

@@ -10,6 +10,7 @@ using Ezenity.DTOs.Models;
 using Ezenity.Core.Services.Common;
 using Ezenity.Infrastructure.Attributes;
 using Ezenity.Core.Helpers.Exceptions;
+using System.Text.Json;
 
 namespace Ezenity.API.Controllers
 {
@@ -96,7 +97,6 @@ namespace Ezenity.API.Controllers
         /// Asynchronously deletes an existing email template.
         /// </summary>
         /// <param name="DeleteEmailTemplateId">The ID of the email template to delete.</param>
-        /// <param name="DeletedById">The ID of the user performing the deletion.</param>
         /// <returns>An action result containing information about the deletion.</returns>
         /// <exception cref="ResourceNotFoundException">Thrown when the email template is not found.</exception>
         /// <exception cref="AuthorizationException">Thrown when the user is unauthorized to perform this action.</exception>
@@ -105,96 +105,23 @@ namespace Ezenity.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
-        public override async Task<ActionResult<ApiResponse<DeleteResponse>>> DeleteAsync(int DeleteEmailTemplateId, int DeletedById)
+        public override async Task<ActionResult<ApiResponse<DeleteResponse>>> DeleteAsync(int DeleteEmailTemplateId)
         {
-            DeleteResponse deleteResponse = new DeleteResponse();
-            List<string> errors = new List<string>();
+            var deletionResult = await _emailTemplateService.DeleteAsync(DeleteEmailTemplateId);
 
-            try
+            return Ok(new ApiResponse<DeleteResponse>
             {
-                var account = await _accountService.GetByIdAsync(DeletedById);
-                var deletionResult = await _emailTemplateService.DeleteAsync(DeleteEmailTemplateId);
-
-                deleteResponse.Message = "Email Template delet succesfully";
-                deleteResponse.StatusCode = 200;
-                deleteResponse.DeletedBy = account;
-                deleteResponse.DeletedAt = DateTime.UtcNow;
-                deleteResponse.ResourceId = DeleteEmailTemplateId.ToString();
-                deleteResponse.IsSuccess = true;
-
-                return Ok(new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = deleteResponse.StatusCode,
-                    IsSuccess = deleteResponse.IsSuccess,
-                    Message = deleteResponse.Message,
-                    Data = deleteResponse
-                });
-            }
-            catch (ResourceNotFoundException ex)
-            {
-                errors.Add(ex.Message);
-                deleteResponse.Errors = errors;
-                deleteResponse.StatusCode = 404;
-                deleteResponse.IsSuccess = false;
-
-                return NotFound(new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = deleteResponse.StatusCode,
-                    IsSuccess = deleteResponse.IsSuccess,
-                    Message = ex.Message,
-                    Data = deleteResponse
-                });
-            }
-            catch (AuthorizationException ex)
-            {
-                errors.Add(ex.Message);
-                deleteResponse.Errors = errors;
-                deleteResponse.StatusCode = 401;
-                deleteResponse.IsSuccess = false;
-
-                return Unauthorized(new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = deleteResponse.StatusCode,
-                    IsSuccess = deleteResponse.IsSuccess,
-                    Message = ex.Message,
-                    Data = deleteResponse
-                });
-            }
-            catch (DeletionFailedException ex)
-            {
-                errors.Add(ex.Message);
-                deleteResponse.Errors = errors;
-                deleteResponse.StatusCode = 400;
-                deleteResponse.IsSuccess = false;
-
-                return BadRequest(new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = deleteResponse.StatusCode,
-                    IsSuccess = deleteResponse.IsSuccess,
-                    Message = ex.Message,
-                    Data = deleteResponse
-                });
-            }
-            catch (Exception ex)
-            {
-                errors.Add(ex.Message);
-                deleteResponse.Errors = errors;
-                deleteResponse.StatusCode = 500;
-                deleteResponse.IsSuccess = false;
-
-                return StatusCode(500, new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = deleteResponse.StatusCode,
-                    IsSuccess = deleteResponse.IsSuccess,
-                    Message = ex.Message,
-                    Data = deleteResponse
-                });
-            }
-
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Email Template delet succesfully",
+                Data = deletionResult
+            });
         }
+
         const int maxEmailTemplatesPageSize = 20;
 
         /// <summary>
@@ -207,33 +134,30 @@ namespace Ezenity.API.Controllers
         [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<IEnumerable<EmailTemplateResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery, int pageNumber, int pageSize = 10)
         {
-            ApiResponse<IEnumerable<EmailTemplateResponse>> apiResponse = new ApiResponse<IEnumerable<EmailTemplateResponse>>();
+            pageSize = Math.Min(pageSize, maxEmailTemplatesPageSize);
 
-            if(pageSize > maxEmailTemplatesPageSize)
-                pageSize = maxEmailTemplatesPageSize;
+            var emailTemplate = await _emailTemplateService.GetAllAsync();
 
-            try
+            //var pagedResult = await _emailTemplateService.GetAllAsync(name);
+            //var pagedResult = await _emailTemplateService.GetAllAsync(name, searchQuery);
+            //var pagedResult = await _emailTemplateService.GetAllAsync(name, searchQuery, pageNumber, pageSize);
+            //var pagedResult = await _emailTemplateService.GetAllAsync(name, searchQuery, pageNumber, pageSize);
+
+            //var emailTemplateData = pagedResult.Data;
+            //var paginationMetaData = pagedResult.Pagination;
+
+            // Add pagination metadata to the response headers
+            //Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetaData));
+
+            return Ok(new ApiResponse<IEnumerable<EmailTemplateResponse>>
             {
-                var emailTemplate = await _emailTemplateService.GetAllAsync();
-
-                apiResponse.StatusCode = 200;
-                apiResponse.Message = "Email Templates fetched successfully.";
-                apiResponse.IsSuccess = true;
-                apiResponse.Data = emailTemplate;
-
-                return Ok(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Email Template fetched unsuccessfully: {0}", ex);
-
-                apiResponse.StatusCode = 500;
-                apiResponse.Message = "An error occurred while fetching the Email Templates.";
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return StatusCode(500, apiResponse);
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Email Templates fetched successfully.",
+                Data = emailTemplate
+                //Data = emailTemplateData,
+                //Pagination = paginationMetaData
+            });
         }
 
         /// <summary>
@@ -254,39 +178,14 @@ namespace Ezenity.API.Controllers
         [HttpGet("{id:int}", Name = "GetEmailTemplate")]
         public override async Task<ActionResult<ApiResponse<EmailTemplateResponse>>> GetByIdAsync(int id)
         {
-            ApiResponse<EmailTemplateResponse> apiResponse = new ApiResponse<EmailTemplateResponse>();
-
-            try
+            var emailTemplate = await _emailTemplateService.GetByIdAsync(id);
+            return Ok(new ApiResponse<EmailTemplateResponse>
             {
-                var emailTemplate = await _emailTemplateService.GetByIdAsync(id);
-
-                apiResponse.StatusCode = 200;
-                apiResponse.Message = "Email Template fetched successfully.";
-                apiResponse.IsSuccess = true;
-                apiResponse.Data = emailTemplate;
-
-                return Ok(apiResponse);
-            }
-            catch (ResourceNotFoundException ex)
-            {
-                apiResponse.StatusCode = 404;
-                apiResponse.Message = ex.Message;
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return NotFound(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Email Template fetched unsuccessfully: {0}", ex);
-
-                apiResponse.StatusCode = 500;
-                apiResponse.Message = "An error occurred while fetching the Email Template.";
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return StatusCode(500, apiResponse);
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Email Template fetched successfully.",
+                Data = emailTemplate
+            });
         }
 
         /// <summary>
@@ -308,39 +207,14 @@ namespace Ezenity.API.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult<ApiResponse<EmailTemplateNonDynamicResponse>>> GetNonDynamicByIdAsync(int id)
         {
-            ApiResponse<EmailTemplateNonDynamicResponse> apiResponse = new ApiResponse<EmailTemplateNonDynamicResponse>();
-
-            try
+            var emailTemplate = await _emailTemplateService.GetNonDynamicByIdAsync(id);
+            return Ok(new ApiResponse<EmailTemplateNonDynamicResponse>
             {
-                var emailTemplate = await _emailTemplateService.GetNonDynamicByIdAsync(id);
-
-                apiResponse.StatusCode = 200;
-                apiResponse.Message = "Email Template fetched successfully.";
-                apiResponse.IsSuccess = true;
-                apiResponse.Data = emailTemplate;
-
-                return Ok(apiResponse);
-            }
-            catch (ResourceNotFoundException ex)
-            {
-                apiResponse.StatusCode = 404;
-                apiResponse.Message = ex.Message;
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return NotFound(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Email Template fetched unsuccessfully: {0}", ex);
-
-                apiResponse.StatusCode = 500;
-                apiResponse.Message = "An error occurred while fetching the Email Template.";
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return StatusCode(500, apiResponse);
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Email Template fetched successfully.",
+                Data = emailTemplate
+            });
         }
 
         /// <summary>
@@ -359,48 +233,14 @@ namespace Ezenity.API.Controllers
         [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<EmailTemplateResponse>>> UpdateAsync(int id, UpdateEmailTemplateRequest model)
         {
-            ApiResponse<EmailTemplateResponse> apiResponse = new ApiResponse<EmailTemplateResponse>();
-
-            try
+            var updatedEmailTemplate = await _emailTemplateService.UpdateAsync(id, model);
+            return Ok(new ApiResponse<EmailTemplateResponse>
             {
-                var updatedEmailTemplate = await _emailTemplateService.UpdateAsync(id, model);
-
-                apiResponse.StatusCode = 200;
-                apiResponse.IsSuccess = true;
-                apiResponse.Data = updatedEmailTemplate;
-                apiResponse.Message = "Email Template updated successfully.";
-
-                return Ok(apiResponse);
-            }
-            catch (ResourceNotFoundException ex)
-            {
-                apiResponse.StatusCode = 404;
-                apiResponse.Message = ex.Message;
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return NotFound(apiResponse);
-            }
-            catch (AuthorizationException ex)
-            {
-                apiResponse.StatusCode = 401;
-                apiResponse.IsSuccess = false;
-                apiResponse.Message = ex.Message;
-
-
-                return Unauthorized(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Email Template fetched unsuccessfully: {0}", ex);
-
-                apiResponse.StatusCode = 500;
-                apiResponse.Message = "An error occurred while fetching the Email Templates.";
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return StatusCode(500, apiResponse);
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Email Template updated successfully.",
+                Data = updatedEmailTemplate
+            });
         }
     }
 }

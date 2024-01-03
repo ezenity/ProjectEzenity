@@ -40,14 +40,14 @@ namespace Ezenity.DTOs.Models
         /// <summary>
         /// Gets or sets a list of errors, if any, that occurred during the deletion.
         /// </summary>
-        public List<string> Errors { get; set; }
+        public List<JsonApiErrors> Errors { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DeleteResponse"/> class, setting the Errors list to an empty list.
         /// </summary>
         public DeleteResponse()
         {
-            Errors = new List<string>();
+            Errors = new List<JsonApiErrors>();
         }
     }
 }

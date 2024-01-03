@@ -63,39 +63,15 @@ namespace Ezenity.API.Controllers
         [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<SectionResponse>>> GetByIdAsync(int id)
         {
-            ApiResponse<SectionResponse> apiResponse = new ApiResponse<SectionResponse>();
+            var section = await _sectionService.GetByIdAsync(id);
 
-            try
+            return Ok(new ApiResponse<SectionResponse>
             {
-                var section = await _sectionService.GetByIdAsync(id);
-
-                apiResponse.StatusCode = 200;
-                apiResponse.Message = "Section fetched successfully.";
-                apiResponse.IsSuccess = true;
-                apiResponse.Data = section;
-
-                return Ok(apiResponse);
-            }
-            catch (ResourceNotFoundException ex)
-            {
-                apiResponse.StatusCode = 404;
-                apiResponse.Message = ex.Message;
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return NotFound(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Section fetched unsuccessfully: {0}", ex);
-
-                apiResponse.StatusCode = 500;
-                apiResponse.Message = "An error occurred while fetching the section.";
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return StatusCode(500, apiResponse);
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Section fetched successfully.",
+                Data = section
+            });
         }
 
         const int maxSectionsPageSize = 20;
@@ -110,35 +86,30 @@ namespace Ezenity.API.Controllers
         [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<IEnumerable<SectionResponse>>>> GetAllAsync([FromQuery(Name = "filteronname")] string? name, string? searchQuery, int pageNumber, int pageSize = 10)
         {
-            //IApiResponse<ISectionResponse> apiResponse = new ApiResponse<ISectionResponse>();
-            ApiResponse<IEnumerable<SectionResponse>> apiResponse = new ApiResponse<IEnumerable<SectionResponse>>();
+            pageSize = Math.Min(pageSize, maxSectionsPageSize);
 
-            if(pageSize > maxSectionsPageSize)
-                pageSize = maxSectionsPageSize;
+            var sections = await _sectionService.GetAllAsync();
 
+            //var pagedResult = await _emailTemplateService.GetAllAsync(name);
+            //var pagedResult = await _emailTemplateService.GetAllAsync(name, searchQuery);
+            //var pagedResult = await _emailTemplateService.GetAllAsync(name, searchQuery, pageNumber, pageSize);
+            //var pagedResult = await _emailTemplateService.GetAllAsync(name, searchQuery, pageNumber, pageSize);
 
-            try
+            //var sectionsData = pagedResult.Data;
+            //var paginationMetaData = pagedResult.Pagination;
+
+            // Add pagination metadata to the response headers
+            //Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetaData));
+
+            return Ok(new ApiResponse<IEnumerable<SectionResponse>>
             {
-                var sections = await _sectionService.GetAllAsync();
-
-                apiResponse.StatusCode = 200;
-                apiResponse.Message = "Sections fetched successfully.";
-                apiResponse.IsSuccess = true;
-                apiResponse.Data = sections;
-
-                return Ok(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Sections fetched unsuccessfully: {0}", ex);
-
-                apiResponse.StatusCode = 500;
-                apiResponse.Message = "An error occurred while fetching the sections.";
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return StatusCode(500, apiResponse);
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Sections fetched successfully.",
+                Data = sections
+                //Data = sectionsData,
+                //Pagination = paginationMetaData
+            });
         }
 
         /// <summary>
@@ -159,30 +130,15 @@ namespace Ezenity.API.Controllers
         [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<SectionResponse>>> CreateAsync(CreateSectionRequest model)
         {
-            ApiResponse<SectionResponse> apiResponse = new ApiResponse<SectionResponse>();
+            var section = await _sectionService.CreateAsync(model);
 
-            try
+            return Ok(new ApiResponse<SectionResponse>
             {
-                var section = await _sectionService.CreateAsync(model);
-
-                apiResponse.StatusCode = 200;
-                apiResponse.Message = "Section created successfully.";
-                apiResponse.IsSuccess = true;
-                apiResponse.Data = section;
-
-                return Ok(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Section creation unsuccessfully: {0}", ex);
-
-                apiResponse.StatusCode = 500;
-                apiResponse.Message = "An error occurred while creating the sections.";
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return StatusCode(500, apiResponse);
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Section created successfully.",
+                Data = section
+            });
         }
 
         /// <summary>
@@ -202,30 +158,15 @@ namespace Ezenity.API.Controllers
         [ApiExplorerSettings(IgnoreApi = true)] 
         public async Task<ActionResult<ApiResponse<CreateSectionWithAdditonalRequest>>> CreateWithAdditionalAsync(CreateSectionWithAdditonalRequest model)
         {
-            ApiResponse<CreateSectionWithAdditonalRequest> apiResponse = new ApiResponse<CreateSectionWithAdditonalRequest>();
+            var section = await _sectionService.CreateWithAdditionalAsync(model);
 
-            try
+            return Ok(new ApiResponse<CreateSectionWithAdditonalRequest>
             {
-                var section = await _sectionService.CreateWithAdditionalAsync(model);
-
-                apiResponse.StatusCode = 200;
-                apiResponse.Message = "Section created successfully.";
-                apiResponse.IsSuccess = true;
-                apiResponse.Data = section;
-
-                return Ok(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Section creation unsuccessfully: {0}", ex);
-
-                apiResponse.StatusCode = 500;
-                apiResponse.Message = "An error occurred while creating the sections.";
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return StatusCode(500, apiResponse);
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Section created successfully.",
+                Data = section
+            });
         }
 
         /// <summary>
@@ -243,46 +184,21 @@ namespace Ezenity.API.Controllers
         [ProducesDefaultResponseType]
         public override async Task<ActionResult<ApiResponse<SectionResponse>>> UpdateAsync(int id, UpdateSectionRequest model)
         {
-            ApiResponse<SectionResponse> apiResponse = new ApiResponse<SectionResponse>();
+            var updatedSection = await _sectionService.UpdateAsync(id, model);
 
-            try
+            return Ok(new ApiResponse<SectionResponse>
             {
-                var updatedSection = await _sectionService.UpdateAsync(id, model);
-
-                apiResponse.StatusCode = 200;
-                apiResponse.Message = "Section updated successfully.";
-                apiResponse.IsSuccess = true;
-                apiResponse.Data = updatedSection;
-
-                return Ok(apiResponse);
-            }
-            catch (ResourceNotFoundException ex)
-            {
-                apiResponse.StatusCode = 404;
-                apiResponse.Message = ex.Message;
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return NotFound(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Error] Section updated unsuccessfully: {0}", ex);
-
-                apiResponse.StatusCode = 500;
-                apiResponse.Message = "An error occurred while updating the section.";
-                apiResponse.IsSuccess = false;
-                apiResponse.Errors.Add(ex.Message);
-
-                return StatusCode(500, apiResponse);
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Section updated successfully.",
+                Data = updatedSection
+            });
         }
 
         /// <summary>
         /// Deletes an existing section based on the provided ID and the ID of the user performing the deletion.
         /// </summary>
         /// <param name="DeleteSectionId">The ID of the section to delete.</param>
-        /// <param name="DeletedById">The ID of the user performing the deletion.</param>
         /// <returns>A wrapped API response containing the deletion status or errors.</returns>
         /// <exception cref="ResourceNotFoundException">Thrown when the requested section or user is not found.</exception>
         /// <exception cref="AuthorizationException">Thrown when the user is not authorized to perform the deletion.</exception>
@@ -295,92 +211,18 @@ namespace Ezenity.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
-        public override async Task<ActionResult<ApiResponse<DeleteResponse>>> DeleteAsync(int DeleteSectionId, int DeletedById)
+        public override async Task<ActionResult<ApiResponse<DeleteResponse>>> DeleteAsync(int DeleteSectionId)
         {
-            DeleteResponse deleteResponse = new DeleteResponse();
-            List<string> errors = new List<string>();
+            var deletionResult = await _sectionService.DeleteAsync(DeleteSectionId);
 
-            try
+
+            return Ok(new ApiResponse<DeleteResponse>
             {
-                var account = await _accountService.GetByIdAsync(DeletedById);
-                var deletionResult = await _sectionService.DeleteAsync(DeleteSectionId);
-
-                deleteResponse.Message = "Section deleted succesfully";
-                deleteResponse.StatusCode = 200;
-                deleteResponse.DeletedBy = account;
-                deleteResponse.DeletedAt = DateTime.UtcNow;
-                deleteResponse.ResourceId = DeleteSectionId.ToString();
-                deleteResponse.IsSuccess = true;
-
-
-                return Ok(new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = 200,
-                    IsSuccess = true,
-                    Message = "Account deleted successfully",
-                    Data = deleteResponse
-                });
-            }
-            catch (ResourceNotFoundException ex)
-            {
-                errors.Add(ex.Message);
-                deleteResponse.Errors = errors;
-                deleteResponse.StatusCode = 404;
-                deleteResponse.IsSuccess = false;
-
-                return NotFound(new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = deleteResponse.StatusCode,
-                    IsSuccess = deleteResponse.IsSuccess,
-                    Message = ex.Message,
-                    Data = deleteResponse
-                });
-            }
-            catch (AuthorizationException ex)
-            {
-                errors.Add(ex.Message);
-                deleteResponse.Errors = errors;
-                deleteResponse.StatusCode = 401;
-                deleteResponse.IsSuccess = false;
-
-                return Unauthorized(new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = deleteResponse.StatusCode,
-                    IsSuccess = deleteResponse.IsSuccess,
-                    Message = ex.Message,
-                    Data = deleteResponse
-                });
-            }
-            catch (DeletionFailedException ex)
-            {
-                errors.Add(ex.Message);
-                deleteResponse.Errors = errors;
-                deleteResponse.StatusCode = 400;
-                deleteResponse.IsSuccess = false;
-
-                return BadRequest(new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = deleteResponse.StatusCode,
-                    IsSuccess = deleteResponse.IsSuccess,
-                    Message = ex.Message,
-                    Data = deleteResponse
-                });
-            }
-            catch (Exception ex)
-            {
-                errors.Add(ex.Message);
-                deleteResponse.Errors = errors;
-                deleteResponse.StatusCode = 500;
-                deleteResponse.IsSuccess = false;
-
-                return StatusCode(500, new ApiResponse<DeleteResponse>
-                {
-                    StatusCode = deleteResponse.StatusCode,
-                    IsSuccess = deleteResponse.IsSuccess,
-                    Message = ex.Message,
-                    Data = deleteResponse
-                });
-            }
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Account deleted successfully",
+                Data = deletionResult
+            });
         }
     }
 }

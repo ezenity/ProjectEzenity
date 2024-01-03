@@ -78,7 +78,9 @@
             The ApiResponse contains the status code, success flag, and a message indicating the result of the operation.
             </returns>
             <response code="201">Returns a created response if the account is successfully created.</response>
+            <response code="404">Returns a not found response if the specified role is not found and/or available.</response>
             <response code="409">Returns a conflict response if an account with the given email already exists.</response>
+            <response code="422">Returns a unprocessable entity response if a role is proivded as a null.</response>
             <response code="500">Returns if an internal server error occurs.</response>
             <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
         </member>
@@ -107,49 +109,11 @@
             <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
             <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
         </member>
-        <member name="M:Ezenity.API.API.Controllers.AccountsController.UpdatePartialAsync(System.Int32,Microsoft.AspNetCore.JsonPatch.JsonPatchDocument{Ezenity.DTOs.Models.Accounts.UpdateAccountRequest})">
-            <summary>
-            Asynchronously updates partially on an existing account.
-            </summary>
-            <param name="id">The identifier of the account to be updated partially.</param>
-            <param name="model">The <see cref="T:Ezenity.DTOs.Models.Accounts.UpdateAccountRequest"/> model containing the new account details.</param>
-            <remarks>
-            This method partially updates an existing account based on the provided identifier and UpdateAccountRequest model.    
-                
-            This request updates the account's **First Name**:    
-                
-                PATCH /api/accounts/{id} \
-                { \
-                    "Title": "Mr.", \
-                    "FirstName": "John", \
-                    "LastName": "Doe" \
-                } \
-                 
-            **Note**: All fields are optional and can be patched individually. The update is partial; fields not provided will not be updated.    
-                
-            It is authorized for use by any authenticated user who are the Role Admin.    
-            Multiple error conditions are handled, such as resource not found, authorization failure, or conflict with existing resources.
-            </remarks>
-            <returns>
-            An <see cref="T:Microsoft.AspNetCore.Mvc.ActionResult"/> containing an <see cref="T:Ezenity.DTOs.Models.ApiResponse`1"/>.
-            The ApiResponse contains the status code, success flag, the updated account data, and a message indicating the result of the operation.
-            </returns>
-            <response code="200">Returns an OK response if the account is successfully updated.</response>
-            <response code="404">Returns a not found response if the account with the specified ID does not exist.</response>
-            <response code="401">Returns an unauthorized response if the caller lacks necessary permissions.</response>
-            <response code="409">Returns a conflict response if updating the account would cause a conflict.</response>
-            <response code="500">Returns an internal server error if an unexpected error occurs.</response>
-            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the account with the specified ID does not exist.</exception>
-            <exception cref="T:Ezenity.Core.Helpers.Exceptions.AuthorizationException">Thrown when the caller lacks necessary permissions.</exception>
-            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
-            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
-        </member>
-        <member name="M:Ezenity.API.API.Controllers.AccountsController.DeleteAsync(System.Int32,System.Int32)">
+        <member name="M:Ezenity.API.API.Controllers.AccountsController.DeleteAsync(System.Int32)">
             <summary>
             Asynchronously deletes an account.
             </summary>
             <param name="DeleteAccountId">The identifier of the account to be deleted.</param>
-            <param name="DeletedById">The identifier of the account performing the deletion.</param>
             <remarks>
             This method deletes an existing account with the given identifier (DeleteAccountId) and logs who performed the deletion (DeletedById).
             The function is authorized for use by any authenticated user.
@@ -347,12 +311,11 @@
             <param name="model">The update model containing the new data.</param>
             <returns>An action result containing an API response with the updated entity data.</returns>
         </member>
-        <member name="M:Ezenity.API.Controllers.BaseController`5.DeleteAsync(System.Int32,System.Int32)">
+        <member name="M:Ezenity.API.Controllers.BaseController`5.DeleteAsync(System.Int32)">
             <summary>
             Deletes an existing entity identified by the given identifier.
             </summary>
             <param name="DeleteAccountId">The identifier of the entity to be deleted.</param>
-            <param name="DeletedById">The identifier of the user who is deleting the entity.</param>
             <returns>An action result containing an API response with the status of the deletion operation.</returns>
         </member>
         <member name="T:Ezenity.API.Controllers.EmailTemplatesController">
@@ -404,12 +367,11 @@
             <param name="model">The email template creation model.</param>
             <returns>An action result containing the created email template.</returns>
         </member>
-        <member name="M:Ezenity.API.Controllers.EmailTemplatesController.DeleteAsync(System.Int32,System.Int32)">
+        <member name="M:Ezenity.API.Controllers.EmailTemplatesController.DeleteAsync(System.Int32)">
             <summary>
             Asynchronously deletes an existing email template.
             </summary>
             <param name="DeleteEmailTemplateId">The ID of the email template to delete.</param>
-            <param name="DeletedById">The ID of the user performing the deletion.</param>
             <returns>An action result containing information about the deletion.</returns>
             <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the email template is not found.</exception>
             <exception cref="T:Ezenity.Core.Helpers.Exceptions.AuthorizationException">Thrown when the user is unauthorized to perform this action.</exception>
@@ -557,33 +519,16 @@
             <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the requested section is not found.</exception>
             <exception cref="T:System.Exception">Thrown for generic server errors.</exception>
         </member>
-        <member name="M:Ezenity.API.Controllers.SectionsController.DeleteAsync(System.Int32,System.Int32)">
+        <member name="M:Ezenity.API.Controllers.SectionsController.DeleteAsync(System.Int32)">
             <summary>
             Deletes an existing section based on the provided ID and the ID of the user performing the deletion.
             </summary>
             <param name="DeleteSectionId">The ID of the section to delete.</param>
-            <param name="DeletedById">The ID of the user performing the deletion.</param>
             <returns>A wrapped API response containing the deletion status or errors.</returns>
             <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the requested section or user is not found.</exception>
             <exception cref="T:Ezenity.Core.Helpers.Exceptions.AuthorizationException">Thrown when the user is not authorized to perform the deletion.</exception>
             <exception cref="T:Ezenity.Core.Helpers.Exceptions.DeletionFailedException">Thrown when deletion fails due to server or validation errors.</exception>
             <exception cref="T:System.Exception">Thrown for generic server errors.</exception>
-        </member>
-        <member name="T:Ezenity.API.Filters.ApiExceptionFilter">
-            <summary>
-            Provides global exception handling for API responses by capturing any thrown exceptions
-            and converting them into a standardized JSON response format.
-            </summary>
-        </member>
-        <member name="M:Ezenity.API.Filters.ApiExceptionFilter.OnException(Microsoft.AspNetCore.Mvc.Filters.ExceptionContext)">
-            <summary>
-            Called when an exception occurs in the application. Overrides the base method to provide
-            a custom response in case of an exception.
-            </summary>
-            <param name="context">
-            The <see cref="T:Microsoft.AspNetCore.Mvc.Filters.ExceptionContext"/> encapsulating the exception details and other 
-            contextual information.
-            </param>
         </member>
         <member name="T:Ezenity.API.Filters.CreateEmailTemplateFilter">
             <summary>
@@ -632,7 +577,7 @@
             The database context used for retrieving the account data.
             </summary>
         </member>
-        <member name="M:Ezenity.API.Filters.LoadAccountFilter.#ctor(Ezenity.Infrastructure.Helpers.DataContext)">
+        <member name="M:Ezenity.API.Filters.LoadAccountFilter.#ctor(Ezenity.Core.Interfaces.IDataContext)">
             <summary>
             Initializes a new instance of the <see cref="T:Ezenity.API.Filters.LoadAccountFilter"/> class.
             </summary>
@@ -677,7 +622,7 @@
             Application settings for configuring JWT.
             </summary>
         </member>
-        <member name="M:Ezenity.API.Middleware.CustomJwtAuthenticationHandler.#ctor(Microsoft.Extensions.Options.IOptionsMonitor{Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions},Ezenity.Core.Interfaces.IAppSettings,Microsoft.Extensions.Logging.ILoggerFactory,System.Text.Encodings.Web.UrlEncoder,Microsoft.AspNetCore.Authentication.ISystemClock,Ezenity.Infrastructure.Helpers.DataContext)">
+        <member name="M:Ezenity.API.Middleware.CustomJwtAuthenticationHandler.#ctor(Microsoft.Extensions.Options.IOptionsMonitor{Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions},Ezenity.Core.Interfaces.IAppSettings,Microsoft.Extensions.Logging.ILoggerFactory,System.Text.Encodings.Web.UrlEncoder,Microsoft.AspNetCore.Authentication.ISystemClock,Ezenity.Core.Interfaces.IDataContext)">
             <summary>
             Initializes a new instance of the <see cref="T:Ezenity.API.Middleware.CustomJwtAuthenticationHandler"/> class.
             </summary>
@@ -700,22 +645,43 @@
         </member>
         <member name="T:Ezenity.API.Middleware.ErrorHandlerMiddleware">
             <summary>
-            Middleware for handling exceptions and converting them into appropriate HTTP responses.
+            Middleware for handling exceptions globally and converting them into structured, 
+            JSON:API compliant HTTP responses. It logs errors and provides a consistent error handling strategy.
             </summary>
         </member>
-        <member name="M:Ezenity.API.Middleware.ErrorHandlerMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Middleware.ErrorHandlerMiddleware})">
+        <member name="M:Ezenity.API.Middleware.ErrorHandlerMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Middleware.ErrorHandlerMiddleware},Microsoft.Extensions.Options.IOptions{Ezenity.Core.Interfaces.IAppSettings},Ezenity.Core.Interfaces.ISensitivePropertiesSettings)">
             <summary>
-            Initializes a new instance of the <see cref="T:Ezenity.API.Middleware.ErrorHandlerMiddleware"/> class.
+            Initializes a new instance of the ErrorHandlerMiddleware class with dependencies.
             </summary>
-            <param name="next">The delegate for the next middleware in the pipeline.</param>
-            <param name="logger">The logger to write diagnostic messages to.</param>
+            <param name="next">The next delegate in the middleware pipeline.</param>
+            <param name="logger">Logger for diagnostic messages.</param>
+            <param name="appSettings">Application settings for retrieving configuration like base URL.</param>
+            <param name="sensitivePropertiesSettings">Settings to identify sensitive properties that should be excluded from error logs.</param>
         </member>
         <member name="M:Ezenity.API.Middleware.ErrorHandlerMiddleware.Invoke(Microsoft.AspNetCore.Http.HttpContext)">
             <summary>
-            Invokes the middleware.
+            Processes a request and catches any unhandled exceptions to format them into structured JSON:API error responses.
             </summary>
-            <param name="context">The HTTP context for the current request and response.</param>
-            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+            <param name="context">The HTTP context for the current request.</param>
+            <returns>A task representing the asynchronous operation of exception handling and response generation.</returns>
+        </member>
+        <member name="M:Ezenity.API.Middleware.ErrorHandlerMiddleware.HandleExceptionAsync(Microsoft.AspNetCore.Http.HttpContext,System.Exception)">
+            <summary>
+            Handles exceptions by determining the appropriate HTTP status code and creating a JSON:API error response.
+            </summary>
+            <param name="context">The HTTP context for the current request.</param>
+            <param name="exception">The caught exception.</param>
+            <returns>A task representing the asynchronous operation of error response writing.</returns>
+        </member>
+        <member name="M:Ezenity.API.Middleware.ErrorHandlerMiddleware.CreateJsonApiError(System.Exception,System.Net.HttpStatusCode,Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Creates a JSON:API compliant error object based on the provided exception and HTTP status code.
+            It excludes any sensitive properties from the error details.
+            </summary>
+            <param name="exception">The exception to convert into a JSON:API error.</param>
+            <param name="statusCode">The HTTP status code associated with the error.</param>
+            <param name="context">The HTTP context for the current request.</param>
+            <returns>A JSON:API error object representing the provided exception.</returns>
         </member>
         <member name="T:Ezenity.API.Middleware.JwtMiddleware">
             <summary>
@@ -739,7 +705,7 @@
             <param name="next">The delegate for the next middleware in the pipeline.</param>
             <param name="appSettings">Application settings for configuring JWT.</param>
         </member>
-        <member name="M:Ezenity.API.Middleware.JwtMiddleware.Invoke(Microsoft.AspNetCore.Http.HttpContext,Ezenity.Infrastructure.Helpers.DataContext)">
+        <member name="M:Ezenity.API.Middleware.JwtMiddleware.Invoke(Microsoft.AspNetCore.Http.HttpContext,Ezenity.Core.Interfaces.IDataContext)">
             <summary>
             Invokes the middleware.
             </summary>
@@ -747,7 +713,7 @@
             <param name="dataContext">The database context to query for accounts.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
         </member>
-        <member name="M:Ezenity.API.Middleware.JwtMiddleware.attachAccountToContext(Microsoft.AspNetCore.Http.HttpContext,Ezenity.Infrastructure.Helpers.DataContext,System.String)">
+        <member name="M:Ezenity.API.Middleware.JwtMiddleware.attachAccountToContext(Microsoft.AspNetCore.Http.HttpContext,Ezenity.Core.Interfaces.IDataContext,System.String)">
             <summary>
             Attaches the account associated with a valid JWT to the HTTP context.
             </summary>

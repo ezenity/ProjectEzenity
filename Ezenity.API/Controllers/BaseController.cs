@@ -61,11 +61,10 @@ namespace Ezenity.API.Controllers
         /// Deletes an existing entity identified by the given identifier.
         /// </summary>
         /// <param name="DeleteAccountId">The identifier of the entity to be deleted.</param>
-        /// <param name="DeletedById">The identifier of the user who is deleting the entity.</param>
         /// <returns>An action result containing an API response with the status of the deletion operation.</returns>
         [AuthorizeV2]
         [HttpDelete("{DeleteAccountId:int}")]
-        public abstract Task<ActionResult<ApiResponse<TDeleteResponse>>> DeleteAsync(int DeleteAccountId, int DeletedById);
+        public abstract Task<ActionResult<ApiResponse<TDeleteResponse>>> DeleteAsync(int DeleteAccountId);
     }
 
 }
