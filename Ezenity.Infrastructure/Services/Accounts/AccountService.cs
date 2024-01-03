@@ -116,7 +116,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
 
                 if (!_passwordService.VerifyPassword(model.Password, account.PasswordHash))
                 {
-                    _logger.LogWarning($"Authentication failed for: {model.Email}");
+                    _logger.LogWarning("Authentication failed for: {Email}", HttpUtility.HtmlEncode(model.Email));
                     throw new AuthenticationException("The 'password' provided is incorrect");
                 }
 
