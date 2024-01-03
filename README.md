@@ -1,3 +1,6 @@
+[![CodeQL](https://github.com/ezenity/ProjectEzenity/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/ezenity/ProjectEzenity/actions/workflows/codeql.yml)
+---
+
 ## Table of Contents
 - [Project Ezenity](#project-ezenity)
   - [Introduction](#introduction)
