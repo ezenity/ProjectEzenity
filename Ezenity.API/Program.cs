@@ -1,387 +1,71 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Formatters;
-using Newtonsoft.Json.Serialization;
-using Microsoft.AspNetCore.Mvc.Versioning;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using System;
-using System.Linq;
-using System.Reflection;
-using System.IO;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.StaticFiles;
 using Serilog;
-using Ezenity.API.Filters;
-using Ezenity.Infrastructure.Helpers;
-using Ezenity.Core.Services.Common;
-using Ezenity.Infrastructure.Services.Accounts;
-using Ezenity.Infrastructure.Services.Emails;
-using Ezenity.Infrastructure.Services.EmailTemplates;
-using Ezenity.Infrastructure.Services.Sections;
-using Ezenity.API.Middleware;
-using Ezenity.Core.Interfaces;
-using Microsoft.Extensions.Options;
-using Ezenity.Infrastructure.Factories;
-using System.Collections.Generic;
+using System;
+using System.IO;
 
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
-    .WriteTo.Console()
-    .WriteTo.File("logs/api.txt", rollingInterval: RollingInterval.Day)
-    .CreateLogger();
-
-
-var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+namespace Ezenity.API
 {
-    Args = args,
-    ApplicationName = typeof(Program).Assembly.FullName,
-    ContentRootPath = Directory.GetCurrentDirectory()
-});
-
-var environmentName = builder.Environment.EnvironmentName;
-
-if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production")
-    environmentName = Environments.Development;
-else
-    environmentName = Environments.Production;
-
-//builder.Logging.ClearProviders();
-/*builder.Logging.AddConfiguration(configuration.GetSection("Logging"));
-builder.Logging.AddJsonConsole();
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();*/
-
-// Set Logging Provider
-builder.Host.UseSerilog();
-
-Console.WriteLine("###################################");
-Console.WriteLine($"Application Name: {builder.Environment.ApplicationName}");
-Console.WriteLine($"Environment Name: {builder.Environment.EnvironmentName}");
-Console.WriteLine($"ContentRoot Path: {builder.Environment.ContentRootPath}");
-Console.WriteLine("###################################");
-
-// Application's configuration settings
-var configuration = builder.Configuration;
-
-// Add configurations from appsettings.json, appsettings.Development.json, etc.
-configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
-
-// Add serices to the container
-var services = builder.Services;
-
-string secretKey;
-if (builder.Environment.IsDevelopment())
-    secretKey = configuration.GetSection("AppSettings")["Secret"];
-else
-    secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? System.IO.File.ReadAllText("./secret/key.txt").Trim(); // TODO: Insert correct location once on server
-
-// Configure AppSettings
-var appSettings = AppSettingsFactory.Create(configuration, secretKey);
-services.AddSingleton<IAppSettings>(new AppSettingsWrapper(appSettings));
-
-// Configure ConnectionStringSettings
-var connectionStringSettings = ConnectionStringSettingsFactory.Create(configuration);
-services.AddSingleton<IConnectionStringSettings>(new ConnectionStringSettingsWrapper(connectionStringSettings));
-
-// Configure SensitivePropertiesSettings
-var sensitivePropsConfig = SensitivePropertiesSettingsFactory.Create(configuration);
-services.AddSingleton<ISensitivePropertiesSettings>(new SensitivePropertiesSettingsWrapper(sensitivePropsConfig));
-
-var connectionString = connectionStringSettings.WebApiDatabase;
-services.AddDbContext<DataContext>(option => option.UseSqlServer(connectionString));
-// TODO: Add support for Azure Kay Vault
-// Make the data repository available for dependency injection. Whenever an interface is 
-// referenced in a constructor, substitute an instace of the class.
-//
-// AddScope: Only one instance of the class is created in a given HTTP request (Last for whole HTTP request)
-// AddTransient: Generate a new instance of the class each time it is requested
-//      Good for lightwieght stateless services
-// AddSingleton: Geernate only one class instance for the lifetime of the whole app
-// configure Dependecy Injection for application services
-services.AddScoped<IAccountService, AccountService>();
-services.AddScoped<IEmailService, EmailService>();
-services.AddScoped<IEmailTemplateService, EmailTemplateService>();
-services.AddScoped<ISectionService, SectionService>();
-services.AddScoped<IPasswordService, PasswordService>();
-services.AddScoped<IAuthService, AuthService>();
-services.AddScoped<IDataContext, DataContext>();
-services.AddScoped<ITokenHelper, TokenHelper>();
-// Filter DI
-services.AddScoped<LoadAccountFilter>();
-
-services.AddSingleton<FileExtensionContentTypeProvider>();
-
-services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
-
-services.AddControllers(options =>
-{
-    // Ensure the API returns a 406 Not Acceptable status code if the requested content type is not supported.
-    options.ReturnHttpNotAcceptable = true;
-
-    // options.Filters.Add(typeof(LoadAccountFilter));
-
-    // Global filters for standard HTTP status codes:
-
-    // 400 Bad Request - Indicates that the server cannot process the request due to a client error (e.g., malformed request syntax).
-    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status400BadRequest));
-
-    // 401 Unauthorized - Indicates that the request lacks valid authentication credentials for the target resource.
-    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status401Unauthorized));
-
-    // 403 Forbidden - Indicates that the server understood the request but refuses to authorize it.
-    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status403Forbidden));
-
-    // 404 Not Found - Indicates that the server can't find the requested resource. Links that lead to a 404 page are often called broken or dead links.
-    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status404NotFound));
-
-    // 406 Not Acceptable - Indicates that the server cannot produce a response matching the list of acceptable values defined in the request's proactive content negotiation headers.
-    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status406NotAcceptable));
-
-    // 409 Conflict - Indicates a request conflict with the current state of the target resource (e.g., conflicts in the current state of the resource).
-    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status409Conflict));
-
-    // 422 Unprocessable Entity - Indicates that the server understands the content type of the request entity, and the syntax of the request entity is correct but it was unable to process the contained instructions.
-    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status422UnprocessableEntity));
-
-    // 429 Too Many Requests - Indicates the user has sent too many requests in a given amount of time ("rate limiting").
-    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status429TooManyRequests));
-
-    // 500 Internal Server Error - Indicates a generic error message when an unexpected condition was encountered and no more specific message is suitable.
-    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status500InternalServerError));
-
-    // 501 Not Implemented - The server does not support the functionality required to fulfill the request. This can indicate an unrecognized or unsupported request method or feature.
-    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status501NotImplemented));
-
-    // 503 Service Unavailable - The server is not ready to handle the request, often used for maintenance or overloaded servers. It signifies temporary unavailability, suggesting clients may retry the request after some time.
-    options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status503ServiceUnavailable));
-
-
-}).AddNewtonsoftJson(setupAction =>
-{
-    setupAction.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-    setupAction.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
-    setupAction.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
-}).AddXmlDataContractSerializerFormatters();
-
-services.Configure<MvcOptions>(options =>
-{
-    var jsonOutputFormatter = options.OutputFormatters.OfType<NewtonsoftJsonOutputFormatter>().FirstOrDefault();
-
-    if (jsonOutputFormatter != null)
+    /// <summary>
+    /// Main entry point for the Ezenity.API web application.
+    /// </summary>
+    public class Program
     {
-        // Remove text/json as it ins't the aproved media type
-        // for working with JSON at API level
-        if (jsonOutputFormatter.SupportedMediaTypes.Contains("text/json"))
+        /// <summary>
+        /// Entry method for the web application. Configures and launches the web host.
+        /// </summary>
+        /// <param name="args">Command-line arguments passed to the application.</param>
+        public static void Main(string[] args)
         {
-            jsonOutputFormatter.SupportedMediaTypes.Remove("text/json");
-        }
-    }
-});
+            // Determine the environment based on the 'ASPNETCORE_ENVIRONMENT' variable.
+            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production"
+                ? Environments.Development
+                : Environments.Production;
 
-services.AddCors(options =>
-{
-    options.AddPolicy("CorsPolicy", builder =>
-    {
-        builder.WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>()) // Use the origins from the configuration
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
-    });
-});
+            // Build configuration from various sources.
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true)
+                .Build();
 
-if (builder.Environment.IsDevelopment())
-{
-    services.AddApiVersioning(setupAction =>
-    {
-        setupAction.AssumeDefaultVersionWhenUnspecified = true;
-        setupAction.DefaultApiVersion = new ApiVersion(1, 0);
-        setupAction.ReportApiVersions = true;
-    //setupAction.ApiVersionReader = new HeaderApiVersionReader("api-version");
-    //setupAction.ApiVersionReader = new MediaTypeApiVersionReader();
-    });
+            // Configure Serilog for logging.
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(configuration)
+                .CreateLogger();
 
-    services.AddVersionedApiExplorer(setupAction =>
-    {
-        setupAction.GroupNameFormat = "'v'VV";
-    });
-
-    var apiVersionDescriptionProvider = services.BuildServiceProvider().GetRequiredService<IApiVersionDescriptionProvider>();
-    var logger = services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
-
-    services.AddSwaggerGen(setupAction =>
-    {
-        foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
-        {
-            setupAction.SwaggerDoc($"ProjectEzenityAPISpecs{description.GroupName}", new OpenApiInfo
+            try
             {
-                Title = "Project Ezenity API",
-                Version = description.ApiVersion.ToString(),
-                Description = "Through this API you can access accounts, sections, roles, operations, and email templates.",
-                Contact = new()
-                {
-                    Email = "anthonymmacallister@gmail.com",
-                    Name = "Anthony MacAllister",
-                    Url = new Uri("https://Ezenity.com/")
-                },
-                License = new()
-                {
-                    Name = "MIT License",
-                    Url = new Uri("https://opensource.org/licenses/MIT")
-                }
+                Console.WriteLine("Starting web host");
+                // Build and run the web host.
+                CreateHostBuilder(args, configuration).Build().Run();
+            }
+            catch (Exception ex)
+            {
+                // Log fatal errors and terminate the application.
+                Log.Fatal(ex, "Host terminated unexpectedly");
+            }
+            finally
+            {
+                // Flush and close the log before application shutdown.
+                Log.CloseAndFlush();
+            }
+        }
+
+        /// <summary>
+        /// Configures and creates a host builder for the web application.
+        /// </summary>
+        /// <param name="args">Command-line arguments passed to the application.</param>
+        /// <param name="configuration">Application configuration settings.</param>
+        /// <returns>A configured IHostBuilder instance.</returns>
+        public static IHostBuilder CreateHostBuilder(string[] args, IConfiguration configuration) =>
+            Host.CreateDefaultBuilder(args)
+            .UseSerilog()
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>();
+                webBuilder.UseConfiguration(configuration);
             });
-        }
-
-        setupAction.DocInclusionPredicate((documentName, apiDescription) =>
-        {
-            var actionApiVersionModel = apiDescription.ActionDescriptor.GetApiVersionModel(ApiVersionMapping.Explicit | ApiVersionMapping.Implicit);
-
-            logger.LogInformation($"Evaluating API description for document: {documentName}");
-            logger.LogInformation($"ActionApiVersionModel: {actionApiVersionModel}");
-
-            if (actionApiVersionModel == null)
-            {
-                logger.LogInformation("ActionApiVersionModel is null. Including in document.");
-                return true;
-            }
-
-            if (actionApiVersionModel.DeclaredApiVersions.Any())
-            {
-            //var isIncluded = actionApiVersionModel.DeclaredApiVersions.Any(v => $"ProjectEzenityAPISpecs{v}" == documentName);
-            var isIncluded = actionApiVersionModel.DeclaredApiVersions.Any(v => string.Equals($"ProjectEzenityAPISpecsv{v}", documentName, StringComparison.OrdinalIgnoreCase));
-
-                logger.LogInformation($"Is included in DeclaredApiVersions: {isIncluded}");
-
-                logger.LogInformation($"Document Name: {documentName}");
-                logger.LogInformation($"Declared API Versions: {string.Join(", ", actionApiVersionModel.DeclaredApiVersions.Select(v => v.ToString()))}");
-
-                return isIncluded;
-            }
-
-            var isImplemented = actionApiVersionModel.ImplementedApiVersions.Any(v => $"ProjectEzenityAPISpecsv{v}" == documentName);
-            logger.LogInformation($"Is included in ImplementedApiVersions: {isImplemented}");
-            return isImplemented;
-        });
-
-        setupAction.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-        {
-            Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer 12345abcdef'. Use this format when making authenticated API calls. You can obtain the JWT Bearer token by making a POST request to http://localhost:5000/api/v1/accounts/authenticate.",
-            Name = "Authorization",
-            In = ParameterLocation.Header,
-            Type = SecuritySchemeType.Http,
-            Scheme = "bearer"
-        });
-
-        setupAction.AddSecurityRequirement(new OpenApiSecurityRequirement
-        {
-            {
-                new OpenApiSecurityScheme
-                {
-                    Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-                },
-                new string[] { }
-            }
-        });
-
-        // Create Operational Filters
-        setupAction.OperationFilter<CreateEmailTemplateFilter>();
-        setupAction.OperationFilter<CreateSectionFilter>();
-
-        // Update Operational Filters
-        setupAction.OperationFilter<UpdateAccountFilter>();
-
-        // Get Operational Filters
-        setupAction.OperationFilter<GetEmailTemplateFilter>();
-
-        var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-        var xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
-
-        setupAction.IncludeXmlComments(xmlCommentsFullPath);
-    });
+    }
 }
-
-services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = "CustomJwt";
-    options.DefaultChallengeScheme = "CustomJwt";
-}).AddScheme<AuthenticationSchemeOptions, CustomJwtAuthenticationHandler>("CustomJwt", null);
-
-services.AddAuthorization(options =>
-{
-    options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
-});
-
-// Build the application
-var app = builder.Build();
-
-
-if (app.Environment.IsDevelopment())
-{
-    var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
-
-    app.UseStaticFiles();
-
-    // Generate swagger json and swagger ui middleware
-    app.UseSwagger();
-    app.UseSwaggerUI(setupAction =>
-    {
-        foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
-        {
-            setupAction.SwaggerEndpoint(
-                $"/swagger/ProjectEzenityAPISpecs{description.GroupName}/swagger.json",
-                $"Project Ezenity API {description.GroupName.ToUpperInvariant()}");
-        }
-
-        setupAction.DefaultModelExpandDepth(2);
-        setupAction.DefaultModelRendering(Swashbuckle.AspNetCore.SwaggerUI.ModelRendering.Model);
-        setupAction.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None); // Default = List
-        setupAction.EnableDeepLinking();
-        setupAction.DisplayOperationId();
-
-        setupAction.InjectStylesheet("/assets/custom-ui.css");
-
-        setupAction.RoutePrefix = String.Empty;
-    });
-}
-
-// Global CORS policy
-app.UseCors("CorsPolicy");
-
-app.UseRouting();
-
-// Global error handler
-app.UseMiddleware<ErrorHandlerMiddleware>();
-
-// Custom jwt auth middleware
-app.UseMiddleware<JwtMiddleware>();
-
-if(app.Environment.IsProduction())
-    app.UseHttpsRedirection();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseEndpoints(
-    endpoints => endpoints.MapControllers()
-);
-
-// Migrate any database changes on startup (includes initial db creation)
-// Ensure to be used only for development. For production, run migrations 
-// manually incase of breaking changes in the database schema.
-if (app.Environment.IsDevelopment())
-{
-    using var scope = app.Services.CreateScope();
-    var dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-    dataContext.Database.Migrate();
-}
-
-app.Run();
