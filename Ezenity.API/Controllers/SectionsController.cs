@@ -17,7 +17,7 @@ namespace Ezenity.API.Controllers
     /// Provides an API controller for managing sections.
     /// </summary>
     [ApiController]
-    [Route("api/v{version:apiVersion}/sections")]
+    [Route("api/sections")]
     [ApiVersion("1.0")]
     [Produces("application/json", "application/xml")]
     public class SectionsController : BaseController<Section, SectionResponse, CreateSectionRequest, UpdateSectionRequest, DeleteResponse>

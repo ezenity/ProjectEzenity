@@ -4,6 +4,24 @@
         <name>Ezenity.API</name>
     </assembly>
     <members>
+        <member name="T:Ezenity.API.Configurations.ConfigureSwaggerOptions">
+            <summary>
+            Configures Swagger to understand and represent API versioning in the generated Swagger documents.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Configurations.ConfigureSwaggerOptions.#ctor(Microsoft.AspNetCore.Mvc.ApiExplorer.IApiVersionDescriptionProvider,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Configurations.ConfigureSwaggerOptions})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity.API.Configurations.ConfigureSwaggerOptions"/> class.
+            </summary>
+            <param name="provider">The API version description provider used for retrieving API version information.</param>
+            <param name="logger">The logger used for logging information within this configuration.</param>
+        </member>
+        <member name="M:Ezenity.API.Configurations.ConfigureSwaggerOptions.Configure(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions)">
+            <summary>
+            Configures the Swagger generation options. Adds each API version as a separate document and sets up security definitions.
+            </summary>
+            <param name="options">The Swagger generation options to configure.</param>
+        </member>
         <member name="T:Ezenity.API.API.Controllers.AccountsController">
             <summary>
             Handles HTTP requests and responses related to Account entities.
@@ -721,6 +739,66 @@
             <param name="dataContext">The database context to query for accounts.</param>
             <param name="token">The JWT to validate and extract account information from.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="T:Ezenity.API.Program">
+            <summary>
+            Main entry point for the Ezenity.API web application.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Program.Main(System.String[])">
+            <summary>
+            Entry method for the web application. Configures and launches the web host.
+            </summary>
+            <param name="args">Command-line arguments passed to the application.</param>
+        </member>
+        <member name="M:Ezenity.API.Program.CreateHostBuilder(System.String[],Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Configures and creates a host builder for the web application.
+            </summary>
+            <param name="args">Command-line arguments passed to the application.</param>
+            <param name="configuration">Application configuration settings.</param>
+            <returns>A configured IHostBuilder instance.</returns>
+        </member>
+        <member name="T:Ezenity.API.Startup">
+            <summary>
+            Represents the startup configuration of the application where services and the request pipeline are configured.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Startup.#ctor(Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Ezenity.API.Startup"/> class with the specified configuration.
+            </summary>
+            <param name="configuration">The application configuration properties.</param>
+        </member>
+        <member name="P:Ezenity.API.Startup.Configuration">
+            <summary>
+            Gets the application's configuration properties, including those set in appsettings.json and other sources.
+            </summary>
+        </member>
+        <member name="M:Ezenity.API.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Configures services for the application. This method gets called by the runtime.
+            It adds services to the container and configures various options including database context, authentication, API versioning, Swagger, etc.
+            </summary>
+            <param name="services">The collection of service descriptors.</param>
+        </member>
+        <member name="M:Ezenity.API.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IWebHostEnvironment,Microsoft.AspNetCore.Mvc.ApiExplorer.IApiVersionDescriptionProvider,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Startup})">
+            <summary>
+            Configures the HTTP request pipeline. This method gets called by the runtime.
+            It adds middleware components to the request pipeline such as error handling, static files, routing, authentication, authorization, Swagger, etc.
+            </summary>
+            <param name="app">Defines a class that provides mechanisms to configure an application's request pipeline.</param>
+            <param name="env">Provides information about the web hosting environment an application is running in.</param>
+            <param name="provider">Provides a mechanism to iterate API versions and their respective descriptions.</param>
+            <param name="logger">Represents a type used to perform logging.</param>
+        </member>
+        <member name="M:Ezenity.API.Startup.ConfigureSwagger(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Mvc.ApiExplorer.IApiVersionDescriptionProvider,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Startup})">
+            <summary>
+            Configures SwaggerGen and SwaggerUI services. This method sets up Swagger documentation for different API versions and configures Swagger UI options.
+            </summary>
+            <param name="app">Defines a class that provides mechanisms to configure an application's request pipeline.</param>
+            <param name="provider">Provides a mechanism to iterate API versions and their respective descriptions.</param>
+            <param name="logger">Represents a type used to perform logging.</param>
         </member>
     </members>
 </doc>
