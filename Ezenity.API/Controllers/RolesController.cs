@@ -6,7 +6,7 @@ namespace Ezenity.API.Controllers
     /// Handles API operations related to roles within the system.
     /// </summary>
     [ApiController]
-    [Route("api/v{version:apiVersion}/roles")]
+    [Route("api/roles")]
     [ApiVersion("2.0")]
     [Produces("application/json", "application/xml")]
     public class RolesController
