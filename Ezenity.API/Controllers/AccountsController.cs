@@ -21,9 +21,10 @@ namespace Ezenity.API.API.Controllers
     /// Handles HTTP requests and responses related to Account entities.
     /// </summary>
     [ApiController]
-    [Route("api/v{version:apiVersion}/accounts")]
+    /*[Route("api/v{version:apiVersion}/accounts")]*/
+    [Route("api/accounts")]
     [ApiVersion("1.0")]
-    [Produces("application/json", "application/xml")]
+    [Produces("application/vnd.api+json")]
     public class AccountsController : BaseController<Account, AccountResponse, CreateAccountRequest, UpdateAccountRequest, DeleteResponse>
     {
         /// <summary>
@@ -220,7 +221,6 @@ namespace Ezenity.API.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status503ServiceUnavailable)]
         [ProducesDefaultResponseType]
-        // public abstract Task<ActionResult<ApiResponse<TResponse>>> UpdateAsync(int id, TUpdateRequest model);
         public override async Task<ActionResult<ApiResponse<AccountResponse>>> UpdateAsync(int id, UpdateAccountRequest model)
         {
             var account = await _accountService.UpdateAsync(id, model);

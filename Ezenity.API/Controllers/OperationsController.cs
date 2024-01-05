@@ -9,7 +9,7 @@ namespace Ezenity.API.Controllers
     /// Provides an API controller for system operations like reloading configurations.
     /// </summary>
     [ApiController]
-    [Route("api/v{version:apiVersion}/[controller]")]
+    [Route("api/operations")]
     [ApiVersion("2.0")]
     [Produces("application/json", "application/xml")]
     public class OperationsController : ControllerBase
