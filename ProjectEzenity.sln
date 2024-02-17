@@ -5,13 +5,13 @@ VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ezenity.API", "Ezenity.API\Ezenity.API.csproj", "{A63DDC57-5293-4FBB-B069-F7F588F3BB82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ezenity.Tests", "Ezenity.Tests\Ezenity.Tests.csproj", "{7BD839B7-F3E2-499A-8DD1-807C4F5ECAD4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ezenity.Tests", "Ezenity.Tests\Ezenity.Tests.csproj", "{7BD839B7-F3E2-499A-8DD1-807C4F5ECAD4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ezenity.Core", "Ezenity.Core\Ezenity.Core.csproj", "{62855BD1-5A85-4BDF-B0E0-07EE1ECBEB63}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ezenity.Core", "Ezenity.Core\Ezenity.Core.csproj", "{62855BD1-5A85-4BDF-B0E0-07EE1ECBEB63}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ezenity.Infrastructure", "Ezenity.Infrastructure\Ezenity.Infrastructure.csproj", "{A63B54BF-F792-4613-81A2-F62B37D83565}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ezenity.Infrastructure", "Ezenity.Infrastructure\Ezenity.Infrastructure.csproj", "{A63B54BF-F792-4613-81A2-F62B37D83565}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ezenity.DTOs", "Ezenity.DTOs\Ezenity.DTOs.csproj", "{62784B6E-D8C4-4C89-9771-7E17CCFB83D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ezenity.DTOs", "Ezenity.DTOs\Ezenity.DTOs.csproj", "{62784B6E-D8C4-4C89-9771-7E17CCFB83D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
