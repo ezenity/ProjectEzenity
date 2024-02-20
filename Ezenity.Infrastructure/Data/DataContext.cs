@@ -147,6 +147,7 @@ namespace Ezenity.Infrastructure.Helpers
             {
                 entity.ToTable("Roles");
                 entity.HasKey(x => x.Id);
+                entity.HasIndex(x => x.Name).IsUnique();
 
                 entity.HasMany(r => r.Accounts)
                       .WithOne(a => a.Role)
