@@ -44,7 +44,8 @@ namespace Ezenity.Infrastructure.Attributes
             if (_roles.Any())
             {
                 var accountRoleName = account.Role?.Name;  // Assumes Role is not null and has a Name property.
-                if (string.IsNullOrEmpty(accountRoleName) || !_roles.Contains(accountRoleName))
+                // if (string.IsNullOrEmpty(accountRoleName) || !_roles.Contains(accountRoleName))
+                if (string.IsNullOrEmpty(accountRoleName) || !_roles.Any(role => string.Equals(role, accountRoleName, StringComparison.OrdinalIgnoreCase)))
                 {
                     context.Result = new JsonResult(new { message = "Unauthorized" }) { StatusCode = StatusCodes.Status401Unauthorized };
                     return;
