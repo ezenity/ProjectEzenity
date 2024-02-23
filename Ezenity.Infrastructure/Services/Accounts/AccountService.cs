@@ -148,38 +148,37 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <exception cref="Exception">Thrown when the token refresh fails.</exception>
         public async Task<AuthenticateResponse> RefreshTokenAsync(string token, string ipAddress)
         {
-            using(var transaction = _context.BeginTransaction())
+            using var transaction = await _context.BeginTransactionAsync();
+
+            try
             {
-                try
-                {
-                    var (refrehToken, account) = await _tokenHelper.GetRefreshTokenAsync(token);
-                    var newRefreshToken = _tokenHelper.GenerateNewRefreshToken(ipAddress);
+                var (refrehToken, account) = await _tokenHelper.GetRefreshTokenAsync(token);
+                var newRefreshToken = _tokenHelper.GenerateNewRefreshToken(ipAddress);
 
-                    _tokenHelper.UpdateRefreshToken(refrehToken, newRefreshToken, ipAddress);
-                    _tokenHelper.RemoveOldRefreshTokens(account);
+                _tokenHelper.UpdateRefreshToken(refrehToken, newRefreshToken, ipAddress);
+                _tokenHelper.RemoveOldRefreshTokens(account);
 
-                    _context.Update(account);
-                    await _context.SaveChangesAsync();
+                _context.Update(account);
+                await _context.SaveChangesAsync();
 
-                    var jwtToken = _tokenHelper.GenerateJwtToken(account.Id);
+                var jwtToken = _tokenHelper.GenerateJwtToken(account.Id);
 
-                    var response = _mapper.Map<AuthenticateResponse>(account);
-                    response.JwtToken = jwtToken;
-                    response.RefreshToken = newRefreshToken.Token;
+                var response = _mapper.Map<AuthenticateResponse>(account);
+                response.JwtToken = jwtToken;
+                response.RefreshToken = newRefreshToken.Token;
 
-                    transaction.Commit();
+                await transaction.CommitAsync();
 
-                    _logger.LogInformation("Refresh token successfully updated.");
+                _logger.LogInformation("Refresh token successfully updated.");
 
-                    return response;
-                }
-                catch(Exception ex)
-                {
-                    transaction.Rollback();
+                return response;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
 
-                    _logger.LogError("Failed to refresh token: {0}", ex.Message);
-                    throw;
-                }
+                _logger.LogError("Failed to refresh token: {ex-message}", ex.Message);
+                throw;
             }
         }
 
@@ -192,13 +191,26 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <exception cref="Exception">Thrown when the token revocation fails.</exception>
         public async Task RevokeTokenAsync(string token, string ipAddress)
         {
-            var (refreshToken, account) = await _tokenHelper.GetRefreshTokenAsync(token);
+            using var transaction = await _context.BeginTransactionAsync();
 
-            // Revoke token and save
-            refreshToken.Revoked = DateTime.UtcNow;
-            refreshToken.RevokedByIp = ipAddress;
-            _context.Update(account);
-            await _context.SaveChangesAsync();
+            try
+            {
+                var (refreshToken, account) = await _tokenHelper.GetRefreshTokenAsync(token);
+
+                // Revoke token and save
+                refreshToken.Revoked = DateTime.UtcNow;
+                refreshToken.RevokedByIp = ipAddress;
+                _context.Update(account);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+
+                _logger.LogError("Failed to refvoke refresh token: {ex-message}", ex.Message);
+                throw;
+            }
         }
 
         /// <summary>
@@ -211,85 +223,98 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <exception cref="ResourceNotFoundException">Thrown when the origin header is missing.</exception>
         public async Task RegisterAsync(RegisterRequest model, string origin)
         {
-            // Check is account exists
-            if (await _context.Accounts.AnyAsync(x => x.Email == model.Email))
+            using var transaction = await _context.BeginTransactionAsync();
+
+            try
             {
-                EmailMessage alreadyRegisteredEmail = new EmailMessage
+                // Check is account exists
+                if (await _context.Accounts.AnyAsync(x => x.Email == model.Email))
                 {
-                    To = model.Email,
-                    TemplateName = "alreadyRegistered",
-                    DynamicValues = new Dictionary<string, string>
+                    EmailMessage alreadyRegisteredEmail = new EmailMessage
+                    {
+                        To = model.Email,
+                        TemplateName = "alreadyRegistered",
+                        DynamicValues = new Dictionary<string, string>
                     {
                         { "accountFullName", model?.FirstName + model?.LastName }
                     }
-                };
+                    };
 
-                await _emailService.SendEmailAsync(alreadyRegisteredEmail);
+                    await _emailService.SendEmailAsync(alreadyRegisteredEmail);
 
-                throw new ResourceAlreadyExistsException($"Email '{model.Email}' is already registered");
-            }
-
-            if (string.IsNullOrEmpty(origin))
-                throw new ResourceNotFoundException("Origin header is missing");
-
-            // Map model to new account object
-            var account = _mapper.Map<Account>(model);
-
-            //account.Role = _context.Accounts.Count() == 0 ? new Role { Name = "Admin" } : new Role { Name = "User" };
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            Role role;
-            if (_context.Accounts.Count() == 0)
-            {
-                // If it's the first account, set the role to Admin
-                role = _context.Roles.FirstOrDefault(r => r.Name == "Admin");
-                if (role == null)
-                {
-                    role = new Role { Name = "Admin" };
-                    _context.Roles.Add(role);
+                    throw new ResourceAlreadyExistsException($"Email '{model.Email}' is already registered");
                 }
-            }
-            else
-            {
-                // Otherwise, set the role to User
-                role = _context.Roles.FirstOrDefault(r => r.Name == "User");
-                if (role == null)
+
+                if (string.IsNullOrEmpty(origin))
+                    throw new ResourceNotFoundException("Origin header is missing");
+
+                // Map model to new account object
+                var account = _mapper.Map<Account>(model);
+
+                //account.Role = _context.Accounts.Count() == 0 ? new Role { Name = "Admin" } : new Role { Name = "User" };
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                Role role;
+                if (_context.Accounts.Count() == 0)
                 {
-                    role = new Role { Name = "User" };
-                    _context.Roles.Add(role);
+                    // If it's the first account, set the role to Admin
+                    role = _context.Roles.FirstOrDefault(r => r.Name == "Admin");
+                    if (role == null)
+                    {
+                        role = new Role { Name = "Admin" };
+                        _context.Roles.Add(role);
+                    }
                 }
-            }
+                else
+                {
+                    // Otherwise, set the role to User
+                    role = _context.Roles.FirstOrDefault(r => r.Name == "User");
+                    if (role == null)
+                    {
+                        role = new Role { Name = "User" };
+                        _context.Roles.Add(role);
+                    }
+                }
 
-            account.Role = role;
+                account.Role = role;
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-            account.Created = DateTime.UtcNow;
-            account.VerificationToken = _tokenHelper.RandomTokenString();
+                account.Created = DateTime.UtcNow;
+                account.VerificationToken = _tokenHelper.RandomTokenString();
 
-            // Hash password
-            account.PasswordHash = BC.HashPassword(model.Password);
+                // Hash password
+                account.PasswordHash = BC.HashPassword(model.Password);
 
-            // Save account
-            _context.Accounts.Add(account);
-            await _context.SaveChangesAsync();
+                // Save account
+                _context.Accounts.Add(account);
+                await _context.SaveChangesAsync();
 
-            // Send email
-            EmailMessage verifyEmail = new EmailMessage
-            {
-                To = model.Email,
-                TemplateName = "verification",
-                DynamicValues = new Dictionary<string, string>
+                // Send email
+                EmailMessage verifyEmail = new EmailMessage
+                {
+                    To = model.Email,
+                    TemplateName = "verification",
+                    DynamicValues = new Dictionary<string, string>
                 {
                     { "accountFullName", model?.FirstName + model?.LastName },
                     //{ "{verificationUrl}", $"{_appSettings.BaseUrl }/account/verify-email?token={account.VerificationToken}" }
                     { "verificationUrl", $"{origin}/account/verify-email?token={account.VerificationToken}" }
                 }
-            };
+                };
 
-            await _emailService.SendEmailAsync(verifyEmail);
+                await _emailService.SendEmailAsync(verifyEmail);
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+
+                _logger.LogError("Error during registration: {ex-message}", ex);
+                throw;
+            }
         }
 
         /// <summary>
@@ -518,33 +543,46 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <exception cref="ResourceAlreadyExistsException">Thrown when an account with the provided email already exists.</exception>
         public async Task<AccountResponse> CreateAsync(CreateAccountRequest model)
         {
-            // Validate if the email is already registered
-            if (await _context.Accounts.AnyAsync(x => x.Email == model.Email))
-                throw new ResourceAlreadyExistsException($"Email '{model.Email}' is already registered");
+            using var transaction = await _context.BeginTransactionAsync();
 
-            // Check if the Role is provided
-            if (string.IsNullOrEmpty(model.Role))
+            try
             {
-                throw new ValidationException("Role is required.");
+                // Validate if the email is already registered
+                if (await _context.Accounts.AnyAsync(x => x.Email == model.Email))
+                    throw new ResourceAlreadyExistsException($"Email '{model.Email}' is already registered");
+
+                // Check if the Role is provided
+                if (string.IsNullOrEmpty(model.Role))
+                {
+                    throw new ValidationException("Role is required.");
+                }
+
+                // Validate the role
+                Role role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == model.Role);
+                if (role == null || role.Name.ToLower() != model.Role.ToLower())
+                    throw new NotFoundException($"There is no Role named {model.Role} available.");
+
+                // Map model to new account object and set properties
+                var account = _mapper.Map<Account>(model);
+                account.Role = role;
+                account.Created = DateTime.UtcNow;
+                account.Verified = DateTime.UtcNow;
+                account.PasswordHash = BC.HashPassword(model.Password); // Hash password
+
+                // Save the account
+                _context.Accounts.Add(account);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return _mapper.Map<AccountResponse>(account);
             }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
 
-            // Validate the role
-            Role role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == model.Role);
-            if (role == null || role.Name.ToLower() != model.Role.ToLower())
-                throw new NotFoundException($"There is no Role named {model.Role} available.");
-
-            // Map model to new account object and set properties
-            var account = _mapper.Map<Account>(model);
-            account.Role = role;
-            account.Created = DateTime.UtcNow;
-            account.Verified = DateTime.UtcNow;
-            account.PasswordHash = BC.HashPassword(model.Password); // Hash password
-
-            // Save the account
-            _context.Accounts.Add(account);
-            await _context.SaveChangesAsync();
-
-            return _mapper.Map<AccountResponse>(account);
+                _logger.LogError("Error during account creation: {ex-message}", ex.Message);
+                throw;
+            }
         }
 
         /// <summary>
@@ -642,43 +680,50 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <exception cref="DeletionFailedException">Thrown when an error occurs during the deletion process.</exception>
         public async Task<DeleteResponse> DeleteAsync(int id)
         {
-            int currentUserId = _authService.GetCurrentUserId();
-            bool isAdmin = _authService.IsCurrentUserAdmin();
-
-            // Ensure the current user is authorized to delete the account
-            if (id != currentUserId || !isAdmin)
-                throw new AuthorizationException("Current user is not authorized.");
-
-            // Retrieve the account to be deleted
-            var accountToDelete = await GetAccountAsync(id);
-            if (accountToDelete == null)
-                throw new ResourceNotFoundException($"Account with ID {id} was not found");
-
-            // retreive the account of the user performing the deletion
-            var deletingAccount = await GetAccountAsync(currentUserId);
-            if(deletingAccount == null)
-                throw new ResourceNotFoundException($"Deleter's with ID {currentUserId} was not found");
-
-            // Prepare the response before deletion
-            var deleteResponse = _mapper.Map<DeleteResponse>(accountToDelete);
-            deleteResponse.DeletedBy = _mapper.Map<AccountResponse>(deletingAccount);
+            using var transaction = await _context.BeginTransactionAsync();
 
             try
             {
+                int currentUserId = _authService.GetCurrentUserId();
+                bool isAdmin = _authService.IsCurrentUserAdmin();
+
+                // Ensure the current user is authorized to delete the account
+                if (id != currentUserId || !isAdmin)
+                    throw new AuthorizationException("Current user is not authorized.");
+
+                // Retrieve the account to be deleted
+                var accountToDelete = await GetAccountAsync(id);
+                if (accountToDelete == null)
+                    throw new ResourceNotFoundException($"Account with ID {id} was not found");
+
+                // retreive the account of the user performing the deletion
+                var deletingAccount = await GetAccountAsync(currentUserId);
+                if (deletingAccount == null)
+                    throw new ResourceNotFoundException($"Deleter's with ID {currentUserId} was not found");
+
+                // Prepare the response before deletion
+                var deleteResponse = _mapper.Map<DeleteResponse>(accountToDelete);
+                deleteResponse.DeletedBy = _mapper.Map<AccountResponse>(deletingAccount);
+
                 // Perform the deletion
                 _context.Accounts.Remove(accountToDelete);
                 await _context.SaveChangesAsync();
 
+                await transaction.CommitAsync();
+
                 // set additional details
                 deleteResponse.DeletedAt = DateTime.UtcNow;
                 deleteResponse.Message = "Account deleted successfully";
+
+                return deleteResponse;
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync();
+
+                _logger.LogError("Error during account deletion: {ex-message}", ex.Message);
                 throw new DeletionFailedException($"Failed to delete account with ID {id}", ex);
             }
-
-            return deleteResponse;
         }
 
         /// //////////////////
