@@ -11,6 +11,7 @@ using Ezenity.Core.Services.Common;
 using Ezenity.Infrastructure.Attributes;
 using Ezenity.Core.Helpers.Exceptions;
 using System.Text.Json;
+using Asp.Versioning;
 
 namespace Ezenity.API.Controllers
 {

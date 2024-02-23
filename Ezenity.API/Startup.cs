@@ -1,4 +1,8 @@
-﻿using Ezenity.API.Configurations;
+﻿using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
+using AutoMapper;
+using AutoMapper.Internal;
+using Ezenity.API.Configurations;
 using Ezenity.API.Filters;
 using Ezenity.API.Middleware;
 using Ezenity.Core.Interfaces;
@@ -14,9 +18,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Formatters;
-using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -99,12 +101,30 @@ namespace Ezenity.API
             // Filter DI
             services.AddScoped<LoadAccountFilter>();
 
+            // Automapper Resolvers
+            services.AddScoped<RoleResolver>();
+
             // Singleton services
             services.AddSingleton<FileExtensionContentTypeProvider>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             // AutoMapper
-            services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+            //services.AddAutoMapper(typeof(AutoMapperProfile).Assembly); // .NET 5.0 -
+            var mapperConfig = new MapperConfiguration(mc =>
+            {
+                // Needed for https://github.com/AutoMapper/AutoMapper/issues/3988
+                mc.Internal().MethodMappingEnabled = true;
+                // mc.AddProfile(new AutoMapperProfile());
+                mc.AddProfile<AutoMapperProfile>();
+                // mc.AddMaps(typeof(AutoMapperProfile).Assembly);
+            });
+
+#if DEVELOPMENT
+            mapperConfig.AssertConfigurationIsValid();
+#endif
+
+            IMapper mapper = mapperConfig.CreateMapper();
+            services.AddSingleton(mapper);
 
             services.AddControllers(options =>
             {
@@ -180,10 +200,7 @@ namespace Ezenity.API
                     options.ApiVersionReader = ApiVersionReader.Combine(new UrlSegmentApiVersionReader(),
                                                                         new HeaderApiVersionReader("x-api-version"),
                                                                         new MediaTypeApiVersionReader("x-api-version"));
-                });
-
-                // Configure the versioned API explorer
-                services.AddVersionedApiExplorer(options =>
+                }).AddApiExplorer(options =>
                 {
                     options.GroupNameFormat = "'v'VV";
                     options.SubstituteApiVersionInUrl = true;
