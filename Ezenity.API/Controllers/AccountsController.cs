@@ -1,4 +1,5 @@
-﻿using Ezenity.API.Controllers;
+﻿using Asp.Versioning;
+using Ezenity.API.Controllers;
 using Ezenity.API.Filters;
 using Ezenity.Core.Entities.Accounts;
 using Ezenity.Core.Helpers.Exceptions;

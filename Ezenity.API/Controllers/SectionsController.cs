@@ -10,6 +10,7 @@ using Ezenity.DTOs.Models;
 using Ezenity.Core.Services.Common;
 using Ezenity.Core.Helpers.Exceptions;
 using Ezenity.Infrastructure.Attributes;
+using Asp.Versioning;
 
 namespace Ezenity.API.Controllers
 {

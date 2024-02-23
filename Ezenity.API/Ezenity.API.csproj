@@ -11,10 +11,12 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>1701;1702;1584;1658;</NoWarn>
+    <DefineConstants>DEBUG;DEVELOPMENT</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <NoWarn>1701;1702;1584;1658;</NoWarn>
+    <DefineConstants>RELEASE;PRODUCTION</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
