@@ -55,7 +55,7 @@ namespace Ezenity.API.Configurations
                         TermsOfService = new Uri("https://example.com/terms"),
                         Contact = new OpenApiContact
                         {
-                            Email = "anthonymmacallister@gmail.com",
+                            Email = "amacallister@ezenity.com",
                             Name = "Anthony MacAllister",
                             Url = new Uri("https://Ezenity.com/")
                         },
