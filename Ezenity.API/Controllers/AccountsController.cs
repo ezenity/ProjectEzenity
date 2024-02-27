@@ -209,7 +209,7 @@ namespace Ezenity.API.API.Controllers
         /// <exception cref="ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [AuthorizeV2]
-        [HttpPatch(Name = "update-account")]
+        [HttpPatch("{id}", Name = "update-account")]
         [RequestHeaderMatchesMediaType("Content-Type",
             "application/vnd.api+json", // JSON:API media type - Default
             "application/json", // Standard JSON media type, if you want to support it
@@ -367,7 +367,7 @@ namespace Ezenity.API.API.Controllers
         /// <exception cref="AuthorizationException">Thrown when the caller lacks necessary permissions.</exception>
         /// <exception cref="DeletionFailedException">Thrown if the deletion fails for some specific reason.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
-        [HttpDelete(Name = "delete-account")]
+        [HttpDelete("{id}", Name = "delete-account")]
         [AuthorizeV2]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status400BadRequest)]
