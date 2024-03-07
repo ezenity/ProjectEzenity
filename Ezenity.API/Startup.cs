@@ -86,7 +86,10 @@ namespace Ezenity.API
             services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
 
             // TODO: Add support for Azure Key Vault
+            // services.AddAzureKeyValut(Configuration["KeyValut:Uri"]);
+
             // TODO: Add support for AWS Secrets Manager
+            // services.AddAWSSecretsManager(Configuration["AWS:SecretsManager:SecretName"]);
 
             // Configure dependecy injection for application services
             services.AddScoped<IAccountService, AccountService>();
@@ -245,6 +248,7 @@ namespace Ezenity.API
             if (env.IsProduction())
             {
                 app.UseHttpsRedirection();
+                //app.UseHsts(hsts => hsts.MaxAge(365).IncludeSubdomains());
             }
 
             // Middleware for serving static files (e.g., CSS, JavaScript, images)
