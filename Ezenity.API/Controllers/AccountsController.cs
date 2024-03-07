@@ -368,7 +368,7 @@ namespace Ezenity.API.API.Controllers
         /// <exception cref="DeletionFailedException">Thrown if the deletion fails for some specific reason.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [HttpDelete("{id}", Name = "delete-account")]
-        [AuthorizeV2]
+        [AuthorizeV2("Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status401Unauthorized)]
