@@ -1,11 +1,6 @@
 pipeline {
     agent { label 'ezenity-node' }
 
-    tools {
-        // Make sure Jenkins has .NET Core 6.0 installed and configured
-        dotnet '6.0'
-    }
-
     environment {
         // Define environment variables here
         DOTNET_CORE_VERSION = '6.0'
