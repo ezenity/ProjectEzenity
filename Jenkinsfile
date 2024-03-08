@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'ezenity-node' }
 
     tools {
         // Make sure Jenkins has .NET Core 6.0 installed and configured
