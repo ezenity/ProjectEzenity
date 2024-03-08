@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        // Define environment variables
+        // Define environment variables here
         DOTNET_CORE_VERSION = '6.0'
         BUILD_CONFIGURATION = 'Release'
     }
