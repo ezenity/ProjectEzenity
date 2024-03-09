@@ -18,13 +18,13 @@ pipeline {
         stage('Restore') {
             steps {
                 echo 'Restoring project dependencies...'
-                sh 'dotnet restore Ezenity.sln'
+                sh 'dotnet restore ProjectEzenity.sln'
             }
         }
         stage('Build') {
             steps {
                 echo 'Building the solution...'
-                sh "dotnet build Ezenity.sln -c ${BUILD_CONFIGURATION} --no-restore"
+                sh "dotnet build ProjectEzenity.sln -c ${BUILD_CONFIGURATION} --no-restore"
             }
         }
         stage('Test') {
