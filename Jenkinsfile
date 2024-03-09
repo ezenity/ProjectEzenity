@@ -18,19 +18,19 @@ pipeline {
         stage('Restore') {
             steps {
                 echo 'Restoring project dependencies...'
-                bat 'dotnet restore Ezenity.sln'
+                sh 'dotnet restore Ezenity.sln'
             }
         }
         stage('Build') {
             steps {
                 echo 'Building the solution...'
-                bat "dotnet build Ezenity.sln -c ${BUILD_CONFIGURATION} --no-restore"
+                sh "dotnet build Ezenity.sln -c ${BUILD_CONFIGURATION} --no-restore"
             }
         }
         stage('Test') {
             steps {
                 echo 'Running unit tests...'
-                bat "dotnet test Ezenity.Tests/Ezenity.Tests.csproj -c ${BUILD_CONFIGURATION} --no-build --logger \"trx;LogFileName=test_results.trx\""
+                sh "dotnet test Ezenity.Tests/Ezenity.Tests.csproj -c ${BUILD_CONFIGURATION} --no-build --logger \"trx;LogFileName=test_results.trx\""
                 // TODO: Adding steps to publish test results for a plugin that supports it
             }
         }
@@ -41,7 +41,7 @@ pipeline {
             steps {
                 echo 'Deploying application...'
                 script {
-                    bat "dotnet publish Ezenity.API/Ezenity.API.csproj -c ${BUILD_CONFIGURATION} -o /var/www/ezenity_api"
+                    sh "dotnet publish Ezenity.API/Ezenity.API.csproj -c ${BUILD_CONFIGURATION} -o /var/www/ezenity_api"
                     sh "sudo systemctl restart ezenity_api.service"
                 }
             }
