@@ -13,7 +13,6 @@ pipeline {
                 checkout scm
                 // Optionally clean workspace
                 sh 'dotnet tool restore'
-                sh 'dotnet cake --target=Clean'
             }
         }
         stage('Restore') {
