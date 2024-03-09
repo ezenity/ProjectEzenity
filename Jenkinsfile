@@ -34,6 +34,14 @@ pipeline {
                 // TODO: Adding steps to publish test results for a plugin that supports it
             }
         }
+        stage('Publish') {
+            steps {
+                echo 'Publish application...'
+                script {
+                    sh "dotnet publish Ezenity.API/Ezenity.API.csproj -c ${BUILD_CONFIGURATION} -o /var/www/ezenity_api"
+                }
+            }
+        }
         stage('Deploy') {
             when {
                 branch 'main'
@@ -41,8 +49,8 @@ pipeline {
             steps {
                 echo 'Deploying application...'
                 script {
-                    sh "dotnet publish Ezenity.API/Ezenity.API.csproj -c ${BUILD_CONFIGURATION} -o /var/www/ezenity_api"
-                    sh "sudo systemctl restart ezenity_api.service"
+                    // Using the script that handles deployment and service restart
+                    sh '/usr/local/bin/restart-ezenity-api.sh'
                 }
             }
         }
