@@ -192,8 +192,8 @@ namespace Ezenity.API
             });
 
             // Configure SwaggerGen
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-            {
+            //if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            //{
                 // Configure API versioning
                 services.AddApiVersioning(options =>
                 {
@@ -216,7 +216,7 @@ namespace Ezenity.API
 
                 services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
-            };
+            //};
 
             services.AddAuthentication(options =>
             {
@@ -276,8 +276,9 @@ namespace Ezenity.API
                 var dataContext = scope.ServiceProvider.GetService<DataContext>();
                 dataContext.Database.Migrate();
 
-                ConfigureSwagger(app, provider, logger);
+                //ConfigureSwagger(app, provider, logger);
             }
+            ConfigureSwagger(app, provider, logger);
         }
 
         /// <summary>
