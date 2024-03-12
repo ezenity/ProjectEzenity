@@ -66,7 +66,7 @@ namespace Ezenity.API
             else
             {
                 // TODO: Insert correct location once on server
-                secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? System.IO.File.ReadAllText("./secrete/key.txt").Trim();
+                secretKey = Environment.GetEnvironmentVariable("EZENITY_SECRET_KEY") ?? System.IO.File.ReadAllText("./secrete/key.txt").Trim();
             }
 
             // Configure AppSettings and binds the necessary configuration sections.
@@ -227,6 +227,16 @@ namespace Ezenity.API
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
+            });
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy", builder =>
+                {
+                    builder.WithOrigins(Configuration.GetSection("AllowedOrigins").Get<string[]>())
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
             });
 
             // Configure Health Checks
