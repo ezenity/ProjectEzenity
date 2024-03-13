@@ -28,6 +28,7 @@ namespace Ezenity.API
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
                 .Build();
 
             // Configure Serilog for logging.
