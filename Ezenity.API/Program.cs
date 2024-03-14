@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Ezenity.Infrastructure.Helpers;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -39,11 +40,16 @@ namespace Ezenity.API
 
             try
             {
-                Console.WriteLine("Starting web host");
+                Console.WriteLine($"Starting web host on Environment: {environmentName}");
                 // Build and run the web host.
                 //CreateHostBuilder(args, configuration).Build().Run();
-                var hostBuilder = CreateHostBuilder(args, configuration)
-                        .UseUpdatedConfiguration();
+
+                /*var hostBuilder = CreateHostBuilder(args, environmentName)
+                        .UseUpdatedConfiguration();*/
+
+                var configurationUpdater = new ConfigurationUpdater();
+                var updatedConfiguration = configurationUpdater.UpdateConfiguration(configuration);
+                CreateHostBuilder(args, updatedConfiguration).Build().Run();
             }
             catch (Exception ex)
             {
@@ -63,9 +69,16 @@ namespace Ezenity.API
         /// <param name="args">Command-line arguments passed to the application.</param>
         /// <param name="configuration">Application configuration settings.</param>
         /// <returns>A configured IHostBuilder instance.</returns>
+        //public static IHostBuilder CreateHostBuilder(string[] args, string environmentName) =>
         public static IHostBuilder CreateHostBuilder(string[] args, IConfiguration configuration) =>
             Host.CreateDefaultBuilder(args)
-            .UseSerilog()
+            .ConfigureAppConfiguration(builder =>
+            {
+                builder.Sources.Clear();
+                builder.AddConfiguration(configuration);
+            })
+            .UseSerilog((hostingContext, loggerConfiguration) => loggerConfiguration
+                .ReadFrom.Configuration(configuration))
             .ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.UseStartup<Startup>();
