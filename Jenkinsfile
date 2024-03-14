@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'ezenity-node' }
+    agent { label 'java-docker-slave' }
 
     environment {
         // Define environment variables here
