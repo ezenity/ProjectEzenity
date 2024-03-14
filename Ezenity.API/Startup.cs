@@ -110,6 +110,7 @@ namespace Ezenity.API
             // Singleton services
             services.AddSingleton<FileExtensionContentTypeProvider>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            //services.AddSingleton<IConfigurationUpdater, ConfigurationUpdater>();
 
             // AutoMapper
             //services.AddAutoMapper(typeof(AutoMapperProfile).Assembly); // .NET 5.0 -
@@ -233,7 +234,8 @@ namespace Ezenity.API
             {
                 options.AddPolicy("CorsPolicy", builder =>
                 {
-                    builder.WithOrigins(Configuration.GetSection("AllowedOrigins").Get<string[]>())
+                    var allowedOrigins = Configuration["EZENITY_ALLOWED_ORIGINS"]?.Split(',') ?? Array.Empty<string>();
+                    builder.WithOrigins(allowedOrigins)
                         .AllowAnyMethod()
                         .AllowAnyHeader();
                 });

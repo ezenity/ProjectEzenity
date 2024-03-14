@@ -19,9 +19,10 @@ namespace Ezenity.API
         public static void Main(string[] args)
         {
             // Determine the environment based on the 'ASPNETCORE_ENVIRONMENT' variable.
-            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production"
+            /*var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production"
                 ? Environments.Development
-                : Environments.Production;
+                : Environments.Production;*/
+            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 
             // Build configuration from various sources.
             var configuration = new ConfigurationBuilder()
@@ -40,7 +41,9 @@ namespace Ezenity.API
             {
                 Console.WriteLine("Starting web host");
                 // Build and run the web host.
-                CreateHostBuilder(args, configuration).Build().Run();
+                //CreateHostBuilder(args, configuration).Build().Run();
+                var hostBuilder = CreateHostBuilder(args, configuration)
+                        .UseUpdatedConfiguration();
             }
             catch (Exception ex)
             {
@@ -66,7 +69,7 @@ namespace Ezenity.API
             .ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.UseStartup<Startup>();
-                webBuilder.UseConfiguration(configuration);
+                //webBuilder.UseConfiguration(configuration);
             });
     }
 }
