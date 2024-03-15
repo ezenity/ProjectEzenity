@@ -21,7 +21,7 @@ namespace Ezenity.Infrastructure.Factories
             var isProduction = deploymentEnvironment == "Production";
 
             var secretKey = isProduction
-                            ? Environment.GetEnvironmentVariable("EZENITY_SECRETE_KEY") ?? throw new InvalidOperationException("Secret key must be provided in environment variables for Production.")
+                            ? Environment.GetEnvironmentVariable("EZENITY_SECRET_KEY") ?? throw new InvalidOperationException("Secret key must be provided in environment variables for Production.")
                             : configuration["AppSettings:Secret"];
 
             var baseUrl = isProduction
