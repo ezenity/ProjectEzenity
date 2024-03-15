@@ -57,20 +57,8 @@ namespace Ezenity.API
         /// <param name="services">The collection of service descriptors.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            // Determine the secret key
-            string secretKey;
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production")
-            {
-                secretKey = Configuration.GetSection("AppSettings")["Secret"];
-            }
-            else
-            {
-                // TODO: Insert correct location once on server
-                secretKey = Environment.GetEnvironmentVariable("EZENITY_SECRET_KEY") ?? System.IO.File.ReadAllText("./secrete/key.txt").Trim();
-            }
-
             // Configure AppSettings and binds the necessary configuration sections.
-            var appSettings = AppSettingsFactory.Create(Configuration, secretKey);
+            var appSettings = AppSettingsFactory.Create(Configuration);
             services.AddSingleton<IAppSettings>(new AppSettingsWrapper(appSettings));
 
             // Configure ConnectionStringSettings
@@ -234,7 +222,21 @@ namespace Ezenity.API
             {
                 options.AddPolicy("CorsPolicy", builder =>
                 {
-                    var allowedOrigins = Configuration["EZENITY_ALLOWED_ORIGINS"]?.Split(',') ?? Array.Empty<string>();
+                    string[] allowedOrigins;
+
+                    // Check if the application is running in Production
+                    if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
+                    {
+                        // Use environment variable for Allowed Origins in Production
+                        var origins = Configuration["EZENITY_ALLOWED_ORIGINS"];
+                        allowedOrigins = origins?.Split(',') ?? Array.Empty<string>();
+                    }
+                    else
+                    {
+                        // Use appsettings.json (or other configuration sources) outside Production
+                        allowedOrigins = Configuration["AllowedOrigins"]?.Split(",") ?? Array.Empty<string>();
+                    }
+
                     builder.WithOrigins(allowedOrigins)
                         .AllowAnyMethod()
                         .AllowAnyHeader();
