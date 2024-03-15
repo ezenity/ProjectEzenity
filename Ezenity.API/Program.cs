@@ -20,10 +20,9 @@ namespace Ezenity.API
         public static void Main(string[] args)
         {
             // Determine the environment based on the 'ASPNETCORE_ENVIRONMENT' variable.
-            /*var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production"
+            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production"
                 ? Environments.Development
-                : Environments.Production;*/
-            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+                : Environments.Production;
 
             // Build configuration from various sources.
             var configuration = new ConfigurationBuilder()
@@ -42,14 +41,7 @@ namespace Ezenity.API
             {
                 Console.WriteLine($"Starting web host on Environment: {environmentName}");
                 // Build and run the web host.
-                //CreateHostBuilder(args, configuration).Build().Run();
-
-                /*var hostBuilder = CreateHostBuilder(args, environmentName)
-                        .UseUpdatedConfiguration();*/
-
-                var configurationUpdater = new ConfigurationUpdater();
-                var updatedConfiguration = configurationUpdater.UpdateConfiguration(configuration);
-                CreateHostBuilder(args, updatedConfiguration).Build().Run();
+                CreateHostBuilder(args, configuration).Build().Run();
             }
             catch (Exception ex)
             {
@@ -69,7 +61,6 @@ namespace Ezenity.API
         /// <param name="args">Command-line arguments passed to the application.</param>
         /// <param name="configuration">Application configuration settings.</param>
         /// <returns>A configured IHostBuilder instance.</returns>
-        //public static IHostBuilder CreateHostBuilder(string[] args, string environmentName) =>
         public static IHostBuilder CreateHostBuilder(string[] args, IConfiguration configuration) =>
             Host.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration(builder =>

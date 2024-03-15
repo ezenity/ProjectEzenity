@@ -19,8 +19,25 @@ namespace Ezenity.Infrastructure.Factories
         /// <returns>An IConnectionStringSettings instance populated with the connection string details from the configuration.</returns>
         public static IConnectionStringSettings Create(IConfiguration configuration)
         {
-            // Retrieve the 'WebApiDatabase' connection string from the configuration
-            var connectionString = configuration.GetConnectionString("WebApiDatabase");
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var isProduction = environment == "Production";
+
+            string connectionString;
+
+            if (isProduction)
+            {
+                // Construct the connection string using environment variables for Production
+                var dbName = Environment.GetEnvironmentVariable("EZENITY_DATABASE_NAME") ?? throw new InvalidOperationException("Database name must be provided in environment variables for Production.");
+                var dbUser = Environment.GetEnvironmentVariable("EZENITY_DATABASE_USER") ?? throw new InvalidOperationException("Database user must be provided in environment variables for Production.");
+                var dbPassword = Environment.GetEnvironmentVariable("EZENITY_DATABASE_PASSWORD") ?? throw new InvalidOperationException("Database password must be provided in environment variables for Production.");
+
+                connectionString = $"Server=localhost;Database={dbName};User={dbUser};Password={dbPassword};";
+            }
+            else
+            {
+                // Use the connection string from configuration settings for Development
+                connectionString = configuration.GetConnectionString("WebApiDatabase") ?? throw new InvalidOperationException("Connection string 'WebApiDatabase' must be defined in configuration for Development.");
+            }
 
             // Create a new ConnectionStringSettings instance with the retrieved connection string
             var connectionStringSettings = new ConnectionStringSettings(connectionString);
