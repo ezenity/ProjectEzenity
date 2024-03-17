@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage;
 using System;
 
-namespace Ezenity.Infrastructure.Helpers
+namespace Ezenity.Infrastructure.Data
 {
     /// <summary>
     /// Represents the Entity Framework Core database context for the application.

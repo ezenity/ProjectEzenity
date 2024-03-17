@@ -161,10 +161,11 @@ namespace Ezenity.Infrastructure.Services.Emails
                         //{
                         try
                         {
+                            // https://support.google.com/mail/?p=InvalidSecondFactor s22-20020a814516000000b00609f87d6d1esm974290ywa.48 - gsmtp
                             await smtpClient.AuthenticateAsync(_appSettings.SmtpUser, _appSettings.SmtpPass);
                         } catch (Core.Helpers.Exceptions.AuthenticationException ex)
                         {
-                            Console.WriteLine("Invalid username or passowrd", ex);
+                            Console.WriteLine("Invalid username or password", ex);
                             return;
                         } catch (SmtpCommandException ex)
                         {
@@ -181,7 +182,7 @@ namespace Ezenity.Infrastructure.Services.Emails
                         // Create the email message
                         var emailMessage = new MimeMessage();
                         if(_env.IsDevelopment())
-                            emailMessage.From.Add(new MailboxAddress("Ezenity API Test", "anthonymmacallister@gmail.com"));
+                            emailMessage.From.Add(new MailboxAddress("Ezenity API Test", "noreply@ezenity.com"));
                         else
                             emailMessage.From.Add(new MailboxAddress(message.From, message.From));
                         emailMessage.To.Add(new MailboxAddress(message.To, message.To));
