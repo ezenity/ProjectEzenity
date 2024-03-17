@@ -7,6 +7,7 @@ using Ezenity.API.Filters;
 using Ezenity.API.Middleware;
 using Ezenity.Core.Interfaces;
 using Ezenity.Core.Services.Common;
+using Ezenity.Infrastructure.Data;
 using Ezenity.Infrastructure.Factories;
 using Ezenity.Infrastructure.Helpers;
 using Ezenity.Infrastructure.Services.Accounts;
@@ -71,7 +72,7 @@ namespace Ezenity.API
 
             // Configure the database context
             var connectionString = connectionStringSettings.WebApiDatabase;
-            services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
+            services.AddDbContext<DataContext>(options => options.UseMySql(connectionString,ServerVersion.AutoDetect(connectionString)));
 
             // TODO: Add support for Azure Key Vault
             // services.AddAzureKeyValut(Configuration["KeyValut:Uri"]);
