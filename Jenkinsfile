@@ -36,7 +36,11 @@ pipeline {
         }
         stage('Publish') {
             steps {
-                echo 'Publish application...'
+                echo 'Stopping application...'
+                script {
+                    sh '/usr/local/bin/stop-ezenity-api.sh'
+                }
+                echo 'Publishing application...'
                 script {
                     sh "dotnet publish Ezenity.API/Ezenity.API.csproj -c ${BUILD_CONFIGURATION} -o /var/www/ezenity_api"
                 }
@@ -49,8 +53,7 @@ pipeline {
             steps {
                 echo 'Deploying application...'
                 script {
-                    // Using the script that handles deployment and service restart
-                    sh '/usr/local/bin/restart-ezenity-api.sh'
+                    sh '/usr/local/bin/start-ezenity-api.sh'
                 }
             }
         }
@@ -59,7 +62,14 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
-            // TODO: Add any cleanup steps if necessary
+        
+            // Removing unused Docker images and containers
+            echo 'Removing unused Docker images and containers...'
+            sh 'docker system prune -af || true' // The `|| true` ensures that the pipeline doesn't fail if this command does.
+
+            // Clearing NuGet package cache
+            echo 'Clearing NuGet package cache...'
+            sh 'dotnet nuget locals all --clear || true' // Similarly, `|| true` is used for safe failure.
         }
         success {
             echo 'Build and deployment succeeded!'
