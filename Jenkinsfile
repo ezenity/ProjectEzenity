@@ -6,7 +6,7 @@ pipeline {
         DOTNET_CORE_VERSION = '6.0'
         BUILD_CONFIGURATION = 'Release'
         PATH = "${env.PATH}:${env.HOME}/.dotnet/tools"
-        ASPNETCORE_ENVIRONMENT = 'Production
+        ASPNETCORE_ENVIRONMENT = 'Production'
     }
 
     stages {
