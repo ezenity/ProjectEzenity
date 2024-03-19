@@ -5,6 +5,7 @@ pipeline {
         // Define environment variables here
         DOTNET_CORE_VERSION = '6.0'
         BUILD_CONFIGURATION = 'Release'
+        PATH = "${env.PATH}:${env.HOME}/.dotnet/tools"
     }
 
     stages {
