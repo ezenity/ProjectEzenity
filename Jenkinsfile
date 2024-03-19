@@ -20,7 +20,7 @@ pipeline {
         stage('Restore') {
             steps {
                 echo 'Restoring project dependencies...'
-                sh 'bash -c ""source /etc/ezenity/api/prod/env_vars.sh && dotnet restore ProjectEzenity.sln""'
+                sh 'bash -c "source /etc/ezenity/api/prod/env_vars.sh && dotnet restore ProjectEzenity.sln"'
             }
         }
         stage('Build') {
