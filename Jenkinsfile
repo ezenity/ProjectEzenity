@@ -20,19 +20,19 @@ pipeline {
         stage('Restore') {
             steps {
                 echo 'Restoring project dependencies...'
-                sh 'dotnet restore ProjectEzenity.sln'
+                sh 'source /etc/ezenity/api/prod/env_vars.sh && dotnet restore ProjectEzenity.sln'
             }
         }
         stage('Build') {
             steps {
                 echo 'Building the solution...'
-                sh "dotnet build ProjectEzenity.sln -c ${BUILD_CONFIGURATION} --no-restore"
+                sh "source /etc/ezenity/api/prod/env_vars.sh && dotnet build ProjectEzenity.sln -c ${BUILD_CONFIGURATION} --no-restore"
             }
         }
         stage('Test') {
             steps {
                 echo 'Running unit tests...'
-                sh "dotnet test Ezenity.Tests/Ezenity.Tests.csproj -c ${BUILD_CONFIGURATION} --no-build --logger \"trx;LogFileName=test_results.trx\""
+                sh "source /etc/ezenity/api/prod/env_vars.sh && dotnet test Ezenity.Tests/Ezenity.Tests.csproj -c ${BUILD_CONFIGURATION} --no-build --logger \"trx;LogFileName=test_results.trx\""
                 // TODO: Adding steps to publish test results for a plugin that supports it
             }
         }
@@ -44,7 +44,7 @@ pipeline {
                 }
                 echo 'Publishing application...'
                 script {
-                    sh "dotnet publish Ezenity.API/Ezenity.API.csproj -c ${BUILD_CONFIGURATION} -o /var/www/ezenity_api"
+                    sh "source /etc/ezenity/api/prod/env_vars.sh && dotnet publish Ezenity.API/Ezenity.API.csproj -c ${BUILD_CONFIGURATION} -o /var/www/ezenity_api"
                 }
             }
         }
@@ -60,13 +60,13 @@ pipeline {
                     try {
                         // This command checks for any pending migrations.
                         def pendingMigrations = sh(
-                            script: 'dotnet ef migrations list --project Ezenity.Infrastructure --startup-project Ezenity.API | tail -n +3',
+                            script: 'source /etc/ezenity/api/prod/env_vars.sh && dotnet ef migrations list --project Ezenity.Infrastructure --startup-project Ezenity.API | tail -n +3',
                             returnStdout: true
                         ).trim()
                         if (pendingMigrations && !pendingMigrations.isEmpty()) {
                             echo "Applying database migrations: ${pendingMigrations}"
                             // Apply the pending migrations.
-                            sh 'dotnet ef database update --project Ezenity.Infrastructure --startup-project Ezenity.API'
+                            sh 'source /etc/ezenity/api/prod/env_vars.sh && dotnet ef database update --project Ezenity.Infrastructure --startup-project Ezenity.API'
                         } else {
                             echo 'No pending database migrations to apply.'
                         }
