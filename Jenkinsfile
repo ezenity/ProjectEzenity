@@ -50,42 +50,32 @@ pipeline {
         }
         stage('Database Migration') {
             when {
-                // Optional: Run migrations only on specific branches, such as 'main' or 'release'.
-                // You can remove this if you want to apply migrations on every branch.
                 branch 'main'
             }
             steps {
                 script {
-                    // Ensure that the migration step has proper error handling.
                     try {
-                        // This command checks for any pending migrations and also prints selected environment variables.
                         def pendingMigrations = sh(
                             script: '''
-                            bash -c '
-                            source /etc/ezenity/api/prod/env_vars.sh
-                            echo "Checking environment variables..."
-                            printenv | grep -E 'ASPNETCORE_ENVIRONMENT|DOTNET_PRINT_TELEMETRY|EZENITY_DATABASE_NAME|EZENITY_DATABASE_USER|EZENITY_DATABASE_PASSWORD|EZENITY_BASE_URL|EZENITY_SECRET_KEY|EZENITY_SMTP_USER|EZENITY_SMTP_PASSWORD|EZENITY_ALLOWED_ORIGINS'
-                            dotnet ef migrations list --project Ezenity.Infrastructure --startup-project Ezenity.API | tail -n +3
-                            '
+                            bash -c 'set -a; source /etc/ezenity/api/prod/env_vars.sh; set +a;
+                            echo "Checking environment variables...";
+                            printenv | grep -E "ASPNETCORE_ENVIRONMENT|DOTNET_PRINT_TELEMETRY|EZENITY_DATABASE_NAME|EZENITY_DATABASE_USER|EZENITY_DATABASE_PASSWORD|EZENITY_BASE_URL|EZENITY_SECRET_KEY|EZENITY_SMTP_USER|EZENITY_SMTP_PASSWORD|EZENITY_ALLOWED_ORIGINS";
+                            dotnet ef migrations list --project Ezenity.Infrastructure --startup-project Ezenity.API | tail -n +3'
                             ''',
                             returnStdout: true
                         ).trim()
                         if (pendingMigrations && !pendingMigrations.isEmpty()) {
                             echo "Applying database migrations: ${pendingMigrations}"
-                            // Apply the pending migrations.
                             sh '''
-                            bash -c '
-                            source /etc/ezenity/api/prod/env_vars.sh
-                            echo "Re-confirming environment variables before migration..."
-                            printenv | grep -E 'ASPNETCORE_ENVIRONMENT|DOTNET_PRINT_TELEMETRY|EZENITY_DATABASE_NAME|EZENITY_DATABASE_USER|EZENITY_DATABASE_PASSWORD|EZENITY_BASE_URL|EZENITY_SECRET_KEY|EZENITY_SMTP_USER|EZENITY_SMTP_PASSWORD|EZENITY_ALLOWED_ORIGINS'
-                            dotnet ef database update --project Ezenity.Infrastructure --startup-project Ezenity.API
-                            '
+                            bash -c 'set -a; source /etc/ezenity/api/prod/env_vars.sh; set +a;
+                            echo "Re-confirming environment variables before migration...";
+                            printenv | grep -E "ASPNETCORE_ENVIRONMENT|DOTNET_PRINT_TELEMETRY|EZENITY_DATABASE_NAME|EZENITY_DATABASE_USER|EZENITY_DATABASE_PASSWORD|EZENITY_BASE_URL|EZENITY_SECRET_KEY|EZENITY_SMTP_USER|EZENITY_SMTP_PASSWORD|EZENITY_ALLOWED_ORIGINS";
+                            dotnet ef database update --project Ezenity.Infrastructure --startup-project Ezenity.API'
                             '''
                         } else {
                             echo 'No pending database migrations to apply.'
                         }
                     } catch (Exception e) {
-                        // Log the error and fail the build if migrations cannot be applied.
                         echo "Database migration failed: ${e.getMessage()}"
                         error "Failed to apply database migrations."
                     }
