@@ -58,15 +58,25 @@ pipeline {
                 script {
                     // Ensure that the migration step has proper error handling.
                     try {
-                        // This command checks for any pending migrations.
+                        // This command checks for any pending migrations and also prints selected environment variables.
                         def pendingMigrations = sh(
-                            script: 'bash -c "source /etc/ezenity/api/prod/env_vars.sh && dotnet ef migrations list --project Ezenity.Infrastructure --startup-project Ezenity.API | tail -n +3"',
+                            script: '''
+                            source /etc/ezenity/api/prod/env_vars.sh
+                            echo "Checking environment variables..."
+                            printenv | grep -E 'ASPNETCORE_ENVIRONMENT|DOTNET_PRINT_TELEMETRY|EZENITY_DATABASE_NAME|EZENITY_DATABASE_USER|EZENITY_DATABASE_PASSWORD|EZENITY_BASE_URL|EZENITY_SECRET_KEY|EZENITY_SMTP_USER|EZENITY_SMTP_PASSWORD|EZENITY_ALLOWED_ORIGINS'
+                            dotnet ef migrations list --project Ezenity.Infrastructure --startup-project Ezenity.API | tail -n +3
+                            ''',
                             returnStdout: true
                         ).trim()
                         if (pendingMigrations && !pendingMigrations.isEmpty()) {
                             echo "Applying database migrations: ${pendingMigrations}"
                             // Apply the pending migrations.
-                            sh 'bash -c "source /etc/ezenity/api/prod/env_vars.sh && dotnet ef database update --project Ezenity.Infrastructure --startup-project Ezenity.API"'
+                            sh '''
+                            source /etc/ezenity/api/prod/env_vars.sh
+                            echo "Re-confirming environment variables before migration..."
+                            printenv | grep -E 'ASPNETCORE_ENVIRONMENT|DOTNET_PRINT_TELEMETRY|EZENITY_DATABASE_NAME|EZENITY_DATABASE_USER|EZENITY_DATABASE_PASSWORD|EZENITY_BASE_URL|EZENITY_SECRET_KEY|EZENITY_SMTP_USER|EZENITY_SMTP_PASSWORD|EZENITY_ALLOWED_ORIGINS'
+                            dotnet ef database update --project Ezenity.Infrastructure --startup-project Ezenity.API
+                            '''
                         } else {
                             echo 'No pending database migrations to apply.'
                         }
