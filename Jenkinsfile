@@ -12,6 +12,10 @@ pipeline {
     stages {
         stage('Preparation') {
             steps {
+                configFileProvider([configFile(fileId: 'd09a8769-3d7e-426f-9345-585423b74ac9', variable: 'ENV_FILE')]) {
+                    // Shell step to source the environment variables
+                    sh 'set -a && . $ENV_FILE && set +a'
+                }
                 checkout scm
                 // Optionally clean workspace
                 sh 'dotnet tool restore'
