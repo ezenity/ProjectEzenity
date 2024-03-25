@@ -24,6 +24,14 @@ namespace Ezenity.Infrastructure.Factories
 
             string connectionString;
 
+            Console.WriteLine($"Factory Class | Environemnt: {environment}");
+            
+            Console.WriteLine($"Factory Class | Environment: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}");
+            Console.WriteLine($"Factory Class | DB Name: {Environment.GetEnvironmentVariable("EZENITY_DATABASE_NAME")}");
+            Console.WriteLine($"Factory Class | DB User: {Environment.GetEnvironmentVariable("EZENITY_DATABASE_USER")}");
+            Console.WriteLine($"Factory Class | DB Password: {Environment.GetEnvironmentVariable("EZENITY_DATABASE_PASSWORD")}");
+
+
             if (isProduction)
             {
                 // Construct the connection string using environment variables for Production
@@ -38,6 +46,8 @@ namespace Ezenity.Infrastructure.Factories
                 // Use the connection string from configuration settings for Development
                 connectionString = configuration.GetConnectionString("WebApiDatabase") ?? throw new InvalidOperationException("Connection string 'WebApiDatabase' must be defined in configuration for Development.");
             }
+
+            Console.WriteLine($"Factory Class | Environemnt: {connectionString}");
 
             // Create a new ConnectionStringSettings instance with the retrieved connection string
             var connectionStringSettings = new ConnectionStringSettings(connectionString);

@@ -72,6 +72,7 @@ namespace Ezenity.API
 
             // Configure the database context
             var connectionString = connectionStringSettings.WebApiDatabase;
+            Console.WriteLine($"Database Connection String: {connectionString}");
             services.AddDbContext<DataContext>(options => options.UseMySql(connectionString,ServerVersion.AutoDetect(connectionString)));
 
             // TODO: Add support for Azure Key Vault
