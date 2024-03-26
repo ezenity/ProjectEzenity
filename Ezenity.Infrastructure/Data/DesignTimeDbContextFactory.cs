@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Ezenity.Infrastructure.Factories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -14,22 +15,25 @@ namespace Ezenity.Infrastructure.Data
     {
         public DataContext CreateDbContext(string[] args)
         {
+            var basePath = Path.Combine(Directory.GetCurrentDirectory(), "../Ezenity.API");
             var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 
             IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../Ezenity.API"))
+                .SetBasePath(basePath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{environmentName}.json", optional: true)
-            .Build();
+                .AddEnvironmentVariables()
+                .Build();
 
-            Console.WriteLine($"Design Time Factory Class | Environemnt: {environmentName}");
+            // Create the settings objects
+            var connectionStringSettings = ConnectionStringSettingsFactory.Create(configuration);
+
+            // Directly use the returned settings
+            var connectionString = connectionStringSettings.WebApiDatabase;
+
+            Console.WriteLine($"DesignTime Factory | Database Connection String: {connectionString}");
 
             var builder = new DbContextOptionsBuilder<DataContext>();
-            Console.WriteLine($"Design Time Factory Class | Environemnt: {builder}");
-
-            var connectionString = configuration.GetConnectionString("WebApiDatabase");
-            Console.WriteLine($"Design Time Factory Class | Environemnt: {connectionString}");
-
             builder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 
             return new DataContext(builder.Options);
