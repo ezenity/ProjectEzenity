@@ -295,6 +295,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
                 // Send email
                 EmailMessage verifyEmail = new EmailMessage
                 {
+                    From = _appSettings.EmailFrom,
                     To = model.Email,
                     TemplateName = "verification",
                     DynamicValues = new Dictionary<string, string>
@@ -312,7 +313,8 @@ namespace Ezenity.Infrastructure.Services.Accounts
             {
                 await transaction.RollbackAsync();
 
-                _logger.LogError("Error during registration: {ex-message}", ex);
+                // _logger.LogError("Error during registration: {0}", ex.Message);
+                _logger.LogError(ex, "Error during registration: {0}", ex.Message);
                 throw;
             }
         }
