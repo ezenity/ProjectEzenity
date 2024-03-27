@@ -232,6 +232,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
                 {
                     EmailMessage alreadyRegisteredEmail = new EmailMessage
                     {
+                        From = _appSettings.EmailFrom,
                         To = model.Email,
                         TemplateName = "alreadyRegistered",
                         DynamicValues = new Dictionary<string, string>
