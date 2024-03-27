@@ -60,6 +60,10 @@ namespace Ezenity.Infrastructure.Factories
                               ? Environment.GetEnvironmentVariable("EZENITY_ACCESS_TOKEN") ?? configuration["AppSettings:AccessToken"]
                               : configuration["AppSettings:AccessToken"];
 
+            var emailMessageIdDomain = isProduction
+                                        ? Environment.GetEnvironmentVariable("EZENITY_EMAIL_MESSAGE_ID_DOMAIN") ?? configuration["AppSettings:EmailMessageIdDomain"]
+                                        : configuration["AppSettings:EmailMessageIdDomain"];
+
             return new AppSettingsWrapper(
                 new AppSettings(
                     secretKey,
@@ -71,7 +75,8 @@ namespace Ezenity.Infrastructure.Factories
                     smtpUser,
                     smtpPass,
                     smtpEnabledSsl,
-                    accessToken
+                    accessToken,
+                    emailMessageIdDomain
                     )
                 );
         }

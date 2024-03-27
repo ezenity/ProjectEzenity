@@ -60,5 +60,10 @@ namespace Ezenity.Core.Interfaces
         /// Gets the access token used for some third-party services or internal processes.
         /// </summary>
         string AccessToken { get; }
+
+        /// <summary>
+        /// Gets the email domain that has been set for the message id in an email.
+        /// </summary>
+        string EmailMessageIdDomain { get; }
     }
 }
