@@ -236,7 +236,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
                         TemplateName = "alreadyRegistered",
                         DynamicValues = new Dictionary<string, string>
                     {
-                        { "accountFullName", model?.FirstName + model?.LastName }
+                        { "firstNameValue", model?.FirstName }
                     }
                     };
 
@@ -300,7 +300,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
                     TemplateName = "verification",
                     DynamicValues = new Dictionary<string, string>
                 {
-                    { "accountFullName", model?.FirstName + model?.LastName },
+                    { "firstNameValue", model?.FirstName },
                     //{ "{verificationUrl}", $"{_appSettings.BaseUrl }/account/verify-email?token={account.VerificationToken}" }
                     { "verificationUrl", $"{origin}/account/verify-email?token={account.VerificationToken}" }
                 }
@@ -369,7 +369,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
                 TemplateName = "passwordReset",
                 DynamicValues = new Dictionary<string, string>
                 {
-                    { "{accountFullName}", account.FirstName },
+                    { "{firstNameValue}", account.FirstName },
                     { "{token}", encodedToken },
                     { "{resetUrl}", resetUrl }
                 }
