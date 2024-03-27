@@ -49,7 +49,7 @@ namespace Ezenity.Infrastructure.Factories
                            : configuration["AppSettings:SmtpUser"];
 
             var smtpPass = isProduction
-                           ? Environment.GetEnvironmentVariable("EZENITY_SMTP_PASS") ?? configuration["AppSettings:SmtpPass"]
+                           ? Environment.GetEnvironmentVariable("EZENITY_SMTP_PASSWORD") ?? configuration["AppSettings:SmtpPass"]
                            : configuration["AppSettings:SmtpPass"];
 
             var smtpEnabledSsl = bool.Parse(isProduction
