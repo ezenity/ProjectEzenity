@@ -192,6 +192,11 @@ namespace Ezenity.Infrastructure.Services.Emails
                         // Create the email message
                         var emailMessage = new MimeMessage();
                         Console.WriteLine("After 'emailMessage' {0}", emailMessage);
+
+                        // Set custom Message-Id
+                        var messageId = $"{Guid.NewGuid()}@{_appSettings.EmailMessageIdDomain}";
+                        emailMessage.MessageId = messageId;
+
                         if (_env.IsDevelopment())
                         {
                             emailMessage.From.Add(new MailboxAddress("Ezenity API Test", "noreply@ezenity.com"));
