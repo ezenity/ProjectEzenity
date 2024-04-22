@@ -35,6 +35,13 @@ namespace Ezenity.API
             // Configure Serilog for logging.
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
+                .Enrich.FromLogContext()
+                .Enrich.WithMachineName()
+                .Enrich.WithThreadId()
+                .WriteTo.Console(outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+                .WriteTo.Async(a => a.File("/var/log/ezenity_api_out.log",
+                                           rollingInterval: RollingInterval.Month,
+                                           outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"))
                 .CreateLogger();
 
             try
