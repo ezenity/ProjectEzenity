@@ -23,7 +23,7 @@ namespace Ezenity.Infrastructure.Data.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Subject = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Content = table.Column<string>(type: "longtext", nullable: false)
+                    ContentViewPath = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     IsDefault = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
@@ -157,18 +157,18 @@ namespace Ezenity.Infrastructure.Data.Migrations
 
             migrationBuilder.InsertData(
                 table: "EmailTemplates",
-                columns: new[] { "Id", "Content", "CreatedAt", "EndDate", "IsDefault", "IsDynamic", "PlaceholderValuesJson", "StartDate", "Subject", "TemplateName", "UpdatedAt" },
-                values: new object[] { 1, "Hello firstNameValue, This email is already registered.", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, true, true, "{\"firstNameValue\":\"\"}", new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), "Email Already Registered", "alreadyRegistered", null });
+                columns: new[] { "Id", "ContentViewPath", "CreatedAt", "EndDate", "IsDefault", "IsDynamic", "PlaceholderValuesJson", "StartDate", "Subject", "TemplateName", "UpdatedAt" },
+                values: new object[] { 1, "EmailTemplates/Templates", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, true, true, "{\"firstName\":\"\"}", new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), "Email Already Registered", "AlreadyRegistered", null });
 
             migrationBuilder.InsertData(
                 table: "EmailTemplates",
-                columns: new[] { "Id", "Content", "CreatedAt", "EndDate", "IsDefault", "IsDynamic", "PlaceholderValuesJson", "StartDate", "Subject", "TemplateName", "UpdatedAt" },
-                values: new object[] { 2, "Hello firstNameValue, please verify your email here: verificationUrl", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2024, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), true, true, "{\"firstNameValue\":\"\",\"verificationUrl\":\"http://localhost/account/verify-email?token={token}\"}", new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), "Email Verification", "verification", null });
+                columns: new[] { "Id", "ContentViewPath", "CreatedAt", "EndDate", "IsDefault", "IsDynamic", "PlaceholderValuesJson", "StartDate", "Subject", "TemplateName", "UpdatedAt" },
+                values: new object[] { 2, "EmailTemplates/Templates", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2024, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), true, true, "{\"firstName\":\"\",\"templateTitle\":\"\",\"bodyContent\":\"Hello {firstName}, please verify your email here: {verificationUrl}\",\"verificationUrl\":\"{origin}/account/verify-email?token={account.VerificationToken}\"}", new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), "Email Verification", "EmailVerification", null });
 
             migrationBuilder.InsertData(
                 table: "EmailTemplates",
-                columns: new[] { "Id", "Content", "CreatedAt", "EndDate", "IsDefault", "IsDynamic", "PlaceholderValuesJson", "StartDate", "Subject", "TemplateName", "UpdatedAt" },
-                values: new object[] { 3, "Hello firstNameValue, <br>please verify your email here: verificationUrl", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2024, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), true, true, "{\"firstNameValue\":\"\",\"resetUrl\":\"http://localhost/account/reset-password?token={token}\"}", new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), "Forgot Password - Reset Password", "passwordReset", null });
+                columns: new[] { "Id", "ContentViewPath", "CreatedAt", "EndDate", "IsDefault", "IsDynamic", "PlaceholderValuesJson", "StartDate", "Subject", "TemplateName", "UpdatedAt" },
+                values: new object[] { 3, "EmailTemplates/Templates", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2024, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), true, true, "{\"firstName\":\"\",\"resetUrl\":\"http://localhost/account/reset-password?token={token}\"}", new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), "Forgot Password - Reset Password", "PasswordReset", null });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Accounts_RoleId",

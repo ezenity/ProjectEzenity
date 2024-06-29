@@ -22,7 +22,7 @@ namespace Ezenity.Infrastructure.Helpers
         /// <param name="smtpEnableSsl">A value indicating whether SSL is enabled for SMTP communications.</param>
         /// <param name="accessToken">The access token used for some third-party services or internal processes.</param>
         /// <param name="emailMessageIdDomain">The email domain that is being used for a message id in an email.</param>
-        public AppSettings(string baseUrl, string secret, int refreshTokenTTL, string emailFrom, string smtpHost, int smtpPort, string smtpUser, string smtpPass, bool smtpEnableSsl, string accessToken, string emailMessageIdDomain)
+        public AppSettings(string baseUrl, string secret, int refreshTokenTTL, string emailFrom, string smtpHost, int smtpPort, string smtpUser, string smtpPass, bool smtpEnableSsl, string accessToken, string emailMessageIdDomain, string emailTemplateBasePath)
         {
             BaseUrl = baseUrl;
             Secret = secret;
@@ -35,6 +35,7 @@ namespace Ezenity.Infrastructure.Helpers
             SmtpEnableSsl = smtpEnableSsl;
             AccessToken = accessToken;
             EmailMessageIdDomain = emailMessageIdDomain;
+            EmailTemplateBasePath = emailTemplateBasePath;
         }
 
         /// <summary>
@@ -91,5 +92,10 @@ namespace Ezenity.Infrastructure.Helpers
         /// Gets the email domain that has been set for the message id in an email.
         /// </summary>
         public string EmailMessageIdDomain { get; }
-    }
+
+        /// <summary>
+        /// Gets the base path for an Razor Email Template
+        /// </summary>
+        public string EmailTemplateBasePath { get; }
+  }
 }

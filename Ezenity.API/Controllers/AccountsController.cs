@@ -210,7 +210,7 @@ namespace Ezenity.API.API.Controllers
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [AuthorizeV2]
         [HttpPatch("{id}", Name = "update-account")]
-        [RequestHeaderMatchesMediaType("Content-Type",
+        [RequestHeaderMatchesMediaType("ContentViewPath-Type",
             "application/vnd.api+json", // JSON:API media type - Default
             "application/json", // Standard JSON media type, if you want to support it
             "application/Ezenity.api.updateaccount+json")] // Custom media type for this specific action
@@ -276,7 +276,7 @@ namespace Ezenity.API.API.Controllers
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [Authorize(Policy = "RequireAdminRole")]
         [HttpPatch("{id:int}")]
-        [RequestHeaderMatchesMediaType("Content-Type",
+        [RequestHeaderMatchesMediaType("ContentViewPath-Type",
             "application/vnd.api+json", // JSON:API media type - Default
             "application/json", // Standard JSON media type, if you want to support it
             "application/Ezenity.api.updatepartialaccount+json")] // Custom media type for this specific action

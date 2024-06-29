@@ -234,10 +234,10 @@ namespace Ezenity.Infrastructure.Services.Accounts
                     {
                         From = _appSettings.EmailFrom,
                         To = model.Email,
-                        TemplateName = "alreadyRegistered",
+                        TemplateName = "AlreadyRegistered",
                         DynamicValues = new Dictionary<string, string>
                     {
-                        { "firstNameValue", model?.FirstName }
+                        { "firstName", model?.FirstName }
                     }
                     };
 
@@ -298,12 +298,14 @@ namespace Ezenity.Infrastructure.Services.Accounts
                 {
                     From = _appSettings.EmailFrom,
                     To = model.Email,
-                    TemplateName = "verification",
+                    TemplateName = "EmailVerification",
                     DynamicValues = new Dictionary<string, string>
                 {
-                    { "firstNameValue", model?.FirstName },
+                    { "firstName", model?.FirstName },
+                    { "templateTitle", "Email Verification" },
                     //{ "{verificationUrl}", $"{_appSettings.BaseUrl }/account/verify-email?token={account.VerificationToken}" }
-                    { "verificationUrl", $"{origin}/account/verify-email?token={account.VerificationToken}" }
+                    { "verificationUrl", $"{origin}/account/verify-email?token={account.VerificationToken}" },
+                    { "bodyContent", "Please verify your email." }
                 }
                 };
 

@@ -6,6 +6,7 @@ using Ezenity.Infrastructure.Helpers;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -37,16 +38,23 @@ namespace Ezenity.Infrastructure.Services.Emails
         private readonly IWebHostEnvironment _env;
 
         /// <summary>
+        /// The data used for Email Templates.
+        /// </summary>
+        private readonly IEmailTemplateService _emailTemplateService;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="EmailService"/> class.
         /// </summary>
         /// <param name="appSettings">Application settings.</param>
         /// <param name="context">Data context for database operations.</param>
         /// <param name="env">Web hosting environment details.</param>
-        public EmailService(IAppSettings appSettings, IDataContext context, IWebHostEnvironment env)
+        /// <param name="emailTemplateService">Email Template data.</param>
+        public EmailService(IAppSettings appSettings, IDataContext context, IWebHostEnvironment env, IEmailTemplateService emailTemplateService)
         {
             _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
             _context = context ?? throw new ArgumentException(nameof(context));
             _env = env ?? throw new ArgumentException(nameof(env));
+            _emailTemplateService = emailTemplateService ?? throw new ArgumentException(nameof(emailTemplateService));
         }
 
         /// <summary>
@@ -60,7 +68,9 @@ namespace Ezenity.Infrastructure.Services.Emails
             {
 
                 // Get the email template from the database based on the provided template name
-                var emailTemplate = EmailHelpers.GetEmailTemplateByName(message.TemplateName, _context) ?? throw new AppException($"Email template ,'{message.TemplateName}', not found.");
+                // var emailTemplate = EmailHelpers.GetEmailTemplateByName(message.TemplateName, _context) ?? throw new AppException($"Email template ,'{message.TemplateName}', not found.");
+                //var emailTemplate = await _context.EmailTemplates.FirstOrDefaultAsync(t => t.TemplateName == message.TemplateName) ?? throw new AppException($"Email template ,'{message.TemplateName}', not found.");
+                var emailTemplate = await _emailTemplateService.GetByNameAsync(message.TemplateName);
 
                 //Console.WriteLine($"Dynamic Values: {string.Join(", ", message.DynamicValues.Select(kv => $"{kv.Key}: {kv.Value}"))}");
 
@@ -87,7 +97,20 @@ namespace Ezenity.Infrastructure.Services.Emails
                     Console.WriteLine("Warning: message.DynamicValues is null.");
                 }*/
 
-
+                // Generalized placeholder replacement
+                foreach (var key in emailTemplate.PlaceholderValues.Keys.ToList())
+                {
+                    var value = emailTemplate.PlaceholderValues[key];
+                    foreach (var inneyKey in emailTemplate.PlaceholderValues.Keys)
+                    {
+                        var placeholder = $"{{{inneyKey}}}";
+                        if (value.Contains(placeholder))
+                        {
+                            value = value.Replace(placeholder, emailTemplate.PlaceholderValues[inneyKey]);
+                        }
+                    }
+                    emailTemplate.PlaceholderValues[key] = value;
+                }
 
                 //message.DynamicValues = (Dictionary<string, string>) emailTemplate.PlaceholderValues;
 
@@ -96,8 +119,21 @@ namespace Ezenity.Infrastructure.Services.Emails
                 // Debug log
                 Console.WriteLine("Placeholder Values: " + JsonConvert.SerializeObject(emailTemplate.PlaceholderValues));
 
-                // Apply dynamic content to the template
-                string body = emailTemplate.ApplyDynamicContent();
+                string body;
+                if (!string.IsNullOrEmpty(emailTemplate.ContentViewPath) )
+                {
+                    // Use Razor view for rendering
+                    //body = await _razorRenderer.RenderViewtoStringAsync(emailTemplate.ContentViewPath, emailTemplate.PlaceholderValues);
+                    body = await _emailTemplateService.RenderEmailTemplateAsync(message.TemplateName, emailTemplate.PlaceholderValues);
+                }
+                else
+                {
+                    // Fallback to the existing ApplyDynamicContent method if ContentViewPath is not set
+                    //body = emailTemplate.ApplyDynamicContent();
+
+                    // TODO: Create a non-dynamic method to implement
+                    body = "";
+                }
 
                 Console.WriteLine($"After applying dynamic content, body: {body}");
 

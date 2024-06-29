@@ -73,7 +73,6 @@ namespace Ezenity.Infrastructure.Helpers
             // Email Templates
             //  - Configures the mappings for EmailTemplate-related objects.
             CreateMap<EmailTemplate, EmailTemplateResponse>();
-            CreateMap<EmailTemplate, EmailTemplateNonDynamicResponse>();
             CreateMap<CreateEmailTemplateRequest, EmailTemplate>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())

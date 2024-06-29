@@ -10,8 +10,13 @@ namespace Ezenity.Core.Services.Common
     public interface IEmailTemplateService : IBaseService<EmailTemplate, EmailTemplateResponse, CreateEmailTemplateRequest, UpdateEmailTemplateRequest, DeleteResponse>
     {
         /// <summary>
-        /// Gets an entity by its ID.
+        /// Gets an entity by its name.
         /// </summary>
-        Task<EmailTemplateNonDynamicResponse> GetNonDynamicByIdAsync(int id);
+        Task<EmailTemplateResponse> GetByNameAsync(string templateName);
+
+        /// <summary>
+        /// Renders Email Content using Razor Views.
+        /// </summary>
+        Task<string> RenderEmailTemplateAsync(string templateName, Dictionary<string, string> model);
     }
 }

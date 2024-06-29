@@ -78,7 +78,7 @@ namespace Ezenity.Infrastructure.Services.Sections
                 Title = model.Title,
                 Layout = model.Layout,
                 ContentType = model.ContentType,
-                Content = sectionContent
+                ContentViewPath = sectionContent
             };*/
 
             // Map Model to new section object
@@ -111,7 +111,7 @@ namespace Ezenity.Infrastructure.Services.Sections
                 Title = model.Title,
                 Layout = model.Layout,
                 ContentType = model.ContentType,
-                Content = sectionContent
+                ContentViewPath = sectionContent
             };*/
 
             // Map Model to new section object
@@ -198,7 +198,7 @@ namespace Ezenity.Infrastructure.Services.Sections
         /// <returns>The section entity.</returns>
         private async Task<Section> GetSection(int id)
         {
-            /*var section = _context.Sections.Include(s => s.Content).SingleOrDefault(s => s.Id == id);*/
+            /*var section = _context.Sections.Include(s => s.ContentViewPath).SingleOrDefault(s => s.Id == id);*/
             var section = await _context.Sections.FindAsync(id);
             if (section == null)
                 throw new KeyNotFoundException("Section not found");

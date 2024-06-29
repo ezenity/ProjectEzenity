@@ -14,6 +14,7 @@ using Ezenity.Infrastructure.Services.Accounts;
 using Ezenity.Infrastructure.Services.Emails;
 using Ezenity.Infrastructure.Services.EmailTemplates;
 using Ezenity.Infrastructure.Services.Sections;
+using Ezenity.RazorViews;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -24,11 +25,13 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
+using System.Reflection;
 
 namespace Ezenity.API
 {
@@ -74,51 +77,6 @@ namespace Ezenity.API
             var connectionString = connectionStringSettings.WebApiDatabase;
             Console.WriteLine($"Database Connection String: {connectionString}");
             services.AddDbContext<DataContext>(options => options.UseMySql(connectionString,ServerVersion.AutoDetect(connectionString)));
-
-            // TODO: Add support for Azure Key Vault
-            // services.AddAzureKeyValut(Configuration["KeyValut:Uri"]);
-
-            // TODO: Add support for AWS Secrets Manager
-            // services.AddAWSSecretsManager(Configuration["AWS:SecretsManager:SecretName"]);
-
-            // Configure dependecy injection for application services
-            services.AddScoped<IAccountService, AccountService>();
-            services.AddScoped<IEmailService, EmailService>();
-            services.AddScoped<IEmailTemplateService, EmailTemplateService>();
-            services.AddScoped<ISectionService, SectionService>();
-            services.AddScoped<IPasswordService, PasswordService>();
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IDataContext, DataContext>();
-            services.AddScoped<ITokenHelper, TokenHelper>();
-
-            // Filter DI
-            services.AddScoped<LoadAccountFilter>();
-
-            // Automapper Resolvers
-            services.AddScoped<RoleResolver>();
-
-            // Singleton services
-            services.AddSingleton<FileExtensionContentTypeProvider>();
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            //services.AddSingleton<IConfigurationUpdater, ConfigurationUpdater>();
-
-            // AutoMapper
-            //services.AddAutoMapper(typeof(AutoMapperProfile).Assembly); // .NET 5.0 -
-            var mapperConfig = new MapperConfiguration(mc =>
-            {
-                // Needed for https://github.com/AutoMapper/AutoMapper/issues/3988
-                mc.Internal().MethodMappingEnabled = true;
-                // mc.AddProfile(new AutoMapperProfile());
-                mc.AddProfile<AutoMapperProfile>();
-                // mc.AddMaps(typeof(AutoMapperProfile).Assembly);
-            });
-
-#if DEVELOPMENT
-            mapperConfig.AssertConfigurationIsValid();
-#endif
-
-            IMapper mapper = mapperConfig.CreateMapper();
-            services.AddSingleton(mapper);
 
             services.AddControllers(options =>
             {
@@ -174,6 +132,61 @@ namespace Ezenity.API
                 options.FormatterMappings.SetMediaTypeMappingForFormat("json", "application/vnd.api+json");
 
             });
+
+            // Add minimal MVC services required for Razor views
+            services.AddRazorPages().AddRazorRuntimeCompilation(options =>
+            {
+              var assembly = typeof(RazorViewRenderer).GetTypeInfo().Assembly;
+              var fileProvider = new EmbeddedFileProvider(assembly, "Ezenity.RazorViews");
+              options.FileProviders.Add(fileProvider);
+            });
+
+            // TODO: Add support for Azure Key Vault
+            // services.AddAzureKeyValut(Configuration["KeyValut:Uri"]);
+
+            // TODO: Add support for AWS Secrets Manager
+            // services.AddAWSSecretsManager(Configuration["AWS:SecretsManager:SecretName"]);
+
+            // Configure dependecy injection for application services
+            services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+            services.AddScoped<ISectionService, SectionService>();
+            services.AddScoped<IPasswordService, PasswordService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IDataContext, DataContext>();
+            services.AddScoped<ITokenHelper, TokenHelper>();
+
+            // Filter DI
+            services.AddScoped<LoadAccountFilter>();
+
+            // Automapper Resolvers
+            services.AddScoped<RoleResolver>();
+
+            // Singleton services
+            services.AddSingleton<FileExtensionContentTypeProvider>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<IEmailTemplateResolver, EmailTemplateResolver>();
+            //services.AddSingleton<IConfigurationUpdater, ConfigurationUpdater>();
+            services.AddSingleton<IRazorViewRenderer, RazorViewRenderer>();
+
+            // AutoMapper
+            //services.AddAutoMapper(typeof(AutoMapperProfile).Assembly); // .NET 5.0 -
+            var mapperConfig = new MapperConfiguration(mc =>
+            {
+                // Needed for https://github.com/AutoMapper/AutoMapper/issues/3988
+                mc.Internal().MethodMappingEnabled = true;
+                // mc.AddProfile(new AutoMapperProfile());
+                mc.AddProfile<AutoMapperProfile>();
+                // mc.AddMaps(typeof(AutoMapperProfile).Assembly);
+            });
+
+#if DEVELOPMENT
+            mapperConfig.AssertConfigurationIsValid();
+#endif
+
+            IMapper mapper = mapperConfig.CreateMapper();
+            services.AddSingleton(mapper);
 
             services.Configure<JsonOptions>(options =>
             {

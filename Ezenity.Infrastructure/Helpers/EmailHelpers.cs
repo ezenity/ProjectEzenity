@@ -58,16 +58,5 @@ namespace Ezenity.Infrastructure.Helpers
         {
             return string.Join(",", emailList.Where(IsValidEmail));
         }
-
-        /// <summary>
-        /// Retrieves an email template by its name from the database context.
-        /// </summary>
-        /// <param name="templateName">Name of the template.</param>
-        /// <param name="context">The data context.</param>
-        /// <returns>The EmailTemplate object if found; otherwise, null.</returns>
-        public static EmailTemplate GetEmailTemplateByName(string templateName, IDataContext context)
-        {
-            return context.EmailTemplates.FirstOrDefault(t => t.TemplateName == templateName);
-        }
     }
 }
