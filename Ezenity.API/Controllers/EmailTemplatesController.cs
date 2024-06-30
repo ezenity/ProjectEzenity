@@ -118,7 +118,7 @@ namespace Ezenity.API.Controllers
             {
                 StatusCode = 200,
                 IsSuccess = true,
-                Message = "Email Template delet succesfully",
+                Message = "Email Template delete succesfully",
                 Data = deletionResult
             });
         }
