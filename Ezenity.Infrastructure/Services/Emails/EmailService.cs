@@ -68,12 +68,7 @@ namespace Ezenity.Infrastructure.Services.Emails
             {
 
                 // Get the email template from the database based on the provided template name
-                // var emailTemplate = EmailHelpers.GetEmailTemplateByName(message.TemplateName, _context) ?? throw new AppException($"Email template ,'{message.TemplateName}', not found.");
-                //var emailTemplate = await _context.EmailTemplates.FirstOrDefaultAsync(t => t.TemplateName == message.TemplateName) ?? throw new AppException($"Email template ,'{message.TemplateName}', not found.");
                 var emailTemplate = await _emailTemplateService.GetByNameAsync(message.TemplateName);
-
-                //Console.WriteLine($"Dynamic Values: {string.Join(", ", message.DynamicValues.Select(kv => $"{kv.Key}: {kv.Value}"))}");
-
 
                 Console.WriteLine($"Before assignment, message.DynamicValues: {JsonConvert.SerializeObject(message.DynamicValues)}");
                 Console.WriteLine($"Before assignment, emailTemplate.PlaceholderValues: {JsonConvert.SerializeObject(emailTemplate.PlaceholderValues)}");
@@ -81,21 +76,9 @@ namespace Ezenity.Infrastructure.Services.Emails
 
                 // Set the placeholders for dynamic content
                 emailTemplate.PlaceholderValues = message.DynamicValues;
-                //                message.DynamicValues = emailTemplate.PlaceholderValues;
 
                 // This should populate the PlaceholderValues based on the PlaceholderValuesJson from the database.
-                //emailTemplate.PlaceholderValuesJson = emailTemplate.PlaceholderValuesJson;
                 Console.WriteLine($"After assignment, emailTemplate.PlaceholderValues: {JsonConvert.SerializeObject(emailTemplate.PlaceholderValues)}");
-
-                /*if (message.DynamicValues != null)
-                {
-                    emailTemplate.PlaceholderValues = message.DynamicValues;
-                    Console.WriteLine($"After assignment, emailTemplate.PlaceholderValues: {JsonConvert.SerializeObject(emailTemplate.PlaceholderValues)}");
-                }
-                else
-                {
-                    Console.WriteLine("Warning: message.DynamicValues is null.");
-                }*/
 
                 // Generalized placeholder replacement
                 foreach (var key in emailTemplate.PlaceholderValues.Keys.ToList())
@@ -112,18 +95,12 @@ namespace Ezenity.Infrastructure.Services.Emails
                     emailTemplate.PlaceholderValues[key] = value;
                 }
 
-                //message.DynamicValues = (Dictionary<string, string>) emailTemplate.PlaceholderValues;
-
-                // Replace placeholders in the template with dynamic values
-                //string body = emailTemplate.TemplateBody;
-                // Debug log
                 Console.WriteLine("Placeholder Values: " + JsonConvert.SerializeObject(emailTemplate.PlaceholderValues));
 
                 string body;
                 if (!string.IsNullOrEmpty(emailTemplate.ContentViewPath) )
                 {
                     // Use Razor view for rendering
-                    //body = await _razorRenderer.RenderViewtoStringAsync(emailTemplate.ContentViewPath, emailTemplate.PlaceholderValues);
                     body = await _emailTemplateService.RenderEmailTemplateAsync(message.TemplateName, emailTemplate.PlaceholderValues);
                 }
                 else
@@ -137,16 +114,9 @@ namespace Ezenity.Infrastructure.Services.Emails
 
                 Console.WriteLine($"After applying dynamic content, body: {body}");
 
-                //message.DynamicValues = emailTemplate.PlaceholderValues; // Testing location - not standard
-
                 message.Subject = emailTemplate.Subject;
 
                 Console.WriteLine("After setting message.Subject = emailTemplate.Subject: {0}", message.Subject);
-
-
-                // This is replaced with the above line
-                /*foreach (var dynamicValue in message.DynamicValues)
-                    body = body.Replace($"{{{dynamicValue.Key}}}", dynamicValue.Value);*/
 
                 //UserCredential oAuthCreds;
                 //string[] Scope = { GmailService.Scope.GmailSend };
@@ -264,7 +234,6 @@ namespace Ezenity.Infrastructure.Services.Emails
                         });*/
 
                         // Send the email
-                        //await service.Users.Messages.Send(emailMessage);
                         try
                         {
                             await smtpClient.SendAsync(emailMessage);
