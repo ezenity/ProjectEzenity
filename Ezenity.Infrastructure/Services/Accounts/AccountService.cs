@@ -302,6 +302,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
                     DynamicValues = new Dictionary<string, string>
                 {
                     { "firstName", model?.FirstName },
+                    { "lastName", model?.LastName },
                     { "templateTitle", "Email Verification" },
                     //{ "{verificationUrl}", $"{_appSettings.BaseUrl }/account/verify-email?token={account.VerificationToken}" }
                     { "verificationUrl", $"{origin}/account/verify-email?token={account.VerificationToken}" },
