@@ -300,14 +300,14 @@ namespace Ezenity.Infrastructure.Services.Accounts
                     To = model.Email,
                     TemplateName = "EmailVerification",
                     DynamicValues = new Dictionary<string, string>
-                {
-                    { "firstName", model?.FirstName },
-                    { "lastName", model?.LastName },
-                    { "templateTitle", "Email Verification" },
-                    //{ "{verificationUrl}", $"{_appSettings.BaseUrl }/account/verify-email?token={account.VerificationToken}" }
-                    { "verificationUrl", $"{origin}/account/verify-email?token={account.VerificationToken}" },
-                    { "bodyContent", "Please verify your email." }
-                }
+                    {
+                        { "firstName", model?.FirstName },
+                        { "lastName", model?.LastName },
+                        { "templateTitle", "Email Verification" },
+                        //{ "{verificationUrl}", $"{_appSettings.BaseUrl }/account/verify-email?token={account.VerificationToken}" }
+                        { "verificationUrl", $"{origin}/account/verify-email?token={account.VerificationToken}" },
+                        { "bodyContent", "Please verify your email." }
+                    }
                 };
 
                 await _emailService.SendEmailAsync(verifyEmail);
