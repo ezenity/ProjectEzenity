@@ -36,6 +36,7 @@ namespace Ezenity.Tests.AccountTests
         private Mock<ITokenHelper> mockTokenHelper;
         private Mock<IAuthService> mockAuthService;
         private Mock<IPasswordService> mockPasswordService;
+        private Mock<IEmailTemplateService> mockEmailTemplateService;
         private AccountService accountService;
 
         [TestInitialize]
@@ -43,13 +44,13 @@ namespace Ezenity.Tests.AccountTests
         {
             // Initialize other mocks
             mockMapper = new Mock<IMapper>();
-            //mockAppSettings = new Mock<IOptions<AppSettings>>();
             mockAppSettings = new Mock<IAppSettings>();
             mockEmailService = new Mock<IEmailService>();
             mockLogger = new Mock<ILogger<AccountService>>();
             mockTokenHelper = new Mock<ITokenHelper>();
             mockAuthService = new Mock<IAuthService>();
             mockPasswordService = new Mock<IPasswordService>();
+            mockEmailTemplateService = new Mock<IEmailTemplateService>();
 
             // Mocking the application settings
             mockAppSettings.Setup(m => m.BaseUrl).Returns("http://test.com");
@@ -114,9 +115,17 @@ namespace Ezenity.Tests.AccountTests
             // Use the configuration in the mock setup
             mockMapper.Setup(m => m.ConfigurationProvider).Returns(config);
 
-
             // Initialize the service to be tested
-            accountService = new AccountService(mockContext.Object, mockMapper.Object, mockAppSettings.Object, mockEmailService.Object, mockLogger.Object, mockTokenHelper.Object, mockAuthService.Object, mockPasswordService.Object);
+            accountService = new AccountService(
+                mockContext.Object, 
+                mockMapper.Object, 
+                mockAppSettings.Object, 
+                mockEmailService.Object, 
+                mockLogger.Object, 
+                mockTokenHelper.Object, 
+                mockAuthService.Object, 
+                mockPasswordService.Object,
+                mockEmailTemplateService.Object);
         }
 
         [TestMethod]
