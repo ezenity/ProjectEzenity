@@ -16,7 +16,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Views\**\*.cshtml" />
+    <EmbeddedResource Include="Views\*.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Views\AlreadyRegistered.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Views\EmailVerification.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Views\PasswordReset.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
