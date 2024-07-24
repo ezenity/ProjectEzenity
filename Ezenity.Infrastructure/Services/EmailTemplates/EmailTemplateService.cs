@@ -210,9 +210,9 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
 
         public async Task<string> RenderEmailTemplateAsync(string templateName, Dictionary<string, string> model)
         { 
-            var emailTemplateExists = await _context.EmailTemplates.AnyAsync(t => t.TemplateName == templateName);
-
-            if (!emailTemplateExists)
+            var emailTemplate = await GetByNameAsync(templateName);
+            
+            if (emailTemplate == null)
             {
                 throw new AppException($"Email template '{templateName}' not found.");
             }
@@ -221,8 +221,18 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
             //string viewPath = $"EmailTemplates/Templates/{templateName}.cshtml";
             var viewPath = _emailTemplateResolver.GetTemplatePath(templateName);
 
+            var updateModel = new Dictionary<string, string>(emailTemplate.PlaceholderValues);
+            foreach (var key in model.Keys)
+            {
+                if (updateModel.ContainsKey(key))
+                {
+                    updateModel[key] = model[key];
+                }
+            }
+
             // Render the view to a string
-            string renderedTemplate = await _razorRenderer.RenderViewToStringAsync(templateName, model);
+            //string renderedTemplate = await _razorRenderer.RenderViewToStringAsync(viewPath, updateModel);
+            string renderedTemplate = await _razorRenderer.RenderViewToStringAsync(templateName, updateModel);
 
             return renderedTemplate;
         }

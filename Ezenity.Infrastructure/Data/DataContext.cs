@@ -193,7 +193,7 @@ namespace Ezenity.Infrastructure.Data
                         IsDynamic = true,
                         StartDate = new DateTime(2023, 8, 18),
                         EndDate = new DateTime(2024, 8, 18),
-                        PlaceholderValuesJson = "{\"firstName\": \"\", \"templateTitle\": \"\", \"bodyContent\": \"Hello {firstName}, please verify your email here: {verificationUrl}\", \"verificationUrl\": \"{origin}/account/verify-email?token={account.VerificationToken}\"}"
+                        PlaceholderValuesJson = "{\"firstName\": \"\", \"lastName\": \"\", \"templateTitle\": \"\", \"bodyContent\": \"please verify your email here: {verificationUrl}\", \"verificationUrl\": \"{origin}/account/verify-email?token={account.VerificationToken}\"}"
                     },
                     new EmailTemplate
                     {
