@@ -28,6 +28,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
         private readonly ITokenHelper _tokenHelper;
         private readonly IAuthService _authService;
         private readonly IPasswordService _passwordService;
+        private readonly IEmailTemplateService _emailTemplateService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AccountService"/> class with required dependencies.
@@ -39,7 +40,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
         /// <param name="logger">The logger for logging information.</param>
         /// <param name="tokenHelper">The helper for generating tokens.</param>
         /// <param name="authService">The service for authentication-related tasks.</param>
-        public AccountService(IDataContext context, IMapper mapper, IAppSettings appSettings, IEmailService emailService, ILogger<AccountService> logger, ITokenHelper tokenHelper, IAuthService authService, IPasswordService passwordService)
+        public AccountService(IDataContext context, IMapper mapper, IAppSettings appSettings, IEmailService emailService, ILogger<AccountService> logger, ITokenHelper tokenHelper, IAuthService authService, IPasswordService passwordService, IEmailTemplateService emailTemplateService)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
@@ -49,6 +50,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
             _tokenHelper = tokenHelper ?? throw new ArgumentNullException(nameof(tokenHelper));
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
             _passwordService = passwordService ?? throw new ArgumentNullException(nameof(passwordService));
+            _emailTemplateService = emailTemplateService ?? throw new ArgumentNullException(nameof(emailTemplateService));
         }
 
         /// <summary>
@@ -213,6 +215,11 @@ namespace Ezenity.Infrastructure.Services.Accounts
             }
         }
 
+                _logger.LogError("Failed to refvoke refresh token: {ex-message}", ex.Message);
+                throw;
+            }
+        }
+
         /// <summary>
         /// Registers a new account.
         /// </summary>
@@ -237,7 +244,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
                         TemplateName = "AlreadyRegistered",
                         DynamicValues = new Dictionary<string, string>
                     {
-                        { "firstName", model?.FirstName }
+                        { "firstName", model.FirstName }
                     }
                     };
 
@@ -260,28 +267,19 @@ namespace Ezenity.Infrastructure.Services.Accounts
                 if (_context.Accounts.Count() == 0)
                 {
                     // If it's the first account, set the role to Admin
-                    role = _context.Roles.FirstOrDefault(r => r.Name == "Admin");
-                    if (role == null)
-                    {
-                        role = new Role { Name = "Admin" };
-                        _context.Roles.Add(role);
-                    }
+                    role = _context.Roles.FirstOrDefault(r => r.Name == "Admin") ?? new Role { Name = "Admin" };
+                    if (role.Id == 0) _context.Roles.Add(role);
                 }
                 else
                 {
                     // Otherwise, set the role to User
-                    role = _context.Roles.FirstOrDefault(r => r.Name == "User");
-                    if (role == null)
-                    {
-                        role = new Role { Name = "User" };
-                        _context.Roles.Add(role);
-                    }
+                    role = _context.Roles.FirstOrDefault(r => r.Name == "User") ?? new Role { Name = "User" };
+                    if (role.Id == 0) _context.Roles.Add(role);
                 }
 
                 account.Role = role;
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
                 account.Created = DateTime.UtcNow;
                 account.VerificationToken = _tokenHelper.RandomTokenString();
@@ -294,19 +292,38 @@ namespace Ezenity.Infrastructure.Services.Accounts
                 await _context.SaveChangesAsync();
 
                 // Send email
-                EmailMessage verifyEmail = new EmailMessage
+                var emailTemplate = await _emailTemplateService.GetByNameAsync("EmailVerification");
+                var dynamicValues = new Dictionary<string, string>(emailTemplate.PlaceholderValues);
+
+                dynamicValues["firstName"] = model.FirstName;
+                dynamicValues["lastName"] = model.LastName;
+                dynamicValues["templateTitle"] = "Email Verification";
+                //dynamicValues["{verificationUrl}"] = $"{_appSettings.BaseUrl }/account/verify-email?token={account.VerificationToken}";
+                dynamicValues["verificationUrl"] = $"{origin}/account/verify-email?token={account.VerificationToken}";
+                //dynamicValues["bodyContent"] = "Please verify your email.";
+                
+                // Use existing "bodyContent" from the template
+                if (dynamicValues.ContainsKey("bodyContent"))
+                {
+                    dynamicValues["bodyContent"] = dynamicValues["bodyContent"];
+                }
+
+                // Send email
+                var verifyEmail = new EmailMessage
                 {
                     From = _appSettings.EmailFrom,
                     To = model.Email,
                     TemplateName = "EmailVerification",
-                    DynamicValues = new Dictionary<string, string>
-                {
-                    { "firstName", model?.FirstName },
-                    { "templateTitle", "Email Verification" },
-                    //{ "{verificationUrl}", $"{_appSettings.BaseUrl }/account/verify-email?token={account.VerificationToken}" }
-                    { "verificationUrl", $"{origin}/account/verify-email?token={account.VerificationToken}" },
-                    { "bodyContent", "Please verify your email." }
-                }
+                    /*DynamicValues = new Dictionary<string, string>
+                    {
+                        { "firstName", model?.FirstName },
+                        { "lastName", model?.LastName },
+                        { "templateTitle", "Email Verification" },
+                        //{ "{verificationUrl}", $"{_appSettings.BaseUrl }/account/verify-email?token={account.VerificationToken}" }
+                        { "verificationUrl", $"{origin}/account/verify-email?token={account.VerificationToken}" },
+                        { "bodyContent", "Please verify your email." }
+                    }*/
+                    DynamicValues = dynamicValues
                 };
 
                 await _emailService.SendEmailAsync(verifyEmail);
