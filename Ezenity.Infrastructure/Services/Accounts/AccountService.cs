@@ -215,6 +215,11 @@ namespace Ezenity.Infrastructure.Services.Accounts
             }
         }
 
+                _logger.LogError("Failed to refvoke refresh token: {ex-message}", ex.Message);
+                throw;
+            }
+        }
+
         /// <summary>
         /// Registers a new account.
         /// </summary>
