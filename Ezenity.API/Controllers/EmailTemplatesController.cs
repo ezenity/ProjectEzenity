@@ -11,6 +11,7 @@ using Ezenity.Core.Services.Common;
 using Ezenity.Infrastructure.Attributes;
 using Ezenity.Core.Helpers.Exceptions;
 using System.Text.Json;
+using Asp.Versioning;
 
 namespace Ezenity.API.Controllers
 {
@@ -180,35 +181,6 @@ namespace Ezenity.API.Controllers
         {
             var emailTemplate = await _emailTemplateService.GetByIdAsync(id);
             return Ok(new ApiResponse<EmailTemplateResponse>
-            {
-                StatusCode = 200,
-                IsSuccess = true,
-                Message = "Email Template fetched successfully.",
-                Data = emailTemplate
-            });
-        }
-
-        /// <summary>
-        /// Retrieves a non-dynamic email template by its ID asynchronously.
-        /// </summary>
-        /// <param name="id">The ID of the email template.</param>
-        /// <returns>An API response containing the requested email template.</returns>
-        /// <exception cref="ResourceNotFoundException">Thrown if the email template does not exist.</exception>
-        /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
-        [RequestHeaderMatchesMediaType(
-            "Accept",
-            "application/Ezenity.api.getemailtemplatenondynamiccontent+json")]
-        [Produces("application/Ezenity.api.getemailtemplatenondynamiccontent+json")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<EmailTemplateResponse>), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ApiResponse<EmailTemplateResponse>), StatusCodes.Status500InternalServerError)]
-        [ProducesDefaultResponseType]
-        [HttpGet("{id:int}")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<ActionResult<ApiResponse<EmailTemplateNonDynamicResponse>>> GetNonDynamicByIdAsync(int id)
-        {
-            var emailTemplate = await _emailTemplateService.GetNonDynamicByIdAsync(id);
-            return Ok(new ApiResponse<EmailTemplateNonDynamicResponse>
             {
                 StatusCode = 200,
                 IsSuccess = true,

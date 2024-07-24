@@ -6,21 +6,39 @@
     <members>
         <member name="T:Ezenity.API.Configurations.ConfigureSwaggerOptions">
             <summary>
-            Configures Swagger to understand and represent API versioning in the generated Swagger documents.
+            Configures Swagger to accurately represent API versioning in the generated Swagger documents, enhancing the API documentation with version details and additional configuration settings.
             </summary>
         </member>
-        <member name="M:Ezenity.API.Configurations.ConfigureSwaggerOptions.#ctor(Microsoft.AspNetCore.Mvc.ApiExplorer.IApiVersionDescriptionProvider,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Configurations.ConfigureSwaggerOptions})">
+        <member name="M:Ezenity.API.Configurations.ConfigureSwaggerOptions.#ctor(Asp.Versioning.ApiExplorer.IApiVersionDescriptionProvider,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Configurations.ConfigureSwaggerOptions})">
             <summary>
-            Initializes a new instance of the <see cref="T:Ezenity.API.Configurations.ConfigureSwaggerOptions"/> class.
+            Constructs an instance of <see cref="T:Ezenity.API.Configurations.ConfigureSwaggerOptions"/> with dependencies injected through parameters.
             </summary>
-            <param name="provider">The API version description provider used for retrieving API version information.</param>
-            <param name="logger">The logger used for logging information within this configuration.</param>
+            <param name="provider">Provides API version description, used to enumerate and document different API versions.</param>
+            <param name="logger">Facilitates logging for diagnostic and informational purposes throughout the configuration process.</param>
         </member>
         <member name="M:Ezenity.API.Configurations.ConfigureSwaggerOptions.Configure(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions)">
             <summary>
-            Configures the Swagger generation options. Adds each API version as a separate document and sets up security definitions.
+            Configures the options for Swagger generation, including the creation of separate Swagger documents for each API version and the setup of security definitions.
             </summary>
-            <param name="options">The Swagger generation options to configure.</param>
+            <param name="options">The options to be configured for Swagger generation.</param>
+        </member>
+        <member name="M:Ezenity.API.Configurations.ConfigureSwaggerOptions.ConfigureSwaggerSecurity(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions)">
+            <summary>
+            Configures Swagger security definitions, setting up JWT authentication for the API documentation.
+            </summary>
+            <param name="options">The Swagger generation options to be further configured.</param>
+        </member>
+        <member name="M:Ezenity.API.Configurations.ConfigureSwaggerOptions.ConfigureSwaggerFilters(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions)">
+            <summary>
+            Adds custom operation filters to Swagger options for handling specific documentation needs, such as annotating API operations with additional metadata or parameters.
+            </summary>
+            <param name="options">The Swagger generation options to be further configured.</param>
+        </member>
+        <member name="M:Ezenity.API.Configurations.ConfigureSwaggerOptions.IncludeXmlComments(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions)">
+            <summary>
+            Includes XML comment files for Swagger documentation, enhancing API descriptions with comments from the source code.
+            </summary>
+            <param name="options">The Swagger generation options to be further configured.</param>
         </member>
         <member name="T:Ezenity.API.API.Controllers.AccountsController">
             <summary>
@@ -412,15 +430,6 @@
             <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown when the email template is not found.</exception>
             <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
         </member>
-        <member name="M:Ezenity.API.Controllers.EmailTemplatesController.GetNonDynamicByIdAsync(System.Int32)">
-            <summary>
-            Retrieves a non-dynamic email template by its ID asynchronously.
-            </summary>
-            <param name="id">The ID of the email template.</param>
-            <returns>An API response containing the requested email template.</returns>
-            <exception cref="T:Ezenity.Core.Helpers.Exceptions.ResourceNotFoundException">Thrown if the email template does not exist.</exception>
-            <exception cref="T:System.Exception">Thrown when an unexpected error occurs.</exception>
-        </member>
         <member name="M:Ezenity.API.Controllers.EmailTemplatesController.UpdateAsync(System.Int32,Ezenity.DTOs.Models.EmailTemplates.UpdateEmailTemplateRequest)">
             <summary>
             Asynchronously updates an existing email template.
@@ -782,7 +791,7 @@
             </summary>
             <param name="services">The collection of service descriptors.</param>
         </member>
-        <member name="M:Ezenity.API.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IWebHostEnvironment,Microsoft.AspNetCore.Mvc.ApiExplorer.IApiVersionDescriptionProvider,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Startup})">
+        <member name="M:Ezenity.API.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IWebHostEnvironment,Asp.Versioning.ApiExplorer.IApiVersionDescriptionProvider,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Startup})">
             <summary>
             Configures the HTTP request pipeline. This method gets called by the runtime.
             It adds middleware components to the request pipeline such as error handling, static files, routing, authentication, authorization, Swagger, etc.
@@ -792,7 +801,7 @@
             <param name="provider">Provides a mechanism to iterate API versions and their respective descriptions.</param>
             <param name="logger">Represents a type used to perform logging.</param>
         </member>
-        <member name="M:Ezenity.API.Startup.ConfigureSwagger(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Mvc.ApiExplorer.IApiVersionDescriptionProvider,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Startup})">
+        <member name="M:Ezenity.API.Startup.ConfigureSwagger(Microsoft.AspNetCore.Builder.IApplicationBuilder,Asp.Versioning.ApiExplorer.IApiVersionDescriptionProvider,Microsoft.Extensions.Logging.ILogger{Ezenity.API.Startup})">
             <summary>
             Configures SwaggerGen and SwaggerUI services. This method sets up Swagger documentation for different API versions and configures Swagger UI options.
             </summary>

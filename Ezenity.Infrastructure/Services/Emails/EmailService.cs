@@ -6,6 +6,7 @@ using Ezenity.Infrastructure.Helpers;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -37,16 +38,23 @@ namespace Ezenity.Infrastructure.Services.Emails
         private readonly IWebHostEnvironment _env;
 
         /// <summary>
+        /// The data used for Email Templates.
+        /// </summary>
+        private readonly IEmailTemplateService _emailTemplateService;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="EmailService"/> class.
         /// </summary>
         /// <param name="appSettings">Application settings.</param>
         /// <param name="context">Data context for database operations.</param>
         /// <param name="env">Web hosting environment details.</param>
-        public EmailService(IAppSettings appSettings, IDataContext context, IWebHostEnvironment env)
+        /// <param name="emailTemplateService">Email Template data.</param>
+        public EmailService(IAppSettings appSettings, IDataContext context, IWebHostEnvironment env, IEmailTemplateService emailTemplateService)
         {
             _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
             _context = context ?? throw new ArgumentException(nameof(context));
             _env = env ?? throw new ArgumentException(nameof(env));
+            _emailTemplateService = emailTemplateService ?? throw new ArgumentException(nameof(emailTemplateService));
         }
 
         /// <summary>
@@ -60,11 +68,9 @@ namespace Ezenity.Infrastructure.Services.Emails
             {
 
                 // Get the email template from the database based on the provided template name
-                var emailTemplate = EmailHelpers.GetEmailTemplateByName(message.TemplateName, _context);
-
-                // Check if the template exists
-                if (emailTemplate == null)
-                    throw new AppException($"Email template ,'{message.TemplateName}', not found.");
+                // var emailTemplate = EmailHelpers.GetEmailTemplateByName(message.TemplateName, _context) ?? throw new AppException($"Email template ,'{message.TemplateName}', not found.");
+                //var emailTemplate = await _context.EmailTemplates.FirstOrDefaultAsync(t => t.TemplateName == message.TemplateName) ?? throw new AppException($"Email template ,'{message.TemplateName}', not found.");
+                var emailTemplate = await _emailTemplateService.GetByNameAsync(message.TemplateName);
 
                 //Console.WriteLine($"Dynamic Values: {string.Join(", ", message.DynamicValues.Select(kv => $"{kv.Key}: {kv.Value}"))}");
 
@@ -91,7 +97,20 @@ namespace Ezenity.Infrastructure.Services.Emails
                     Console.WriteLine("Warning: message.DynamicValues is null.");
                 }*/
 
-
+                // Generalized placeholder replacement
+                foreach (var key in emailTemplate.PlaceholderValues.Keys.ToList())
+                {
+                    var value = emailTemplate.PlaceholderValues[key];
+                    foreach (var inneyKey in emailTemplate.PlaceholderValues.Keys)
+                    {
+                        var placeholder = $"{{{inneyKey}}}";
+                        if (value.Contains(placeholder))
+                        {
+                            value = value.Replace(placeholder, emailTemplate.PlaceholderValues[inneyKey]);
+                        }
+                    }
+                    emailTemplate.PlaceholderValues[key] = value;
+                }
 
                 //message.DynamicValues = (Dictionary<string, string>) emailTemplate.PlaceholderValues;
 
@@ -100,14 +119,29 @@ namespace Ezenity.Infrastructure.Services.Emails
                 // Debug log
                 Console.WriteLine("Placeholder Values: " + JsonConvert.SerializeObject(emailTemplate.PlaceholderValues));
 
-                // Apply dynamic content to the template
-                string body = emailTemplate.ApplyDynamicContent();
+                string body;
+                if (!string.IsNullOrEmpty(emailTemplate.ContentViewPath) )
+                {
+                    // Use Razor view for rendering
+                    //body = await _razorRenderer.RenderViewtoStringAsync(emailTemplate.ContentViewPath, emailTemplate.PlaceholderValues);
+                    body = await _emailTemplateService.RenderEmailTemplateAsync(message.TemplateName, emailTemplate.PlaceholderValues);
+                }
+                else
+                {
+                    // Fallback to the existing ApplyDynamicContent method if ContentViewPath is not set
+                    //body = emailTemplate.ApplyDynamicContent();
+
+                    // TODO: Create a non-dynamic method to implement
+                    body = "";
+                }
 
                 Console.WriteLine($"After applying dynamic content, body: {body}");
 
                 //message.DynamicValues = emailTemplate.PlaceholderValues; // Testing location - not standard
 
                 message.Subject = emailTemplate.Subject;
+
+                Console.WriteLine("After setting message.Subject = emailTemplate.Subject: {0}", message.Subject);
 
 
                 // This is replaced with the above line
@@ -140,11 +174,16 @@ namespace Ezenity.Infrastructure.Services.Emails
                     try
                     {
                         smtpClient.ServerCertificateValidationCallback = (s, cert, chain, sslPolicyErrors) => true;
+                        Console.WriteLine("After smtpClient.ServerCertificateValidationCallback");
                         try
                         {
-                            await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, SecureSocketOptions.SslOnConnect);
-                            //await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, SecureSocketOptions.StartTlsWhenAvailable);
-                            //await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort);
+                            // await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, SecureSocketOptions.SslOnConnect);
+                            // await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, SecureSocketOptions.StartTlsWhenAvailable);
+                            await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort);
+
+                            Console.WriteLine("After smtpClient.ConnectAsync()");
+                            Console.WriteLine("SMTP Host: {0}", _appSettings.SmtpHost);
+                            Console.WriteLine("SMTP Host: {0}", _appSettings.SmtpPort);
 
                         } catch (SmtpCommandException ex)
                         {
@@ -157,14 +196,22 @@ namespace Ezenity.Infrastructure.Services.Emails
                             return;
                         }
 
+                        Console.WriteLine("Before Try/Catch");
+
                         //if (_appSettings.SmtpEnableSsl)
                         //{
                         try
                         {
+                            /// https://support.google.com/mail/?p=InvalidSecondFactor s22-20020a814516000000b00609f87d6d1esm974290ywa.48 - gsmtp
+                            Console.WriteLine("Before smtpClient.AuthenticateAsync()");
+                            Console.WriteLine("SMTP User: {0} \n SMTP PW: {1}", _appSettings.SmtpUser, _appSettings.SmtpPass);
                             await smtpClient.AuthenticateAsync(_appSettings.SmtpUser, _appSettings.SmtpPass);
+                            Console.WriteLine("After smtpClient.AuthenticateAsync()");
+                            Console.WriteLine("SMTP User: {0} \n SMTP PW: {1}", _appSettings.SmtpUser, _appSettings.SmtpPass);
+
                         } catch (Core.Helpers.Exceptions.AuthenticationException ex)
                         {
-                            Console.WriteLine("Invalid username or passowrd", ex);
+                            Console.WriteLine("Invalid username or password", ex);
                             return;
                         } catch (SmtpCommandException ex)
                         {
@@ -180,16 +227,34 @@ namespace Ezenity.Infrastructure.Services.Emails
 
                         // Create the email message
                         var emailMessage = new MimeMessage();
-                        if(_env.IsDevelopment())
-                            emailMessage.From.Add(new MailboxAddress("Ezenity API Test", "anthonymmacallister@gmail.com"));
+                        Console.WriteLine("After 'emailMessage' {0}", emailMessage);
+
+                        // Set custom Message-Id
+                        var messageId = $"{Guid.NewGuid()}@{_appSettings.EmailMessageIdDomain}";
+                        emailMessage.MessageId = messageId;
+
+                        if (_env.IsDevelopment())
+                        {
+                            emailMessage.From.Add(new MailboxAddress("Ezenity API Test", "noreply@ezenity.com"));
+                        }
                         else
+                        {
                             emailMessage.From.Add(new MailboxAddress(message.From, message.From));
+                            Console.WriteLine("After From.Add() {0}", emailMessage.From.ToString() );
+                            Console.WriteLine("PROD");
+                        }
                         emailMessage.To.Add(new MailboxAddress(message.To, message.To));
+                        Console.WriteLine("After To.Add() {0}", emailMessage.To.ToString() );
                         emailMessage.Subject = message.Subject;
+                        Console.WriteLine("After Subject {0}", emailMessage.Subject);
                         emailMessage.Body = new TextPart(TextFormat.Html)
                         {
                             Text = body
                         };
+
+                        Console.WriteLine("After Body {0}", emailMessage.Body.ToString() );
+
+                        Console.WriteLine("After creating email message: {0}", emailMessage);
 
                         // Create GMail API Service
                         /*var service = new GmailService(new BaseClientService.Initializer()
@@ -203,6 +268,7 @@ namespace Ezenity.Infrastructure.Services.Emails
                         try
                         {
                             await smtpClient.SendAsync(emailMessage);
+                            Console.WriteLine("After smtpClient.sendAsync(emailMessage)");
                         } catch (SmtpCommandException ex)
                         {
                             Console.WriteLine("Error sending message: {0}", ex.Message);
@@ -230,7 +296,7 @@ namespace Ezenity.Infrastructure.Services.Emails
                     catch (Exception smtpException)
                     {
                         // Handle specific SMTP sexceptions here
-                        throw new AppException("Error sending email", smtpException);
+                        throw new AppException("Error sending email: {0} \n\n {1}", smtpException, smtpException.Message);
                     }
                 }
             }
@@ -238,11 +304,13 @@ namespace Ezenity.Infrastructure.Services.Emails
             {
                 // Log or handle known application exceptions
                 throw new AppException("An unexpected error occurred while sending the email.", appEx);  // Re-throws the caught AppException
+                // throw new AppException("An unexpected error occurred while sending the email: {0} \n {1}", appEx, appEx.Message);  // Re-throws the caught AppException
             }
             catch (Exception ex)
             {
                 // Handle unexpected exceptions
-                throw new AppException("An unexpected error occurred while sending the email.", ex);
+                // throw new AppException("An unexpected error occurred while sending the email.", ex);
+                throw new AppException("An unexpected error occurred while sending the email: {0} \n\n {1}", ex, ex.Message);
             }
         }
     }

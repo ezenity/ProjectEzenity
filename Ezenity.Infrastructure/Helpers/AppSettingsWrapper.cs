@@ -69,5 +69,15 @@ namespace Ezenity.Infrastructure.Helpers
         /// Gets the access token used for some third-party services or internal processes.
         /// </summary>
         public string AccessToken => _appSettings.AccessToken;
-    }
+
+        /// <summary>
+        /// Gets the email domain that has been set for the message id in an email.
+        /// </summary>
+        public string EmailMessageIdDomain => _appSettings.EmailMessageIdDomain;
+
+        /// <summary>
+        /// Gets the base path for an Razor Email Template
+        /// </summary>
+        public string EmailTemplateBasePath => _appSettings.EmailTemplateBasePath;
+  }
 }

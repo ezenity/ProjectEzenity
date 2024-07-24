@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Ezenity.Infrastructure.Helpers;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -28,16 +29,24 @@ namespace Ezenity.API
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
                 .Build();
 
             // Configure Serilog for logging.
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
+                .Enrich.FromLogContext()
+                .Enrich.WithMachineName()
+                .Enrich.WithThreadId()
+                .WriteTo.Console(outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+                .WriteTo.Async(a => a.File("/var/log/ezenity_api_out.log",
+                                           rollingInterval: RollingInterval.Month,
+                                           outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"))
                 .CreateLogger();
 
             try
             {
-                Console.WriteLine("Starting web host");
+                Console.WriteLine($"Starting web host on Environment: {environmentName}");
                 // Build and run the web host.
                 CreateHostBuilder(args, configuration).Build().Run();
             }
@@ -61,11 +70,17 @@ namespace Ezenity.API
         /// <returns>A configured IHostBuilder instance.</returns>
         public static IHostBuilder CreateHostBuilder(string[] args, IConfiguration configuration) =>
             Host.CreateDefaultBuilder(args)
-            .UseSerilog()
+            .ConfigureAppConfiguration(builder =>
+            {
+                builder.Sources.Clear();
+                builder.AddConfiguration(configuration);
+            })
+            .UseSerilog((hostingContext, loggerConfiguration) => loggerConfiguration
+                .ReadFrom.Configuration(configuration))
             .ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.UseStartup<Startup>();
-                webBuilder.UseConfiguration(configuration);
+                //webBuilder.UseConfiguration(configuration);
             });
     }
 }

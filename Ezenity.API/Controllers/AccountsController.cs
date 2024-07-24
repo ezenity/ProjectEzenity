@@ -1,4 +1,5 @@
-﻿using Ezenity.API.Controllers;
+﻿using Asp.Versioning;
+using Ezenity.API.Controllers;
 using Ezenity.API.Filters;
 using Ezenity.Core.Entities.Accounts;
 using Ezenity.Core.Helpers.Exceptions;
@@ -22,7 +23,7 @@ namespace Ezenity.API.API.Controllers
     /// </summary>
     [ApiController]
     /*[Route("api/v{version:apiVersion}/accounts")]*/
-    [Route("api/accounts")]
+    [Route("api/accounts", Name = "api/accounts")]
     [ApiVersion("1.0")]
     [Produces("application/vnd.api+json")]
     public class AccountsController : BaseController<Account, AccountResponse, CreateAccountRequest, UpdateAccountRequest, DeleteResponse>
@@ -70,6 +71,7 @@ namespace Ezenity.API.API.Controllers
         /// <response code="404">Returns a not found response if the account does not exist.</response>
         /// <response code="500">Returns if an internal server error occurs.</response>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
+        [HttpGet("{id}", Name = "get-account-by-id")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status401Unauthorized)]
@@ -106,6 +108,7 @@ namespace Ezenity.API.API.Controllers
         /// <response code="404">Returns a not found response if no accounts exist.</response>
         /// <response code="500">Returns if an internal server error occurs.</response>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
+        [HttpGet(Name = "get-all-accounts")]
         //[Authorize("Admin")]
         [Authorize(Policy = "RequireAdminRole")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -158,6 +161,7 @@ namespace Ezenity.API.API.Controllers
         /// <response code="422">Returns a unprocessable entity response if a role is proivded as a null.</response>
         /// <response code="500">Returns if an internal server error occurs.</response>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
+        [HttpPost(Name = "create-account")]
         [AuthorizeV2("Admin")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status409Conflict)]
@@ -205,8 +209,8 @@ namespace Ezenity.API.API.Controllers
         /// <exception cref="ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [AuthorizeV2]
-        [HttpPatch(Name = "UpdateAccount")]
-        [RequestHeaderMatchesMediaType("Content-Type",
+        [HttpPatch("{id}", Name = "update-account")]
+        [RequestHeaderMatchesMediaType("ContentViewPath-Type",
             "application/vnd.api+json", // JSON:API media type - Default
             "application/json", // Standard JSON media type, if you want to support it
             "application/Ezenity.api.updateaccount+json")] // Custom media type for this specific action
@@ -272,7 +276,7 @@ namespace Ezenity.API.API.Controllers
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [Authorize(Policy = "RequireAdminRole")]
         [HttpPatch("{id:int}")]
-        [RequestHeaderMatchesMediaType("Content-Type",
+        [RequestHeaderMatchesMediaType("ContentViewPath-Type",
             "application/vnd.api+json", // JSON:API media type - Default
             "application/json", // Standard JSON media type, if you want to support it
             "application/Ezenity.api.updatepartialaccount+json")] // Custom media type for this specific action
@@ -363,7 +367,8 @@ namespace Ezenity.API.API.Controllers
         /// <exception cref="AuthorizationException">Thrown when the caller lacks necessary permissions.</exception>
         /// <exception cref="DeletionFailedException">Thrown if the deletion fails for some specific reason.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
-        [AuthorizeV2]
+        [HttpDelete("{id}", Name = "delete-account")]
+        [AuthorizeV2("Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status401Unauthorized)]
@@ -406,7 +411,7 @@ namespace Ezenity.API.API.Controllers
         /// <response code="500">Returns an internal server error if an unexpected error occurs.</response>
         /// <exception cref="ResourceNotFoundException">Thrown when the account associated with the provided credentials does not exist.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
-        [HttpPost("authenticate")]
+        [HttpPost("authenticate", Name = "authenticate-account")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<AuthenticateResponse>), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse<AuthenticateResponse>), StatusCodes.Status404NotFound)]
@@ -446,7 +451,7 @@ namespace Ezenity.API.API.Controllers
         /// <response code="500">Returns Internal Server Error if any unexpected error occurs.</response>
         /// <exception cref="ResourceNotFoundException">Thrown when the refresh token is missing or invalid.</exception>
         /// <exception cref="Exception">Thrown when any unexpected error occurs.</exception>
-        [HttpPost("refresh-token")]
+        [HttpPost("refresh-token", Name = "refresh-token")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<AuthenticateResponse>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<AuthenticateResponse>), StatusCodes.Status500InternalServerError)]
@@ -494,9 +499,9 @@ namespace Ezenity.API.API.Controllers
         /// <response code="400">Returns BadRequest if the token is not provided.</response>
         /// <response code="401">Returns Unauthorized if the token is not owned by the loaded account.</response>
         /// <exception cref="Exception">Thrown when any unexpected error occurs.</exception>
+        [HttpPost("revoke-token", Name = "revoke-token")]
         [AuthorizeV2("Admin")]
         [ServiceFilter(typeof(LoadAccountFilter))]
-        [HttpPost("revoke-token")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(RevokeTokenRequest))]
@@ -546,7 +551,7 @@ namespace Ezenity.API.API.Controllers
         /// <response code="400">Returns BadRequest if the request parameters are not valid.</response>
         /// <response code="500">Returns a StatusCode of 500 if an unexpected error occurs.</response>
         [AllowAnonymous]
-        [HttpPost("register")]
+        [HttpPost("register", Name = "register")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
@@ -579,7 +584,7 @@ namespace Ezenity.API.API.Controllers
         /// <returns>An <see cref="IActionResult"/> that indicates the result of the email verification.</returns>
         /// <response code="200">Returns OK with a message indicating successful email verification.</response>
         /// <response code="500">Returns a StatusCode of 500 if the token is invalid or an unexpected error occurs.</response>
-        [HttpPost("verify-email")]
+        [HttpPost("verify-email", Name = "verify-email")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
@@ -602,7 +607,7 @@ namespace Ezenity.API.API.Controllers
         /// </summary>
         /// <param name="model">A <see cref="ForgotPasswordRequest"/> object containing the email of the account to reset.</param>
         /// <returns>A message indicating that a password reset instruction has been sent to the user's email.</returns>
-        [HttpPost("forgot-password")]
+        [HttpPost("forgot-password", Name = "forgot-password")]
         public async Task<IActionResult> ForgotPasswordAsync(ForgotPasswordRequest model)
         {
             await _accountService.ForgotPasswordAsync(model, Request.Headers["origin"]);
@@ -614,7 +619,7 @@ namespace Ezenity.API.API.Controllers
         /// </summary>
         /// <param name="model">A <see cref="ValidateResetTokenRequest"/> object containing the reset token to be validated.</param>
         /// <returns>A message indicating the validity of the provided reset token.</returns>
-        [HttpPost("validate-reset-token")]
+        [HttpPost("validate-reset-token", Name = "validate-reset-token")]
         public async Task<IActionResult> ValidateResetTokenAsync(ValidateResetTokenRequest model)
         {
             await _accountService.ValidateResetTokenAsync(model);
@@ -626,7 +631,7 @@ namespace Ezenity.API.API.Controllers
         /// </summary>
         /// <param name="model">A <see cref="ResetPasswordRequest"/> object containing the reset token and new password.</param>
         /// <returns>A message indicating the password has been reset and the user can now login.</returns>
-        [HttpPost("reset-password")]
+        [HttpPost("reset-password", Name = "reset-password")]
         public async Task<IActionResult> ResetPasswordAsync(ResetPasswordRequest model)
         {
             await _accountService.ResetPasswordAsync(model);

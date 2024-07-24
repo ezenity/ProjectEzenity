@@ -48,6 +48,17 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
         private readonly IAuthService _authService;
 
         /// <summary>
+        /// Provides rendering for Razor views.
+        /// </summary>
+        //private readonly IRazorViewToStringRenderer _razorRenderer;
+        private readonly IRazorViewRenderer _razorRenderer;
+
+        /// <summary>
+        /// Used to resolve template paths.
+        /// </summary>
+        private readonly IEmailTemplateResolver _emailTemplateResolver;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="EmailTemplateService"/> class.
         /// </summary>
         /// <param name="context">Provides data access to the application's data store.</param>
@@ -56,7 +67,9 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
         /// <param name="logger">Provides logging capabilities.</param>
         /// <param name="tokenHelper">Provides token generation and validation services.</param>
         /// <param name="authService">Provides user authentication services.</param>
-        public EmailTemplateService(IDataContext context, IMapper mapper, IAppSettings appSettings, ILogger<IEmailTemplateService> logger, ITokenHelper tokenHelper, IAuthService authService)
+        /// <param name="razorRenderer">Provides rendering for Razor views.</param>
+        /// <param name="emailTemplateResolver">Provides the resolved template paths.</param>
+        public EmailTemplateService(IDataContext context, IMapper mapper, IAppSettings appSettings, ILogger<IEmailTemplateService> logger, ITokenHelper tokenHelper, IAuthService authService, IRazorViewRenderer razorRenderer, IEmailTemplateResolver emailTemplateResolver)
         {
             _context = context ?? throw new ArgumentException(nameof(context));
             _mapper = mapper ?? throw new ArgumentException(nameof(mapper));
@@ -64,6 +77,8 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
             _logger = logger ?? throw new ArgumentException(nameof(logger));
             _tokenHelper = tokenHelper ?? throw new ArgumentException(nameof(tokenHelper));
             _authService = authService ?? throw new ArgumentException(nameof(authService));
+            _razorRenderer = razorRenderer ?? throw new ArgumentException(nameof(razorRenderer));
+            _emailTemplateResolver = emailTemplateResolver ?? throw new ArgumentException(nameof(emailTemplateResolver));
         }
 
         /// <summary>
@@ -85,18 +100,23 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
             return _mapper.Map<EmailTemplateResponse>(emailTemplate);
         }
 
-        public async Task<EmailTemplateNonDynamicResponse> GetNonDynamicByIdAsync(int id)
+        /// <summary>
+        /// Fetches an email template by its name.
+        /// </summary>
+        /// <param name="templateName">The name of the email template to fetch.</param>
+        /// <returns>A task that represents the asynchronous opertion. The task result contains the EmailTemplateResponse.</returns>
+        /// <exception cref="ResourceNotFoundException"></exception>
+        public async Task<EmailTemplateResponse> GetByNameAsync(string templateName)
         {
-            //var emailTemplate = await GetEmailTemplate(id);
             var emailTemplate = await _context.EmailTemplates
-                                    .Where(x => x.Id == id)
-                                    .ProjectTo<EmailTemplateNonDynamicResponse>(_mapper.ConfigurationProvider)
+                                    .Where(n => n.TemplateName == templateName)
+                                    .ProjectTo<EmailTemplateResponse>(_mapper.ConfigurationProvider)
                                     .SingleOrDefaultAsync();
 
-            if (emailTemplate == null)
-                throw new ResourceNotFoundException($"Email Template ID, {id}, was not found.");
+            if(emailTemplate == null)
+                throw new ResourceNotFoundException($"Email Template Name, {templateName}, was not found.");
 
-            return _mapper.Map<EmailTemplateNonDynamicResponse>(emailTemplate);
+            return _mapper.Map<EmailTemplateResponse>(emailTemplate);
         }
 
         /// <summary>
@@ -188,6 +208,24 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
             return _mapper.Map<EmailTemplateResponse>(emailTemplate);
         }
 
+        public async Task<string> RenderEmailTemplateAsync(string templateName, Dictionary<string, string> model)
+        { 
+            var emailTemplateExists = await _context.EmailTemplates.AnyAsync(t => t.TemplateName == templateName);
+
+            if (!emailTemplateExists)
+            {
+                throw new AppException($"Email template '{templateName}' not found.");
+            }
+
+            // Assuming the ContentViewPath property or similar to construct the view path
+            //string viewPath = $"EmailTemplates/Templates/{templateName}.cshtml";
+            var viewPath = _emailTemplateResolver.GetTemplatePath(templateName);
+
+            // Render the view to a string
+            string renderedTemplate = await _razorRenderer.RenderViewToStringAsync(templateName, model);
+
+            return renderedTemplate;
+        }
 
         /// //////////////////
         /// Helper Methods ///

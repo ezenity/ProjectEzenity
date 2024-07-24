@@ -402,3 +402,5 @@ appsettings.json
 appsettings.Development.json
 appsettings.Production.json
 client_secret.json
+appsettings.Development.json
+Ezenity.API/appsettings.Development.json

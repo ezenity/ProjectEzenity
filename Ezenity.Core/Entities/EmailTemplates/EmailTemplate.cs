@@ -23,9 +23,9 @@ namespace Ezenity.Core.Entities.EmailTemplates
         public string Subject { get; set; }
 
         /// <summary>
-        /// Gets or sets the content of the email template.
+        /// Gets or sets the path to a Razor view.
         /// </summary>
-        public string Content { get; set; }
+        public string ContentViewPath { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the template is the default one.
@@ -87,11 +87,11 @@ namespace Ezenity.Core.Entities.EmailTemplates
         /// <returns>The content of the template with placeholders replaced.</returns>
         public string ApplyDynamicContent()
         {
-            if (!IsDynamic || string.IsNullOrEmpty(Content) || PlaceholderValues.Values == null || PlaceholderValues.Count == 0 || PlaceholderValues.Values.Count == 0)
-                return Content;
+            if (!IsDynamic || string.IsNullOrEmpty(ContentViewPath) || PlaceholderValues.Values == null || PlaceholderValues.Count == 0 || PlaceholderValues.Values.Count == 0)
+                return ContentViewPath;
 
             // Replace placeholders with their corresponding values
-            var result = Content;
+            var result = ContentViewPath;
             foreach (var (placeholder, value) in PlaceholderValues)
             {
                 result = result.Replace(placeholder, value);

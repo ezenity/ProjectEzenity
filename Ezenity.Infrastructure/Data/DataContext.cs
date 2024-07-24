@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage;
 using System;
 
-namespace Ezenity.Infrastructure.Helpers
+namespace Ezenity.Infrastructure.Data
 {
     /// <summary>
     /// Represents the Entity Framework Core database context for the application.
@@ -147,6 +147,7 @@ namespace Ezenity.Infrastructure.Helpers
             {
                 entity.ToTable("Roles");
                 entity.HasKey(x => x.Id);
+                entity.HasIndex(x => x.Name).IsUnique();
 
                 entity.HasMany(r => r.Accounts)
                       .WithOne(a => a.Role)
@@ -174,37 +175,37 @@ namespace Ezenity.Infrastructure.Helpers
                     new EmailTemplate
                     {
                         Id = 1,
-                        TemplateName = "alreadyRegistered",
+                        TemplateName = "AlreadyRegistered",
                         Subject = "Email Already Registered",
-                        Content = "Hello firstNameValue, This email is already registered.",
+                        ContentViewPath = "EmailTemplates/Templates",
                         IsDefault = true,
                         IsDynamic = true,
                         StartDate = new DateTime(2023, 8, 18),
-                        PlaceholderValuesJson = "{\"firstNameValue\": \"\"}"
+                        PlaceholderValuesJson = "{\"firstName\": \"\"}"
                     },
                     new EmailTemplate
                     {
                         Id = 2,
-                        TemplateName = "verification",
+                        TemplateName = "EmailVerification",
                         Subject = "Email Verification",
-                        Content = "Hello firstNameValue, please verify your email here: verificationUrl",
+                        ContentViewPath = "EmailTemplates/Templates",
                         IsDefault = true,
                         IsDynamic = true,
                         StartDate = new DateTime(2023, 8, 18),
                         EndDate = new DateTime(2024, 8, 18),
-                        PlaceholderValuesJson = "{\"firstNameValue\": \"\", \"verificationUrl\": \"http://localhost/account/verify-email?token={token}\"}"
+                        PlaceholderValuesJson = "{\"firstName\": \"\", \"templateTitle\": \"\", \"bodyContent\": \"Hello {firstName}, please verify your email here: {verificationUrl}\", \"verificationUrl\": \"{origin}/account/verify-email?token={account.VerificationToken}\"}"
                     },
                     new EmailTemplate
                     {
                         Id = 3,
-                        TemplateName = "passwordReset",
+                        TemplateName = "PasswordReset",
                         Subject = "Forgot Password - Reset Password",
-                        Content = "Hello firstNameValue, <br>please verify your email here: verificationUrl",
+                        ContentViewPath = "EmailTemplates/Templates",
                         IsDefault = true,
                         IsDynamic = true,
                         StartDate = new DateTime(2023, 8, 18),
                         EndDate = new DateTime(2024, 8, 18),
-                        PlaceholderValuesJson = "{\"firstNameValue\": \"\", \"resetUrl\": \"http://localhost/account/reset-password?token={token}\"}"
+                        PlaceholderValuesJson = "{\"firstName\": \"\", \"resetUrl\": \"http://localhost/account/reset-password?token={token}\"}"
                     });
             });
         }

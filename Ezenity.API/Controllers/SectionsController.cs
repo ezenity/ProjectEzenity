@@ -10,6 +10,7 @@ using Ezenity.DTOs.Models;
 using Ezenity.Core.Services.Common;
 using Ezenity.Core.Helpers.Exceptions;
 using Ezenity.Infrastructure.Attributes;
+using Asp.Versioning;
 
 namespace Ezenity.API.Controllers
 {
@@ -119,7 +120,7 @@ namespace Ezenity.API.Controllers
         /// <returns>A wrapped API response containing the created section or errors.</returns>
         /// <exception cref="Exception">Thrown for generic server errors.</exception>
         [HttpPost(Name = "CreateSection")]
-        [RequestHeaderMatchesMediaType("Content-Type",
+        [RequestHeaderMatchesMediaType("ContentViewPath-Type",
             "application/json",
             "application/Ezenity.api.createsection+json")]
         [Consumes(
@@ -148,7 +149,7 @@ namespace Ezenity.API.Controllers
         /// <returns>An API response containing the created section.</returns>
         /// <exception cref="AppException">Thrown if the section title already exists.</exception>
         [HttpPost]
-        [RequestHeaderMatchesMediaType("Content-Type",
+        [RequestHeaderMatchesMediaType("ContentViewPath-Type",
             "application/Ezenity.api.createsectionwithadditionalproperties+json")]
         [Consumes(
             "application/Ezenity.api.createsectionwithadditionalproperties+json")]

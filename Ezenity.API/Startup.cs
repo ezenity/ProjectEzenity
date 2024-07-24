@@ -1,31 +1,37 @@
-﻿using Ezenity.API.Configurations;
+﻿using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
+using AutoMapper;
+using AutoMapper.Internal;
+using Ezenity.API.Configurations;
 using Ezenity.API.Filters;
 using Ezenity.API.Middleware;
 using Ezenity.Core.Interfaces;
 using Ezenity.Core.Services.Common;
+using Ezenity.Infrastructure.Data;
 using Ezenity.Infrastructure.Factories;
 using Ezenity.Infrastructure.Helpers;
 using Ezenity.Infrastructure.Services.Accounts;
 using Ezenity.Infrastructure.Services.Emails;
 using Ezenity.Infrastructure.Services.EmailTemplates;
 using Ezenity.Infrastructure.Services.Sections;
+using Ezenity.RazorViews;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Formatters;
-using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
+using System.Reflection;
 
 namespace Ezenity.API
 {
@@ -55,20 +61,8 @@ namespace Ezenity.API
         /// <param name="services">The collection of service descriptors.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            // Determine the secret key
-            string secretKey;
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production")
-            {
-                secretKey = Configuration.GetSection("AppSettings")["Secret"];
-            }
-            else
-            {
-                // TODO: Insert correct location once on server
-                secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? System.IO.File.ReadAllText("./secrete/key.txt").Trim();
-            }
-
             // Configure AppSettings and binds the necessary configuration sections.
-            var appSettings = AppSettingsFactory.Create(Configuration, secretKey);
+            var appSettings = AppSettingsFactory.Create(Configuration);
             services.AddSingleton<IAppSettings>(new AppSettingsWrapper(appSettings));
 
             // Configure ConnectionStringSettings
@@ -81,30 +75,8 @@ namespace Ezenity.API
 
             // Configure the database context
             var connectionString = connectionStringSettings.WebApiDatabase;
-            services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
-
-            // TODO: Add support for Azure Key Vault
-            // TODO: Add support for AWS Secrets Manager
-
-            // Configure dependecy injection for application services
-            services.AddScoped<IAccountService, AccountService>();
-            services.AddScoped<IEmailService, EmailService>();
-            services.AddScoped<IEmailTemplateService, EmailTemplateService>();
-            services.AddScoped<ISectionService, SectionService>();
-            services.AddScoped<IPasswordService, PasswordService>();
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IDataContext, DataContext>();
-            services.AddScoped<ITokenHelper, TokenHelper>();
-
-            // Filter DI
-            services.AddScoped<LoadAccountFilter>();
-
-            // Singleton services
-            services.AddSingleton<FileExtensionContentTypeProvider>();
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
-            // AutoMapper
-            services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+            Console.WriteLine($"Database Connection String: {connectionString}");
+            services.AddDbContext<DataContext>(options => options.UseMySql(connectionString,ServerVersion.AutoDetect(connectionString)));
 
             services.AddControllers(options =>
             {
@@ -161,6 +133,61 @@ namespace Ezenity.API
 
             });
 
+            // Add minimal MVC services required for Razor views
+            services.AddRazorPages().AddRazorRuntimeCompilation(options =>
+            {
+              var assembly = typeof(RazorViewRenderer).GetTypeInfo().Assembly;
+              var fileProvider = new EmbeddedFileProvider(assembly, "Ezenity.RazorViews");
+              options.FileProviders.Add(fileProvider);
+            });
+
+            // TODO: Add support for Azure Key Vault
+            // services.AddAzureKeyValut(Configuration["KeyValut:Uri"]);
+
+            // TODO: Add support for AWS Secrets Manager
+            // services.AddAWSSecretsManager(Configuration["AWS:SecretsManager:SecretName"]);
+
+            // Configure dependecy injection for application services
+            services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+            services.AddScoped<ISectionService, SectionService>();
+            services.AddScoped<IPasswordService, PasswordService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IDataContext, DataContext>();
+            services.AddScoped<ITokenHelper, TokenHelper>();
+
+            // Filter DI
+            services.AddScoped<LoadAccountFilter>();
+
+            // Automapper Resolvers
+            services.AddScoped<RoleResolver>();
+
+            // Singleton services
+            services.AddSingleton<FileExtensionContentTypeProvider>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<IEmailTemplateResolver, EmailTemplateResolver>();
+            //services.AddSingleton<IConfigurationUpdater, ConfigurationUpdater>();
+            services.AddSingleton<IRazorViewRenderer, RazorViewRenderer>();
+
+            // AutoMapper
+            //services.AddAutoMapper(typeof(AutoMapperProfile).Assembly); // .NET 5.0 -
+            var mapperConfig = new MapperConfiguration(mc =>
+            {
+                // Needed for https://github.com/AutoMapper/AutoMapper/issues/3988
+                mc.Internal().MethodMappingEnabled = true;
+                // mc.AddProfile(new AutoMapperProfile());
+                mc.AddProfile<AutoMapperProfile>();
+                // mc.AddMaps(typeof(AutoMapperProfile).Assembly);
+            });
+
+#if DEVELOPMENT
+            mapperConfig.AssertConfigurationIsValid();
+#endif
+
+            IMapper mapper = mapperConfig.CreateMapper();
+            services.AddSingleton(mapper);
+
             services.Configure<JsonOptions>(options =>
             {
                 options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
@@ -169,8 +196,8 @@ namespace Ezenity.API
             });
 
             // Configure SwaggerGen
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-            {
+            //if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            //{
                 // Configure API versioning
                 services.AddApiVersioning(options =>
                 {
@@ -180,10 +207,7 @@ namespace Ezenity.API
                     options.ApiVersionReader = ApiVersionReader.Combine(new UrlSegmentApiVersionReader(),
                                                                         new HeaderApiVersionReader("x-api-version"),
                                                                         new MediaTypeApiVersionReader("x-api-version"));
-                });
-
-                // Configure the versioned API explorer
-                services.AddVersionedApiExplorer(options =>
+                }).AddApiExplorer(options =>
                 {
                     options.GroupNameFormat = "'v'VV";
                     options.SubstituteApiVersionInUrl = true;
@@ -196,7 +220,7 @@ namespace Ezenity.API
 
                 services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
-            };
+            //};
 
             services.AddAuthentication(options =>
             {
@@ -207,6 +231,31 @@ namespace Ezenity.API
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
+            });
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy", builder =>
+                {
+                    string[] allowedOrigins;
+
+                    // Check if the application is running in Production
+                    if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
+                    {
+                        // Use environment variable for Allowed Origins in Production
+                        var origins = Configuration["EZENITY_ALLOWED_ORIGINS"];
+                        allowedOrigins = origins?.Split(',') ?? Array.Empty<string>();
+                    }
+                    else
+                    {
+                        // Use appsettings.json (or other configuration sources) outside Production
+                        allowedOrigins = Configuration["AllowedOrigins"]?.Split(",") ?? Array.Empty<string>();
+                    }
+
+                    builder.WithOrigins(allowedOrigins)
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
             });
 
             // Configure Health Checks
@@ -228,6 +277,7 @@ namespace Ezenity.API
             if (env.IsProduction())
             {
                 app.UseHttpsRedirection();
+                //app.UseHsts(hsts => hsts.MaxAge(365).IncludeSubdomains());
             }
 
             // Middleware for serving static files (e.g., CSS, JavaScript, images)
@@ -255,8 +305,9 @@ namespace Ezenity.API
                 var dataContext = scope.ServiceProvider.GetService<DataContext>();
                 dataContext.Database.Migrate();
 
-                ConfigureSwagger(app, provider, logger);
+                //ConfigureSwagger(app, provider, logger);
             }
+            ConfigureSwagger(app, provider, logger);
         }
 
         /// <summary>

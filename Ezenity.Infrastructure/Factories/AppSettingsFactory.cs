@@ -1,6 +1,7 @@
 ﻿using Ezenity.Core.Interfaces;
 using Ezenity.Infrastructure.Helpers;
 using Microsoft.Extensions.Configuration;
+using System;
 
 namespace Ezenity.Infrastructure.Factories
 {
@@ -13,19 +14,59 @@ namespace Ezenity.Infrastructure.Factories
         /// Creates an instance of IAppSettings based on provided IConfiguration and secret key.
         /// </summary>
         /// <param name="configuration">The application configuration.</param>
-        /// <param name="secretKey">The secret key.</param>
         /// <returns>A populated IAppSettings object.</returns>
-        public static IAppSettings Create(IConfiguration configuration, string secretKey)
+        public static IAppSettings Create(IConfiguration configuration)
         {
-            var baseUrl = configuration["AppSettings:BaseUrl"];
-            var refreshTokenTTL = int.Parse(configuration["AppSettings:RefreshTokenTTL"]);
-            var emailFrom = configuration["AppSettings:EmailFrom"];
-            var smtpHost = configuration["AppSettings:SmtpHost"];
-            var smtpPort = int.Parse(configuration["AppSettings:SmtpPort"]);
-            var smtpUser = configuration["AppSettings:SmtpUser"];
-            var smtpPass = configuration["AppSettings:SmtpPass"];
-            var smtpEnabledSsl = bool.Parse(configuration["AppSettings:SmtpEnabledSsl"]);
-            var accessToken = configuration["AppSettings:AccessToken"];
+            var deploymentEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var isProduction = deploymentEnvironment == "Production";
+
+            var secretKey = isProduction
+                            ? Environment.GetEnvironmentVariable("EZENITY_SECRET_KEY") ?? throw new InvalidOperationException("Secret key must be provided in environment variables for Production.")
+                            : configuration["AppSettings:Secret"];
+
+            var baseUrl = isProduction
+                          ? Environment.GetEnvironmentVariable("EZENITY_BASE_URL") ?? throw new InvalidOperationException("Base URL must be provided in environment variables for Production.")
+                          : configuration["AppSettings:BaseUrl"];
+
+            var refreshTokenTTL = int.Parse(isProduction
+                                            ? Environment.GetEnvironmentVariable("EZENITY_REFRESH_TOKEN_TTL") ?? configuration["AppSettings:RefreshTokenTTL"]
+                                            : configuration["AppSettings:RefreshTokenTTL"]);
+
+            var emailFrom = isProduction
+                            ? Environment.GetEnvironmentVariable("EZENITY_EMAIL_FROM") ?? configuration["AppSettings:EmailFrom"]
+                            : configuration["AppSettings:EmailFrom"];
+
+            var smtpHost = isProduction
+                            ? Environment.GetEnvironmentVariable("EZENITY_SMTP_HOST") ?? configuration["AppSettings:SmtpHost"]
+                            : configuration["AppSettings:SmtpHost"];
+
+            var smtpPort = int.Parse(isProduction
+                                     ? Environment.GetEnvironmentVariable("EZENITY_SMTP_PORT") ?? configuration["AppSettings:SmtpPort"]
+                                     : configuration["AppSettings:SmtpPort"]);
+
+            var smtpUser = isProduction
+                           ? Environment.GetEnvironmentVariable("EZENITY_SMTP_USER") ?? configuration["AppSettings:SmtpUser"]
+                           : configuration["AppSettings:SmtpUser"];
+
+            var smtpPass = isProduction
+                           ? Environment.GetEnvironmentVariable("EZENITY_SMTP_PASSWORD") ?? configuration["AppSettings:SmtpPass"]
+                           : configuration["AppSettings:SmtpPass"];
+
+            var smtpEnabledSsl = bool.Parse(isProduction
+                                            ? Environment.GetEnvironmentVariable("EZENITY_SMTP_ENABLE_SSL") ?? configuration["AppSettings:SmtpEnabledSsl"]
+                                            : configuration["AppSettings:SmtpEnabledSsl"]);
+
+            var accessToken = isProduction
+                              ? Environment.GetEnvironmentVariable("EZENITY_ACCESS_TOKEN") ?? configuration["AppSettings:AccessToken"]
+                              : configuration["AppSettings:AccessToken"];
+
+            var emailMessageIdDomain = isProduction
+                                        ? Environment.GetEnvironmentVariable("EZENITY_EMAIL_MESSAGE_ID_DOMAIN") ?? configuration["AppSettings:EmailMessageIdDomain"]
+                                        : configuration["AppSettings:EmailMessageIdDomain"];
+
+            var emailTemplateBasePath = isProduction
+                                        ? Environment.GetEnvironmentVariable("EZENITY_EMAIL_TEMPLATE_BASE_PATH") ?? configuration["AppSettings:EmailTemplateBasePath"]
+                                        : configuration["AppSettings:EmailTemplateBasePath"];
 
             return new AppSettingsWrapper(
                 new AppSettings(
@@ -38,7 +79,9 @@ namespace Ezenity.Infrastructure.Factories
                     smtpUser,
                     smtpPass,
                     smtpEnabledSsl,
-                    accessToken
+                    accessToken,
+                    emailMessageIdDomain,
+                    emailTemplateBasePath
                     )
                 );
         }
