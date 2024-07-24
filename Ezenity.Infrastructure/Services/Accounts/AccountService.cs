@@ -607,6 +607,11 @@ namespace Ezenity.Infrastructure.Services.Accounts
             }
         }
 
+                _logger.LogError("Error during account creation: {ex-message}", ex.Message);
+                throw;
+            }
+        }
+
         /// <summary>
         /// Updates an existing account.
         /// </summary>

@@ -1,4 +1,4 @@
-﻿using Ezenity.Core.Entities.Emails;
+using Ezenity.Core.Entities.Emails;
 using Ezenity.Core.Helpers.Exceptions;
 using Ezenity.Core.Interfaces;
 using Ezenity.Core.Services.Common;
