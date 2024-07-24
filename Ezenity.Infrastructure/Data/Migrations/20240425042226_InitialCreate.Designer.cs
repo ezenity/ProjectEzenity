@@ -11,7 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Ezenity.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
+<<<<<<<< HEAD:Ezenity.Infrastructure/Data/Migrations/20240425042226_InitialCreate.Designer.cs
     [Migration("20240425042226_InitialCreate")]
+========
+    [Migration("20240316003149_InitialCreate")]
+>>>>>>>> main:Ezenity.Infrastructure/Data/Migrations/20240316003149_InitialCreate.Designer.cs
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -143,7 +147,11 @@ namespace Ezenity.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+<<<<<<<< HEAD:Ezenity.Infrastructure/Data/Migrations/20240425042226_InitialCreate.Designer.cs
                     b.Property<string>("ContentViewPath")
+========
+                    b.Property<string>("Content")
+>>>>>>>> main:Ezenity.Infrastructure/Data/Migrations/20240316003149_InitialCreate.Designer.cs
                         .IsRequired()
                         .HasColumnType("longtext");
 

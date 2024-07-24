@@ -209,8 +209,8 @@ namespace Ezenity.API.API.Controllers
         /// <exception cref="ResourceAlreadyExistsException">Thrown if updating the account would cause a conflict.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
         [AuthorizeV2]
-        [HttpPatch("{id}", Name = "update-account")]
-        [RequestHeaderMatchesMediaType("ContentViewPath-Type",
+        [HttpPatch(Name = "UpdateAccount")]
+        [RequestHeaderMatchesMediaType("Content-Type",
             "application/vnd.api+json", // JSON:API media type - Default
             "application/json", // Standard JSON media type, if you want to support it
             "application/Ezenity.api.updateaccount+json")] // Custom media type for this specific action

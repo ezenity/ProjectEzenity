@@ -77,6 +77,7 @@ namespace Ezenity.API
             var connectionString = connectionStringSettings.WebApiDatabase;
             Console.WriteLine($"Database Connection String: {connectionString}");
             services.AddDbContext<DataContext>(options => options.UseMySql(connectionString,ServerVersion.AutoDetect(connectionString)));
+            // services.AddAWSSecretsManager(Configuration["AWS:SecretsManager:SecretName"]);
 
             services.AddControllers(options =>
             {
