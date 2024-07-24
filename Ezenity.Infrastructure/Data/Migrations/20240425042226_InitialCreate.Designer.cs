@@ -11,7 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Ezenity.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
+<<<<<<<< HEAD:Ezenity.Infrastructure/Data/Migrations/20240425042226_InitialCreate.Designer.cs
+    [Migration("20240425042226_InitialCreate")]
+========
     [Migration("20240316003149_InitialCreate")]
+>>>>>>>> main:Ezenity.Infrastructure/Data/Migrations/20240316003149_InitialCreate.Designer.cs
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -143,7 +147,11 @@ namespace Ezenity.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+<<<<<<<< HEAD:Ezenity.Infrastructure/Data/Migrations/20240425042226_InitialCreate.Designer.cs
+                    b.Property<string>("ContentViewPath")
+========
                     b.Property<string>("Content")
+>>>>>>>> main:Ezenity.Infrastructure/Data/Migrations/20240316003149_InitialCreate.Designer.cs
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -185,40 +193,40 @@ namespace Ezenity.Infrastructure.Data.Migrations
                         new
                         {
                             Id = 1,
-                            Content = "Hello firstNameValue, This email is already registered.",
+                            ContentViewPath = "EmailTemplates/Templates",
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDefault = true,
                             IsDynamic = true,
-                            PlaceholderValuesJson = "{\"firstNameValue\":\"\"}",
+                            PlaceholderValuesJson = "{\"firstName\":\"\"}",
                             StartDate = new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Subject = "Email Already Registered",
-                            TemplateName = "alreadyRegistered"
+                            TemplateName = "AlreadyRegistered"
                         },
                         new
                         {
                             Id = 2,
-                            Content = "Hello firstNameValue, please verify your email here: verificationUrl",
+                            ContentViewPath = "EmailTemplates/Templates",
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             EndDate = new DateTime(2024, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDefault = true,
                             IsDynamic = true,
-                            PlaceholderValuesJson = "{\"firstNameValue\":\"\",\"verificationUrl\":\"http://localhost/account/verify-email?token={token}\"}",
+                            PlaceholderValuesJson = "{\"firstName\":\"\",\"templateTitle\":\"\",\"bodyContent\":\"Hello {firstName}, please verify your email here: {verificationUrl}\",\"verificationUrl\":\"{origin}/account/verify-email?token={account.VerificationToken}\"}",
                             StartDate = new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Subject = "Email Verification",
-                            TemplateName = "verification"
+                            TemplateName = "EmailVerification"
                         },
                         new
                         {
                             Id = 3,
-                            Content = "Hello firstNameValue, <br>please verify your email here: verificationUrl",
+                            ContentViewPath = "EmailTemplates/Templates",
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             EndDate = new DateTime(2024, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDefault = true,
                             IsDynamic = true,
-                            PlaceholderValuesJson = "{\"firstNameValue\":\"\",\"resetUrl\":\"http://localhost/account/reset-password?token={token}\"}",
+                            PlaceholderValuesJson = "{\"firstName\":\"\",\"resetUrl\":\"http://localhost/account/reset-password?token={token}\"}",
                             StartDate = new DateTime(2023, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Subject = "Forgot Password - Reset Password",
-                            TemplateName = "passwordReset"
+                            TemplateName = "PasswordReset"
                         });
                 });
 

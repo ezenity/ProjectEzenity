@@ -23,9 +23,9 @@ namespace Ezenity.DTOs.Models.EmailTemplates
         public string Subject { get; set; }
 
         /// <summary>
-        /// Gets or sets the content of the email.
+        /// Gets or sets the path to a Razor view.
         /// </summary>
-        public string Content { get; set; }
+        public string ContentViewPath { get; set; }
 
         /// <summary>
         /// Indicates if this template is the default template.
@@ -51,5 +51,10 @@ namespace Ezenity.DTOs.Models.EmailTemplates
         /// Indicates if the email template is currently active.
         /// </summary>
         public bool IsActive { get; set; }
+
+        /// <summary>
+        /// Gets or sets the placeholder values in the email template.
+        /// </summary>
+        public Dictionary<string, string> PlaceholderValues { get; set; }
     }
 }

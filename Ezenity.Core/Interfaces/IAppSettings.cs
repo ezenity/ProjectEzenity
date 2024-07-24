@@ -65,5 +65,10 @@ namespace Ezenity.Core.Interfaces
         /// Gets the email domain that has been set for the message id in an email.
         /// </summary>
         string EmailMessageIdDomain { get; }
-    }
+
+        /// <summary>
+        /// Gets the base path for an Razor Email Template
+        /// </summary>
+        string EmailTemplateBasePath { get; }
+  }
 }
