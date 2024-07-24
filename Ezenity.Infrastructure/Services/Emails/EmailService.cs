@@ -144,6 +144,7 @@ namespace Ezenity.Infrastructure.Services.Emails
                 Console.WriteLine("After setting message.Subject = emailTemplate.Subject: {0}", message.Subject);
 
 
+
                 // This is replaced with the above line
                 /*foreach (var dynamicValue in message.DynamicValues)
                     body = body.Replace($"{{{dynamicValue.Key}}}", dynamicValue.Value);*/
