@@ -7,14 +7,34 @@ services:
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      # Put real connection strings in /srv/.../.env (see below)
-      - ConnectionStrings__DefaultConnection=${EZENITY_DB_CONN}
-      - Jwt__Secret=${JWT_SECRET}
-      - BaseUrl=https://api.ezenity.com
+
+      # IMPORTANT: match your code's expected key
+      - ConnectionStrings__WebApiDatabase=${EZENITY_DB_CONN}
+
+      # IMPORTANT: match your appsettings "AppSettings:Secret"
+      - AppSettings__Secret=${EZENITY_SECRET_KEY}
+
+      # these match your appsettings.Production.json comments
+      - AppSettings__BaseUrl=${EZENITY_BASE_URL}
+      - EZENITY_ALLOWED_ORIGINS=${EZENITY_ALLOWED_ORIGINS}
+
+      - AppSettings__SmtpUser=${EZENITY_SMTP_USER}
+      - AppSettings__SmtpPass=${EZENITY_SMTP_PASSWORD}
+      - AppSettings__SmtpHost=${EZENITY_SMTP_HOST}
+      - AppSettings__SmtpPort=${EZENITY_SMTP_PORT}
+      - AppSettings__SmtpEnabledSsl=${EZENITY_SMTP_ENABLE_SSL}
+      - AppSettings__EmailFrom=${EZENITY_EMAIL_FROM}
+      - AppSettings__EmailMessageIdDomain=${EZENITY_EMAIL_MESSAGE_ID_DOMAIN}
+      - AppSettings__EmailTemplateBasePath=${EZENITY_EMAIL_TEMPLATE_BASE_PATH}
+      - AppSettings__RefreshTokenTTL=${EZENITY_REFRESH_TOKEN_TTL}
     ports:
       - "127.0.0.1:5001:8080"
     networks:
       - ezenity_net
+    # If you keep Program.cs writing to /var/log/ezenity_api_out.log,
+    # either run container as root or mount a writable volume:
+    volumes:
+      - /srv/ezenity/logs/ezenity_api:/var/log
 
   ezenity_frontend:
     build:
@@ -22,9 +42,6 @@ services:
       dockerfile: Dockerfile
     image: ezenity/ezenity-frontend:${TAG:-latest}
     restart: unless-stopped
-    environment:
-      # only if your app reads runtime env; most Angular is build-time
-      - API_URL=https://api.ezenity.com
     ports:
       - "127.0.0.1:4200:80"
     networks:
@@ -36,8 +53,6 @@ services:
       dockerfile: Dockerfile
     image: ezenity/changemakercreations-frontend:${TAG:-latest}
     restart: unless-stopped
-    environment:
-      - API_URL=https://api.ezenity.com
     ports:
       - "127.0.0.1:4201:80"
     networks:
