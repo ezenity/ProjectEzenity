@@ -1,25 +1,32 @@
+version: "3.9"
+
 services:
+  # ----------------------------
+  # API (runtime)
+  # ----------------------------
   ezenity_api:
     build:
       context: .
       dockerfile: Ezenity.API/Dockerfile
-      target: migrator
-    image: ezenity/project-ezenity-migrator:${TAG:-latest}
-    restart: "no"
+      # IMPORTANT: do NOT set target here.
+      # The Dockerfile's final stage is the runtime image.
+    image: ezenity/project-ezenity-api:${TAG:-latest}
+    restart: unless-stopped
+
     env_file:
-        - ./.env
+      - ./.env
+
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
 
-      # IMPORTANT: matching code's expected key
+      # IMPORTANT: must match your code's expected key:
+      # connectionStringSettings.WebApiDatabase
       - ConnectionStrings__WebApiDatabase=${EZENITY_DB_CONN}
 
-      # IMPORTANT: matching appsettings "AppSettings:Secret"
+      # IMPORTANT: your code binds AppSettings (AppSettingsFactory.Create)
       - AppSettings__Secret=${EZENITY_SECRET_KEY}
-
-      # these match the appsettings.Production.json comments
       - AppSettings__BaseUrl=${EZENITY_BASE_URL}
-      - EZENITY_ALLOWED_ORIGINS=${EZENITY_ALLOWED_ORIGINS}
+      - AppSettings__RefreshTokenTTL=${EZENITY_REFRESH_TOKEN_TTL}
 
       - AppSettings__SmtpUser=${EZENITY_SMTP_USER}
       - AppSettings__SmtpPass=${EZENITY_SMTP_PASSWORD}
@@ -29,16 +36,24 @@ services:
       - AppSettings__EmailFrom=${EZENITY_EMAIL_FROM}
       - AppSettings__EmailMessageIdDomain=${EZENITY_EMAIL_MESSAGE_ID_DOMAIN}
       - AppSettings__EmailTemplateBasePath=${EZENITY_EMAIL_TEMPLATE_BASE_PATH}
-      - AppSettings__RefreshTokenTTL=${EZENITY_REFRESH_TOKEN_TTL}
+
+      # Your Startup.cs production CORS reads this env var directly:
+      # Configuration["EZENITY_ALLOWED_ORIGINS"]
+      - EZENITY_ALLOWED_ORIGINS=${EZENITY_ALLOWED_ORIGINS}
+
     ports:
       - "127.0.0.1:5001:8080"
+
     networks:
       - ezenity_net
-    # If you keep Program.cs writing to /var/log/ezenity_api_out.log,
-    # either run container as root or mount a writable volume:
+
+    # Program.cs writes to /var/log/ezenity_api_out.log
     volumes:
       - /srv/ezenity/logs/ezenity_api:/var/log
 
+  # ----------------------------
+  # Ezenity Frontend
+  # ----------------------------
   ezenity_frontend:
     build:
       context: ./Ezenity_Frontend
@@ -50,6 +65,9 @@ services:
     networks:
       - ezenity_net
 
+  # ----------------------------
+  # Trina Frontend
+  # ----------------------------
   trina_frontend:
     build:
       context: ./Ezenity_Trina
@@ -61,6 +79,9 @@ services:
     networks:
       - ezenity_net
 
+  # ----------------------------
+  # DB Migrator (runs on-demand)
+  # ----------------------------
   ezenity_migrator:
     build:
       context: .
@@ -68,15 +89,30 @@ services:
       target: migrator
     image: ezenity/project-ezenity-migrator:${TAG:-latest}
     restart: "no"
+
     env_file:
       - ./.env
+
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__WebApiDatabase=${EZENITY_DB_CONN}
       - AppSettings__Secret=${EZENITY_SECRET_KEY}
+
     networks:
       - ezenity_net
 
+    # Don't start by default. Only when explicitly invoked.
+    profiles:
+      - tools
+
+    # If your migrator image doesn't have an entrypoint, set it here.
+    # This assumes your migrator target provides dotnet-ef at /tools/dotnet-ef
+    entrypoint: ["bash", "-lc"]
+    command:
+      - >
+        /tools/dotnet-ef database update
+        --project Ezenity.Infrastructure
+        --startup-project Ezenity.API
 
 networks:
   ezenity_net:
