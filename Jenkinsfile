@@ -105,7 +105,7 @@ pipeline {
 
             # Start/update services
             docker compose down
-            docker compose up -d
+            docker compose up -d --build
 
             docker compose ps
           '''
@@ -130,7 +130,7 @@ pipeline {
 
           if docker compose config --services | grep -q '^api$'; then
             echo "Running EF migrations via docker compose run api..."
-            docker compose run --rm api bash -lc "dotnet ef database update --project Ezenity.Infrastructure --startup-project Ezenity.API"
+            docker compose run --rm ezenity_api bash -lc "dotnet ef database update --project Ezenity.Infrastructure --startup-project Ezenity.API"
           else
             echo "Skipping migrations: compose service 'api' not found."
             echo "Update service name in Jenkinsfile if needed."
