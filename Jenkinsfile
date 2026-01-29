@@ -61,6 +61,23 @@ pipeline {
       }
     }
 
+    stage('Unit Tests (.NET)') {
+      steps {
+        sh '''#!/usr/bin/env bash
+          set -euo pipefail
+
+          # Run the Dockerfile test stage only (fast fail).
+          # Uses repo root as context; dockerfile is in Ezenity.API/.
+          docker build \
+            --pull \
+            -f Ezenity.API/Dockerfile \
+            --target test \
+            -t ezenity/project-ezenity-tests:${TAG} \
+            .
+        '''
+      }
+    }
+
     stage('Docker: build images (tagged)') {
       steps {
         sh '''#!/usr/bin/env bash
@@ -130,13 +147,14 @@ pipeline {
           #
           # Also assumes your docker-compose has a service named "api" (change if different).
 
-          if docker compose config --services | grep -q '^api$'; then
+          if docker compose config --services | grep -q '^ezenity_migrator$'; then
             echo "Running EF migrations using migrator image..."
             docker compose --profile migrate run --rm ezenity_migrator
           else
-            echo "Skipping migrations: compose service 'api' not found."
-            echo "Update service name in Jenkinsfile if needed."
+            echo "Skipping migrations: compose service 'ezenity_migrator' not found."
+            exit 1
           fi
+
         '''
       }
     }

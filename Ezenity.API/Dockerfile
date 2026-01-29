@@ -1,7 +1,7 @@
 # =========================
-# Build (SDK)
+# Restore (SDK) - cached layer
 # =========================
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS restore
 WORKDIR /src
 
 # Copy sln + csproj first for restore caching
@@ -10,13 +10,34 @@ COPY Ezenity.API/Ezenity.API.csproj Ezenity.API/
 COPY Ezenity.Core/Ezenity.Core.csproj Ezenity.Core/
 COPY Ezenity.Infrastructure/Ezenity.Infrastructure.csproj Ezenity.Infrastructure/
 COPY Ezenity.DTOs/Ezenity.DTOs.csproj Ezenity.DTOs/
-# If more projects are referenced by the API, COPY them too.
+COPY Ezenity.RazorViews/Ezenity.RazorViews.csproj Ezenity.RazorViews/
 
-# Restore ONLY the API project (avoids solution projects like Tests/RazorViews)
-RUN dotnet restore Ezenity.API/Ezenity.API.csproj
+# Copy test project csproj(s) ONLY for restore caching (no source yet)
+# (This does NOT include tests in runtime, it's only so restore can resolve references)
+COPY Ezenity.Tests/Ezenity.Tests.csproj Ezenity.Tests/
 
-# Copy everything and publish
+# Restore (solution restore is fine since we explicitly copy required csprojs)
+RUN dotnet restore ProjectEzenity.sln
+
+# =========================
+# Test (SDK)
+# =========================
+FROM restore AS test
+WORKDIR /src
+
+# Now copy the full source and run tests
 COPY . .
+
+# If you have multiple test projects, this will run them all:
+RUN dotnet test ProjectEzenity.sln -c Release --no-restore --logger "trx;LogFileName=test_results.trx"
+
+# =========================
+# Build/Publish (SDK)
+# =========================
+FROM restore AS build
+WORKDIR /src
+COPY . .
+
 RUN dotnet publish Ezenity.API/Ezenity.API.csproj -c Release -o /app/publish --no-restore
 
 # =========================
@@ -35,7 +56,8 @@ ENTRYPOINT ["dotnet", "Ezenity.API.dll"]
 # =========================
 # Migrator (SDK + dotnet-ef)
 # =========================
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS migrator
+##FROM mcr.microsoft.com/dotnet/sdk:8.0 AS migrator
+FROM restore AS migrator
 WORKDIR /src
 
 # Copy full source from the build stage so we have:
