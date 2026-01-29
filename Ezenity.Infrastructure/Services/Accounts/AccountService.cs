@@ -177,7 +177,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
             {
                 await transaction.RollbackAsync();
 
-                _logger.LogError("Failed to refresh token: {ex-message}", ex.Message);
+                _logger.LogError(ex, "Failed to refresh token: {Message}", ex.Message);
                 throw;
             }
         }
@@ -208,7 +208,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
             {
                 await transaction.RollbackAsync();
 
-                _logger.LogError("Failed to refvoke refresh token: {ex-message}", ex.Message);
+                _logger.LogError(ex, "Failed to refvoke refresh token: {Message}", ex.Message);
                 throw;
             }
         }
@@ -317,7 +317,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
                 await transaction.RollbackAsync();
 
                 // _logger.LogError("Error during registration: {0}", ex.Message);
-                _logger.LogError(ex, "Error during registration: {0}", ex.Message);
+                _logger.LogError(ex, "Error during registration: {Message}", ex.Message);
                 throw;
             }
         }
@@ -513,7 +513,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
             }
             catch (Exception ex)
             {
-                _logger.LogCritical("[ERROR] There was an issue with fetching the list of accounts.");
+                _logger.LogCritical(ex, "[ERROR] There was an issue with fetching the list of accounts.");
                 throw new AppException("An error occurred while fetching accounts.", ex);
             }
         }
@@ -585,7 +585,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
             {
                 await transaction.RollbackAsync();
 
-                _logger.LogError("Error during account creation: {ex-message}", ex.Message);
+                _logger.LogError(ex, "Error during account creation: {Message}", ex.Message);
                 throw;
             }
         }
@@ -726,7 +726,7 @@ namespace Ezenity.Infrastructure.Services.Accounts
             {
                 await transaction.RollbackAsync();
 
-                _logger.LogError("Error during account deletion: {ex-message}", ex.Message);
+                _logger.LogError(ex, "Error during account deletion: {Message}", ex.Message);
                 throw new DeletionFailedException($"Failed to delete account with ID {id}", ex);
             }
         }
