@@ -8,10 +8,6 @@ pipeline {
 
   environment {
     DEPLOY_DIR = '/srv/ezenity/apps/project-ezenity'
-    // This file should contain your EZENITY_* variables (DB, SMTP, AllowedOrigins, etc.)
-    // Create it in Jenkins: Manage Jenkins -> Managed files -> add "Secret file"
-    // Put its fileId here:
-    ENV_FILE_ID = 'REPLACE_WITH_YOUR_MANAGED_FILE_ID'
   }
 
   stages {
@@ -67,54 +63,55 @@ pipeline {
 
     stage('Docker: build images (tagged)') {
       steps {
-        configFileProvider([configFile(fileId: "${ENV_FILE_ID}", variable: 'ENV_FILE')]) {
-          sh '''#!/usr/bin/env bash
-            set -euo pipefail
-            export TAG="${TAG}"
+        sh '''#!/usr/bin/env bash
+          set -euo pipefail
+          export TAG="${TAG}"
 
-            # Ensure compose variables exist during build (silences warnings)
-            cp "$ENV_FILE" ./.env
-            chmod 600 ./.env
-
-            docker compose build --pull
-          '''
-        }
+          # Build all services declared in docker-compose.yml (uses default .env if present in workspace; not required for build)
+          docker compose build --pull
+        '''
       }
     }
 
     stage('Deploy (main only)') {
       when { branch 'main' }
       steps {
-        // Pull env file from Jenkins and write it into DEPLOY_DIR as ".env"
-        configFileProvider([configFile(fileId: "${ENV_FILE_ID}", variable: 'ENV_FILE')]) {
-          sh '''#!/usr/bin/env bash
-            set -euo pipefail
+        sh '''#!/usr/bin/env bash
+          set -euo pipefail
 
-            mkdir -p "${DEPLOY_DIR}"
+          mkdir -p "${DEPLOY_DIR}"
 
-            # Deploy source to VPS folder (same machine Jenkins is on)
-            if command -v rsync >/dev/null 2>&1; then
-              rsync -av --delete ./ "${DEPLOY_DIR}/"
-            else
-              rm -rf "${DEPLOY_DIR:?}/"*
-              tar -cf - . | (cd "${DEPLOY_DIR}" && tar -xf -)
+          # Deploy source to VPS folder BUT preserve existing .env
+          if command -v rsync >/dev/null 2>&1; then
+            rsync -av --delete --exclude '.env' ./ "${DEPLOY_DIR}/"
+          else
+            # fallback without rsync: keep .env if it exists
+            if [ -f "${DEPLOY_DIR}/.env" ]; then
+              cp "${DEPLOY_DIR}/.env" /tmp/project-ezenity.env.backup
             fi
 
-            # Install the env file used by docker compose
-            cp "$ENV_FILE" "${DEPLOY_DIR}/.env"
-            chmod 600 "${DEPLOY_DIR}/.env"
+            rm -rf "${DEPLOY_DIR:?}/"*
+            tar -cf - . | (cd "${DEPLOY_DIR}" && tar -xf -)
 
-            cd "${DEPLOY_DIR}"
+            if [ -f /tmp/project-ezenity.env.backup ]; then
+              cp /tmp/project-ezenity.env.backup "${DEPLOY_DIR}/.env"
+              rm -f /tmp/project-ezenity.env.backup
+            fi
+          fi
 
-            export TAG="${TAG}"
+          # Ensure .env exists on VPS
+          if [ ! -f "${DEPLOY_DIR}/.env" ]; then
+            echo "ERROR: ${DEPLOY_DIR}/.env not found. Create it on the VPS first."
+            exit 1
+          fi
 
-            # Start/update services
-            docker compose down
-            docker compose up -d --build
+          cd "${DEPLOY_DIR}"
+          export TAG="${TAG}"
 
-            docker compose ps
-          '''
-        }
+          docker compose down
+          docker compose up -d --build
+          docker compose ps
+        '''
       }
     }
 
@@ -135,7 +132,7 @@ pipeline {
 
           if docker compose config --services | grep -q '^api$'; then
             echo "Running EF migrations using migrator image..."
-            docker compose run --rm ezenity_migrator
+            docker compose --profile migrate run --rm ezenity_migrator
           else
             echo "Skipping migrations: compose service 'api' not found."
             echo "Update service name in Jenkinsfile if needed."
@@ -149,7 +146,8 @@ pipeline {
     always {
       sh '''#!/usr/bin/env bash
         set +e
-        command -v docker >/dev/null 2>&1 && docker compose ps || true
+        cd "${DEPLOY_DIR}" 2>/dev/null || true
+        docker compose ps 2>/dev/null || true
       '''
       echo 'Pipeline finished.'
     }
