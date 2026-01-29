@@ -10,7 +10,7 @@ COPY Ezenity.API/Ezenity.API.csproj Ezenity.API/
 COPY Ezenity.Core/Ezenity.Core.csproj Ezenity.Core/
 COPY Ezenity.Infrastructure/Ezenity.Infrastructure.csproj Ezenity.Infrastructure/
 COPY Ezenity.DTOs/Ezenity.DTOs.csproj Ezenity.DTOs/
-# add any other csproj that API references
+# If there are more referenced projects, copy them here too for caching.
 
 RUN dotnet restore ./ProjectEzenity.sln
 
@@ -23,9 +23,12 @@ RUN dotnet publish Ezenity.API/Ezenity.API.csproj -c Release -o /app/publish
 # =========================
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
+
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080
+
 COPY --from=build /app/publish .
+
 ENTRYPOINT ["dotnet", "Ezenity.API.dll"]
 
 # =========================
@@ -34,13 +37,21 @@ ENTRYPOINT ["dotnet", "Ezenity.API.dll"]
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS migrator
 WORKDIR /src
 
-# copy full source so EF can find projects, migrations, etc.
-COPY . .
+# Copy full source from the build stage so we have:
+# - project files
+# - restored packages already in the layer history
+# - migrations + startup project
+COPY --from=build /src /src
 
 # Install EF tool locally (no global install needed)
 RUN dotnet tool install --tool-path /tools dotnet-ef --version 8.*
 ENV PATH="/tools:${PATH}"
 
-# Default command runs migrations
+# Helpful defaults (safe if overridden by docker compose env)
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV DOTNET_NOLOGO=true
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+
+# Default command runs migrations (compose can override if needed)
 # Uses env vars from docker compose (.env) at runtime.
 CMD ["bash", "-lc", "dotnet ef database update --project Ezenity.Infrastructure --startup-project Ezenity.API"]
