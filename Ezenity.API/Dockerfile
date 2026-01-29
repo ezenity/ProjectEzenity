@@ -10,13 +10,14 @@ COPY Ezenity.API/Ezenity.API.csproj Ezenity.API/
 COPY Ezenity.Core/Ezenity.Core.csproj Ezenity.Core/
 COPY Ezenity.Infrastructure/Ezenity.Infrastructure.csproj Ezenity.Infrastructure/
 COPY Ezenity.DTOs/Ezenity.DTOs.csproj Ezenity.DTOs/
-# If there are more referenced projects, copy them here too for caching.
+# If more projects are referenced by the API, COPY them too.
 
-RUN dotnet restore ./ProjectEzenity.sln
+# Restore ONLY the API project (avoids solution projects like Tests/RazorViews)
+RUN dotnet restore Ezenity.API/Ezenity.API.csproj
 
 # Copy everything and publish
 COPY . .
-RUN dotnet publish Ezenity.API/Ezenity.API.csproj -c Release -o /app/publish
+RUN dotnet publish Ezenity.API/Ezenity.API.csproj -c Release -o /app/publish --no-restore
 
 # =========================
 # Runtime (API)
@@ -41,7 +42,8 @@ WORKDIR /src
 # - project files
 # - restored packages already in the layer history
 # - migrations + startup project
-COPY --from=build /src /src
+#COPY --from=build /src /src
+COPY . .
 
 # Install EF tool locally (no global install needed)
 RUN dotnet tool install --tool-path /tools dotnet-ef --version 8.*

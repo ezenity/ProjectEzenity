@@ -11,10 +11,8 @@ services:
       target: runtime
     image: ezenity/project-ezenity-api:${TAG:-latest}
     restart: unless-stopped
-
     env_file:
       - ./.env
-
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
 
@@ -39,13 +37,10 @@ services:
       # Your Startup.cs production CORS reads this env var directly:
       # Configuration["EZENITY_ALLOWED_ORIGINS"]
       - EZENITY_ALLOWED_ORIGINS=${EZENITY_ALLOWED_ORIGINS}
-
     ports:
       - "127.0.0.1:5001:8080"
-
     networks:
       - ezenity_net
-
     # Program.cs writes to /var/log/ezenity_api_out.log
     volumes:
       - /srv/ezenity/logs/ezenity_api:/var/log
@@ -88,22 +83,16 @@ services:
       target: migrator
     image: ezenity/project-ezenity-migrator:${TAG:-latest}
     restart: "no"
-
     env_file:
       - ./.env
-
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__WebApiDatabase=${EZENITY_DB_CONN}
       - AppSettings__Secret=${EZENITY_SECRET_KEY}
-
     networks:
       - ezenity_net
-
     # Don't start by default. Only when explicitly invoked.
-    profiles:
-      - tools
-
+    profiles: ["migrate"]
     # If your migrator image doesn't have an entrypoint, set it here.
     # This assumes your migrator target provides dotnet-ef at /tools/dotnet-ef
     entrypoint: ["bash", "-lc"]
