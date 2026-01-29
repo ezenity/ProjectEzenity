@@ -31,6 +31,9 @@ COPY . .
 # If you have multiple test projects, this will run them all:
 RUN dotnet test ProjectEzenity.sln -c Release --no-restore --logger "trx;LogFileName=test_results.trx"
 
+# Stricter CI to run:
+#RUN dotnet test ProjectEzenity.sln -c Release --no-restore -warnaserror
+
 # =========================
 # Build/Publish (SDK)
 # =========================

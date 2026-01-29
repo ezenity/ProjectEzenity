@@ -238,17 +238,12 @@ namespace Ezenity.API
                 {
                     // This reads your appsettings.json/appsettings.Production.json "AllowedOrigins"
                     // which may itself be substituted from ${EZENITY_ALLOWED_ORIGINS}
-                    var originsRaw = Configuration["AllowedOrigins"] ?? '';
+                    var originsRaw = Configuration["EZENITY_ALLOWED_ORIGINS"] ?? "";
                     var allowedOrigins = originsRaw
-                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries)
                         .Select(x => x.Trim())
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
                         .ToArray();
-
-                    if (allowedOrigins.Length == 0)
-                    {
-                        // fail closed (no wildcard); you can log/adjust later
-                        allowedOrigins = Array.Empty<string>();
-                    }
 
                     builder.WithOrigins(allowedOrigins)
                         .AllowAnyMethod()
