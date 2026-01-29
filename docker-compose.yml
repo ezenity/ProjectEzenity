@@ -3,18 +3,21 @@ services:
     build:
       context: .
       dockerfile: Ezenity.API/Dockerfile
-    image: ezenity/project-ezenity-api:${TAG:-latest}
-    restart: unless-stopped
+      target: migrator
+    image: ezenity/project-ezenity-migrator:${TAG:-latest}
+    restart: "no"
+    env_file:
+        - ./.env
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
 
-      # IMPORTANT: match your code's expected key
+      # IMPORTANT: matching code's expected key
       - ConnectionStrings__WebApiDatabase=${EZENITY_DB_CONN}
 
-      # IMPORTANT: match your appsettings "AppSettings:Secret"
+      # IMPORTANT: matching appsettings "AppSettings:Secret"
       - AppSettings__Secret=${EZENITY_SECRET_KEY}
 
-      # these match your appsettings.Production.json comments
+      # these match the appsettings.Production.json comments
       - AppSettings__BaseUrl=${EZENITY_BASE_URL}
       - EZENITY_ALLOWED_ORIGINS=${EZENITY_ALLOWED_ORIGINS}
 
