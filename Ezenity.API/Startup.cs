@@ -32,6 +32,7 @@ using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Reflection;
+using System.Linq;
 
 namespace Ezenity.API
 {
