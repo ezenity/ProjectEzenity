@@ -67,13 +67,18 @@ pipeline {
 
     stage('Docker: build images (tagged)') {
       steps {
-        sh '''#!/usr/bin/env bash
-          set -euo pipefail
-          export TAG="${TAG}"
+        configFileProvider([configFile(fileId: "${ENV_FILE_ID}", variable: 'ENV_FILE')]) {
+          sh '''#!/usr/bin/env bash
+            set -euo pipefail
+            export TAG="${TAG}"
 
-          # Build all services declared in docker-compose.yml
-          docker compose build --pull
-        '''
+            # Ensure compose variables exist during build (silences warnings)
+            cp "$ENV_FILE" ./.env
+            chmod 600 ./.env
+
+            docker compose build --pull
+          '''
+        }
       }
     }
 

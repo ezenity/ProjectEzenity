@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # ----------------------------
   # API (runtime)
@@ -10,6 +8,7 @@ services:
       dockerfile: Ezenity.API/Dockerfile
       # IMPORTANT: do NOT set target here.
       # The Dockerfile's final stage is the runtime image.
+      target: runtime
     image: ezenity/project-ezenity-api:${TAG:-latest}
     restart: unless-stopped
 
