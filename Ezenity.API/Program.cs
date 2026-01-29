@@ -19,10 +19,10 @@ namespace Ezenity.API
         /// <param name="args">Command-line arguments passed to the application.</param>
         public static void Main(string[] args)
         {
-            // Determine the environment based on the 'ASPNETCORE_ENVIRONMENT' variable.
-            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production"
-                ? Environments.Development
-                : Environments.Production;
+            // Use ASPNETCORE_ENVIRONMENT as-is; default to "Production" on servers
+            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            if (string.IsNullOrWhiteSpace(environmentName))
+                environmentName = Environments.Production;
 
             // Build configuration from various sources.
             var configuration = new ConfigurationBuilder()
@@ -32,6 +32,14 @@ namespace Ezenity.API
                 .AddEnvironmentVariables()
                 .Build();
 
+            // Log directory (consistent with /srv standard)
+            var logDir = Environment.GetEnvironmentVariable("EZENITY_LOG_DIR");
+            if (string.IsNullOrWhiteSpace(logDir))
+                logDir = "/srv/ezenity/logs/project-ezenity";
+
+            Directory.CreateDirectory(logDir);
+            var logFile = Path.Combine(logDir, "api-.log");
+
             // Configure Serilog for logging.
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
@@ -39,9 +47,11 @@ namespace Ezenity.API
                 .Enrich.WithMachineName()
                 .Enrich.WithThreadId()
                 .WriteTo.Console(outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-                .WriteTo.Async(a => a.File("/var/log/ezenity_api_out.log",
-                                           rollingInterval: RollingInterval.Month,
-                                           outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"))
+                .WriteTo.Async(a => a.File(
+                    logFile,
+                    rollingInterval: RollingInterval.Day,
+                    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"
+                ))
                 .CreateLogger();
 
             try
@@ -75,8 +85,8 @@ namespace Ezenity.API
                 builder.Sources.Clear();
                 builder.AddConfiguration(configuration);
             })
-            .UseSerilog((hostingContext, loggerConfiguration) => loggerConfiguration
-                .ReadFrom.Configuration(configuration))
+            .UseSerilog((_, loggerConfiguration) =>
+                loggerConfiguration.ReadFrom.Configuration(configuration))
             .ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.UseStartup<Startup>();

@@ -44,10 +44,7 @@ namespace Ezenity.API
         /// Initializes a new instance of the <see cref="Startup"/> class with the specified configuration.
         /// </summary>
         /// <param name="configuration">The application configuration properties.</param>
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+        public Startup(IConfiguration configuration) => Configuration = configuration;
 
         /// <summary>
         /// Gets the application's configuration properties, including those set in appsettings.json and other sources.
@@ -185,9 +182,7 @@ namespace Ezenity.API
 #if DEVELOPMENT
             mapperConfig.AssertConfigurationIsValid();
 #endif
-
-            IMapper mapper = mapperConfig.CreateMapper();
-            services.AddSingleton(mapper);
+            services.AddSingleton(mapperConfig.CreateMapper());
 
             services.Configure<JsonOptions>(options =>
             {
@@ -205,9 +200,10 @@ namespace Ezenity.API
                     options.AssumeDefaultVersionWhenUnspecified = true;
                     options.DefaultApiVersion = new ApiVersion(1, 0);
                     options.ReportApiVersions = true;
-                    options.ApiVersionReader = ApiVersionReader.Combine(new UrlSegmentApiVersionReader(),
-                                                                        new HeaderApiVersionReader("x-api-version"),
-                                                                        new MediaTypeApiVersionReader("x-api-version"));
+                    options.ApiVersionReader = ApiVersionReader.Combine(
+                        new UrlSegmentApiVersionReader(),
+                        new HeaderApiVersionReader("x-api-version"),
+                        new MediaTypeApiVersionReader("x-api-version"));
                 }).AddApiExplorer(options =>
                 {
                     options.GroupNameFormat = "'v'VV";
@@ -223,6 +219,7 @@ namespace Ezenity.API
 
             //};
 
+            // authn/authZ
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = "CustomJwt";
@@ -234,23 +231,23 @@ namespace Ezenity.API
                 options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
             });
 
+            // CORS, reading from config for consistency
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder =>
                 {
-                    string[] allowedOrigins;
+                    // This reads your appsettings.json/appsettings.Production.json "AllowedOrigins"
+                    // which may itself be substituted from ${EZENITY_ALLOWED_ORIGINS}
+                    var originsRaw = Configuration["AllowedOrigins"] ?? '';
+                    var allowedOrigins = originsRaw
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .ToArray();
 
-                    // Check if the application is running in Production
-                    if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
+                    if (allowedOrigins.Length == 0)
                     {
-                        // Use environment variable for Allowed Origins in Production
-                        var origins = Configuration["EZENITY_ALLOWED_ORIGINS"];
-                        allowedOrigins = origins?.Split(',') ?? Array.Empty<string>();
-                    }
-                    else
-                    {
-                        // Use appsettings.json (or other configuration sources) outside Production
-                        allowedOrigins = Configuration["AllowedOrigins"]?.Split(",") ?? Array.Empty<string>();
+                        // fail closed (no wildcard); you can log/adjust later
+                        allowedOrigins = Array.Empty<string>();
                     }
 
                     builder.WithOrigins(allowedOrigins)
@@ -277,6 +274,7 @@ namespace Ezenity.API
 
             if (env.IsProduction())
             {
+                // Only enable if behind TLS (Nginx terminated SSL)
                 app.UseHttpsRedirection();
                 //app.UseHsts(hsts => hsts.MaxAge(365).IncludeSubdomains());
             }
@@ -299,16 +297,11 @@ namespace Ezenity.API
                 endpoints.MapHealthChecks("/health");
             });
 
-            // Automatic database migration at startup (Development Only)
-            if (env.IsDevelopment())
-            {
-                using var scope = app.ApplicationServices.CreateScope();
-                var dataContext = scope.ServiceProvider.GetService<DataContext>();
-                dataContext.Database.Migrate();
-
-                //ConfigureSwagger(app, provider, logger);
-            }
+            // Swagger (you can later limit to non-prod if you want)
             ConfigureSwagger(app, provider, logger);
+
+            // Optional migrations on startup (controlled)
+            TryApplyMigrations(app, env, logger);
         }
 
         /// <summary>
@@ -327,8 +320,8 @@ namespace Ezenity.API
                 // Loop through the API versions and create a swagger endpoint for each
                 foreach (var description in provider.ApiVersionDescriptions)
                 {
-                    logger.LogInformation("ConfigureSwagger() - API Version Info: {descriptionGroupName}", description.GroupName);
-                    options.SwaggerEndpoint($"/swagger/api-{description.GroupName}/swagger.json", $"API { description.GroupName.ToUpperInvariant() }");
+                    logger.LogInformation("Swagger API Version: {GroupName}", description.GroupName);
+                    options.SwaggerEndpoint($"/swagger/api-{description.GroupName}/swagger.json", $"API {description.GroupName.ToUpperInvariant()}");
                 }
 
                 // options.OAuthClientId("");
@@ -343,9 +336,35 @@ namespace Ezenity.API
 
                 options.InjectStylesheet("/assets/custom-ui.css");
 
-                options.RoutePrefix = String.Empty;
+                options.RoutePrefix = "swagger";
             });
 
+        }
+
+        private static void TryApplyMigrations(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
+        {
+            // Only run if explicitly enabled
+            var apply = Environment.GetEnvironmentVariable("EZENITY_APPLY_MIGRATIONS");
+            if (!string.Equals(apply, "true", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogInformation("DB migrations skipped (EZENITY_APPLY_MIGRATIONS != true).");
+                return;
+            }
+
+            try
+            {
+                using var scope = app.ApplicationServices.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+                logger.LogInformation("Applying DB migrations...");
+                db.Database.Migrate();
+                logger.LogInformation("DB migrations applied successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "DB migration failed.");
+                // In prod you probably want to fail hard so you know immediately
+                throw;
+            }
         }
     }
 }

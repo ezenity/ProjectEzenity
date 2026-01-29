@@ -1,0 +1,48 @@
+services:
+  ezenity_api:
+    build:
+      context: .
+      dockerfile: Ezenity.API/Dockerfile
+    image: ezenity/project-ezenity-api:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Put real connection strings in /srv/.../.env (see below)
+      - ConnectionStrings__DefaultConnection=${EZENITY_DB_CONN}
+      - Jwt__Secret=${JWT_SECRET}
+      - BaseUrl=https://api.ezenity.com
+    ports:
+      - "127.0.0.1:5001:8080"
+    networks:
+      - ezenity_net
+
+  ezenity_frontend:
+    build:
+      context: ./Ezenity_Frontend
+      dockerfile: Dockerfile
+    image: ezenity/ezenity-frontend:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      # only if your app reads runtime env; most Angular is build-time
+      - API_URL=https://api.ezenity.com
+    ports:
+      - "127.0.0.1:4200:80"
+    networks:
+      - ezenity_net
+
+  trina_frontend:
+    build:
+      context: ./Ezenity_Trina
+      dockerfile: Dockerfile
+    image: ezenity/changemakercreations-frontend:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      - API_URL=https://api.ezenity.com
+    ports:
+      - "127.0.0.1:4201:80"
+    networks:
+      - ezenity_net
+
+networks:
+  ezenity_net:
+    driver: bridge

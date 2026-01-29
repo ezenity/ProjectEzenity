@@ -1,0 +1,9 @@
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.angular
+**/.git
+**/.vs
+**/*.user
+**/*.suo
