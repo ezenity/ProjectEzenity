@@ -58,6 +58,23 @@ services:
     networks:
       - ezenity_net
 
+  ezenity_migrator:
+    build:
+      context: .
+      dockerfile: Ezenity.API/Dockerfile
+      target: migrator
+    image: ezenity/project-ezenity-migrator:${TAG:-latest}
+    restart: "no"
+    env_file:
+      - ./.env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__WebApiDatabase=${EZENITY_DB_CONN}
+      - AppSettings__Secret=${EZENITY_SECRET_KEY}
+    networks:
+      - ezenity_net
+
+
 networks:
   ezenity_net:
     driver: bridge
