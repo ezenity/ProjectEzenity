@@ -18,6 +18,10 @@
     <NoWarn>1701;1702;1584;1658;</NoWarn>
     <DefineConstants>RELEASE;PRODUCTION</DefineConstants>
   </PropertyGroup>
+	
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc" Version="6.4.1" />
