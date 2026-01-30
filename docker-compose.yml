@@ -44,6 +44,8 @@ services:
     # Program.cs writes to /var/log/ezenity_api_out.log
     volumes:
       - /srv/ezenity/logs/ezenity_api:/var/log
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # ----------------------------
   # Ezenity Frontend
@@ -101,6 +103,8 @@ services:
         /tools/dotnet-ef database update
         --project Ezenity.Infrastructure
         --startup-project Ezenity.API
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 networks:
   ezenity_net:
