@@ -8,6 +8,8 @@
   "license": "MIT",
   "scripts": {
     "build": "webpack --mode production",
+    "build:prod": "webpack --mode production",
+    "build:dev": "webpack --mode development",
     "start": "webpack-dev-server --open"
   },
   "dependencies": {
