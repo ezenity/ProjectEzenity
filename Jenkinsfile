@@ -43,20 +43,10 @@ pipeline {
 
           [ -f "ProjectEzenity.sln" ] || (echo "Missing ProjectEzenity.sln at repo root" && exit 1)
           [ -d "Ezenity.API" ] || (echo "Missing Ezenity.API folder" && exit 1)
+          [ -f "docker-compose.yml" ] || (echo "Missing docker-compose.yml at repo root" && exit 1)
 
-          if [ -d "Ezenity_Frontend" ]; then
-            echo "Found Ezenity_Frontend"
-          else
-            echo "WARNING: No Ezenity_Frontend folder found"
-          fi
-
-          if [ -d "Ezenity_Trina" ]; then
-            echo "Found Ezenity_Trina"
-          else
-            echo "WARNING: No Ezenity_Trina folder found"
-          fi
-
-          [ -f "docker-compose.yml" ] || echo "WARNING: docker-compose.yml not found at repo root (update Jenkinsfile if different)"
+          if [ -d "Ezenity_Frontend" ]; then echo "Found Ezenity_Frontend"; else echo "WARNING: No Ezenity_Frontend folder found"; fi
+          if [ -d "Ezenity_Trina" ]; then echo "Found Ezenity_Trina"; else echo "WARNING: No Ezenity_Trina folder found"; fi
         '''
       }
     }
@@ -108,9 +98,29 @@ pipeline {
 
           mkdir -p "${DEPLOY_DIR}"
 
-          # Deploy source to VPS folder BUT preserve existing .env
+          echo "Deploying repo contents to ${DEPLOY_DIR} (preserving .env)..."
+
+          # IMPORTANT:
+          # If /srv/ezenity/apps/project-ezenity is mounted read-only or has immutable attributes,
+          # rsync will fail with "Read-only file system (30)".
+          # We detect that and fail with a clear message, OR (optional) skip syncing and just deploy images.
+          #
+          # This implementation:
+          # - tries rsync
+          # - if it fails due to RO filesystem, it prints a clear error and stops
+
           if command -v rsync >/dev/null 2>&1; then
+            set +e
             rsync -av --delete --exclude '.env' ./ "${DEPLOY_DIR}/"
+            RSYNC_RC=$?
+            set -e
+
+            if [ $RSYNC_RC -ne 0 ]; then
+              echo "ERROR: rsync failed with exit code $RSYNC_RC"
+              echo "If you see 'Read-only file system (30)', your ${DEPLOY_DIR} is not writable."
+              echo "Fix by ensuring the filesystem/mount permissions allow writes, or change DEPLOY_DIR."
+              exit $RSYNC_RC
+            fi
           else
             # fallback without rsync: keep .env if it exists
             if [ -f "${DEPLOY_DIR}/.env" ]; then
@@ -132,12 +142,32 @@ pipeline {
             exit 1
           fi
 
+          echo "Validating required .env keys exist (not empty)..."
+          # Minimal required set - add more if you want the pipeline to enforce them
+          REQUIRED_KEYS=(
+            EZENITY_DB_CONN
+            EZENITY_SECRET_KEY
+          )
+
+          for key in "${REQUIRED_KEYS[@]}"; do
+            if ! grep -qE "^${key}=" "${DEPLOY_DIR}/.env"; then
+              echo "ERROR: Missing ${key} in ${DEPLOY_DIR}/.env"
+              exit 1
+            fi
+            val="$(grep -E "^${key}=" "${DEPLOY_DIR}/.env" | head -n1 | cut -d= -f2-)"
+            if [ -z "${val}" ]; then
+              echo "ERROR: ${key} is present but empty in ${DEPLOY_DIR}/.env"
+              exit 1
+            fi
+          done
+
           cd "${DEPLOY_DIR}"
           export TAG="${TAG}"
 
-          docker compose down
-          docker compose up -d --build
-          docker compose ps
+          echo "Stopping existing stack..."
+          docker compose --env-file "${DEPLOY_DIR}/.env" down || true
+
+          echo "NOTE: Not starting stack here yet. Migrations will run first in next stage."
         '''
       }
     }
@@ -151,20 +181,38 @@ pipeline {
           cd "${DEPLOY_DIR}"
           export TAG="${TAG}"
 
-          # Option A (recommended): run EF migrations in the API container image.
-          # This assumes your API image contains the EF tooling and can run "dotnet ef".
-          # If it doesn't, tell me and I'll adjust to a dedicated "migrator" image.
-          #
-          # Also assumes your docker-compose has a service named "api" (change if different).
-
-          if docker compose config --services | grep -q '^ezenity_migrator$'; then
-            echo "Running EF migrations using migrator image..."
-            docker compose --profile migrate run --rm ezenity_migrator
+          echo "Checking that migrator exists in compose (profile: migrate)..."
+          if docker compose --env-file "${DEPLOY_DIR}/.env" --profile migrate config --services | grep -qx "ezenity_migrator"; then
+            echo "Running EF migrations..."
+            docker compose --env-file "${DEPLOY_DIR}/.env" --profile migrate run --rm ezenity_migrator
+            echo "Migrations completed."
           else
-            echo "Skipping migrations: compose service 'ezenity_migrator' not found."
+            echo "ERROR: service 'ezenity_migrator' not found even with profile 'migrate'."
+            echo "Dumping services for debugging:"
+            docker compose --env-file "${DEPLOY_DIR}/.env" --profile migrate config --services || true
             exit 1
           fi
+        '''
+      }
+    }
 
+    stage('Start Stack (main only)') {
+      when { branch 'main' }
+      steps {
+        sh '''#!/usr/bin/env bash
+          set -euo pipefail
+
+          cd "${DEPLOY_DIR}"
+          export TAG="${TAG}"
+
+          echo "Starting stack..."
+          docker compose --env-file "${DEPLOY_DIR}/.env" up -d
+
+          echo "Current stack:"
+          docker compose --env-file "${DEPLOY_DIR}/.env" ps
+
+          echo "Recent API logs (last 80 lines):"
+          docker compose --env-file "${DEPLOY_DIR}/.env" logs --tail=80 ezenity_api || true
         '''
       }
     }
@@ -175,7 +223,7 @@ pipeline {
       sh '''#!/usr/bin/env bash
         set +e
         cd "${DEPLOY_DIR}" 2>/dev/null || true
-        docker compose ps 2>/dev/null || true
+        docker compose --env-file "${DEPLOY_DIR}/.env" ps 2>/dev/null || true
       '''
       echo 'Pipeline finished.'
     }
