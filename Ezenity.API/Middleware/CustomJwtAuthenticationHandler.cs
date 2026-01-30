@@ -45,7 +45,7 @@ namespace Ezenity.API.Middleware
             IAppSettings appSettings,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            TimeProvider clock,
+            ISystemClock clock,
             IDataContext context)
             : base(options, logger, encoder, clock)
         {
