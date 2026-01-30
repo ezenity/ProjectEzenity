@@ -87,7 +87,8 @@ pipeline {
           export TAG="${TAG}"
 
           # Build all services declared in docker-compose.yml (uses default .env if present in workspace; not required for build)
-          docker compose build --pull
+          #docker compose build --pull
+          docker compose --env-file "${DEPLOY_DIR}/.env" build --pull
         '''
       }
     }
