@@ -83,12 +83,19 @@ pipeline {
         sh '''#!/usr/bin/env bash
           set -euo pipefail
 
-          cd /srv/ezenity/apps/project-ezenity   # <-- FIX A (THIS IS THE KEY)
+          echo "WORKSPACE=$WORKSPACE"
+          cd "$WORKSPACE"
+
           export TAG="${TAG}"
 
-          # Build all services declared in docker-compose.yml (uses default .env if present in workspace; not required for build)
-          #docker compose build --pull
-          docker compose --env-file "${DEPLOY_DIR}/.env" build --pull
+          # Use server .env if it exists (main branch deploy server), otherwise build without it
+          if [ -f "${DEPLOY_DIR}/.env" ]; then
+            echo "Using env file: ${DEPLOY_DIR}/.env"
+            docker compose --env-file "${DEPLOY_DIR}/.env" build --pull
+          else
+            echo "WARNING: ${DEPLOY_DIR}/.env not found yet; building without it."
+            docker compose build --pull
+          fi
         '''
       }
     }
