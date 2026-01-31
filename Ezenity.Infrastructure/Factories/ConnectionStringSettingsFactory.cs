@@ -19,41 +19,47 @@ namespace Ezenity.Infrastructure.Factories
         /// <returns>An IConnectionStringSettings instance populated with the connection string details from the configuration.</returns>
         public static IConnectionStringSettings Create(IConfiguration configuration)
         {
-            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var isProduction = environment == "Production";
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 
-            string connectionString;
-
-            Console.WriteLine($"Factory Class | Environemnt: {environment}");
-            
-            Console.WriteLine($"Factory Class | Environment: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}");
+            Console.WriteLine($"Factory Class | Environment: {environment}");
             Console.WriteLine($"Factory Class | DB Name: {Environment.GetEnvironmentVariable("EZENITY_DATABASE_NAME")}");
             Console.WriteLine($"Factory Class | DB User: {Environment.GetEnvironmentVariable("EZENITY_DATABASE_USER")}");
             Console.WriteLine($"Factory Class | DB Password: {Environment.GetEnvironmentVariable("EZENITY_DATABASE_PASSWORD")}");
 
+            // 1) Prefer standard .NET connection strings (supports env: ConnectionStrings__WebApiDatabase)
+            var direct =
+                configuration.GetConnectionString("WebApiDatabase")
+                ?? configuration["ConnectionStrings:WebApiDatabase"];
 
-            if (isProduction)
+            if (!string.IsNullOrWhiteSpace(direct))
             {
-                // Construct the connection string using environment variables for Production
-                var dbName = Environment.GetEnvironmentVariable("EZENITY_DATABASE_NAME") ?? throw new InvalidOperationException("Database name must be provided in environment variables for Production.");
-                var dbUser = Environment.GetEnvironmentVariable("EZENITY_DATABASE_USER") ?? throw new InvalidOperationException("Database user must be provided in environment variables for Production.");
-                var dbPassword = Environment.GetEnvironmentVariable("EZENITY_DATABASE_PASSWORD") ?? throw new InvalidOperationException("Database password must be provided in environment variables for Production.");
-
-                connectionString = $"Server=localhost;Database={dbName};User={dbUser};Password={dbPassword};";
-            }
-            else
-            {
-                // Use the connection string from configuration settings for Development
-                connectionString = configuration.GetConnectionString("WebApiDatabase") ?? throw new InvalidOperationException("Connection string 'WebApiDatabase' must be defined in configuration for Development.");
+                Console.WriteLine("Factory Class | Using ConnectionStrings:WebApiDatabase");
+                return new ConnectionStringSettingsWrapper(new ConnectionStringSettings(direct));
             }
 
-            Console.WriteLine($"Factory Class | Environemnt: {connectionString}");
+            // 2) Fallback: build from your custom env vars (optional)
+            var dbName = Environment.GetEnvironmentVariable("EZENITY_DATABASE_NAME");
+            var dbUser = Environment.GetEnvironmentVariable("EZENITY_DATABASE_USER");
+            var dbPassword = Environment.GetEnvironmentVariable("EZENITY_DATABASE_PASSWORD");
 
-            // Create a new ConnectionStringSettings instance with the retrieved connection string
-            var connectionStringSettings = new ConnectionStringSettings(connectionString);
+            // We MUST NOT use localhost in containers unless DB runs in same container.
+            // If your DB runs on the host machine, use host.docker.internal (with extra_hosts mapping).
+            var dbHost = Environment.GetEnvironmentVariable("EZENITY_DATABASE_HOST") ?? "host.docker.internal";
+            var dbPort = Environment.GetEnvironmentVariable("EZENITY_DATABASE_PORT") ?? "3306";
 
-            // Wrap and return the ConnectionStringSettings instance
-            return new ConnectionStringSettingsWrapper(connectionStringSettings);
+            if (string.IsNullOrWhiteSpace(dbName) ||
+                string.IsNullOrWhiteSpace(dbUser) ||
+                string.IsNullOrWhiteSpace(dbPassword))
+            {
+                throw new InvalidOperationException(
+                    "Database connection is not configured. Set ConnectionStrings__WebApiDatabase (recommended) " +
+                    "or set EZENITY_DATABASE_NAME / EZENITY_DATABASE_USER / EZENITY_DATABASE_PASSWORD (fallback).");
+            }
+
+            Console.WriteLine($"Factory Class | Using built DB config (Host={dbHost}, Port={dbPort}, Db={dbName}, User={dbUser})");
+
+            var built = $"Server={dbHost};Port={dbPort};Database={dbName};User={dbUser};Password={dbPassword};";
+            return new ConnectionStringSettingsWrapper(new ConnectionStringSettings(built));
         }
     }
 }
