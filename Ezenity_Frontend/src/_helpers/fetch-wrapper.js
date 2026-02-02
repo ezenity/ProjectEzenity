@@ -60,7 +60,10 @@ function authHeader(url) {
 
 function handleResponse(response) {
     return response.text().then(text => {
-        const data = text && JSON.parse(text);
+        const contentType = response.headers.get("content-type") || "";
+        const isJson = contentType.includes("application/json") || contentType.includes("application/vnd.api+json");
+
+        const data = isJson && text ? JSON.parse(text) : text;
         
         if (!response.ok) {
             if ([401, 403].includes(response.status) && accountService.userValue) {
@@ -68,8 +71,12 @@ function handleResponse(response) {
                 accountService.logout();
             }
 
-            const error = (data && data.message) || response.statusText;
-            return Promise.reject(error);
+            //const error = (data && data.message) || response.statusText;
+            const msg =
+                (isJson && data && (data.message || data.error)) ||
+                response.statusText ||
+                (typeof data === "string" ? data : "Request failed");
+            return Promise.reject(msg);
         }
 
         return data;

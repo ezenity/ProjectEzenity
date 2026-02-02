@@ -14,29 +14,30 @@ services:
     env_file:
       - ./.env
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      ASPNETCORE_ENVIRONMENT: "Production"
 
       # IMPORTANT: must match your code's expected key:
       # connectionStringSettings.WebApiDatabase
-      - ConnectionStrings__WebApiDatabase=${EZENITY_DB_CONN}
+      #- ConnectionStrings__WebApiDatabase=${EZENITY_DB_CONN}
+      ConnectionStrings__WebApiDatabase: "Server=host.docker.internal;Port=3306;Database=${EZENITY_DATABASE_NAME};User=${EZENITY_DATABASE_USER};Password=${EZENITY_DATABASE_PASSWORD};"
 
       # IMPORTANT: your code binds AppSettings (AppSettingsFactory.Create)
-      - AppSettings__Secret=${EZENITY_SECRET_KEY}
-      - AppSettings__BaseUrl=${EZENITY_BASE_URL}
-      - AppSettings__RefreshTokenTTL=${EZENITY_REFRESH_TOKEN_TTL}
+      AppSettings__Secret: "${EZENITY_SECRET_KEY}"
+      AppSettings__BaseUrl: "${EZENITY_BASE_URL}"
+      AppSettings__RefreshTokenTTL: "${EZENITY_REFRESH_TOKEN_TTL}"
 
-      - AppSettings__SmtpUser=${EZENITY_SMTP_USER}
-      - AppSettings__SmtpPass=${EZENITY_SMTP_PASSWORD}
-      - AppSettings__SmtpHost=${EZENITY_SMTP_HOST}
-      - AppSettings__SmtpPort=${EZENITY_SMTP_PORT}
-      - AppSettings__SmtpEnabledSsl=${EZENITY_SMTP_ENABLE_SSL}
-      - AppSettings__EmailFrom=${EZENITY_EMAIL_FROM}
-      - AppSettings__EmailMessageIdDomain=${EZENITY_EMAIL_MESSAGE_ID_DOMAIN}
-      - AppSettings__EmailTemplateBasePath=${EZENITY_EMAIL_TEMPLATE_BASE_PATH}
+      AppSettings__SmtpUser: "${EZENITY_SMTP_USER}"
+      AppSettings__SmtpPass: "${EZENITY_SMTP_PASSWORD}"
+      AppSettings__SmtpHost: "${EZENITY_SMTP_HOST}"
+      AppSettings__SmtpPort: "${EZENITY_SMTP_PORT}"
+      AppSettings__SmtpEnabledSsl: "${EZENITY_SMTP_ENABLE_SSL}"
+      AppSettings__EmailFrom: "${EZENITY_EMAIL_FROM}"
+      AppSettings__EmailMessageIdDomain: "${EZENITY_EMAIL_MESSAGE_ID_DOMAIN}"
+      AppSettings__EmailTemplateBasePath: "${EZENITY_EMAIL_TEMPLATE_BASE_PATH}"
 
       # Your Startup.cs production CORS reads this env var directly:
       # Configuration["EZENITY_ALLOWED_ORIGINS"]
-      - EZENITY_ALLOWED_ORIGINS=${EZENITY_ALLOWED_ORIGINS}
+      EZENITY_ALLOWED_ORIGINS: "${EZENITY_ALLOWED_ORIGINS}"
     ports:
       - "127.0.0.1:5001:8080"
     networks:
@@ -88,9 +89,10 @@ services:
     env_file:
       - ./.env
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__WebApiDatabase=${EZENITY_DB_CONN}
-      - AppSettings__Secret=${EZENITY_SECRET_KEY}
+      ASPNETCORE_ENVIRONMENT: "Production"
+      #ConnectionStrings__WebApiDatabase: "${EZENITY_DB_CONN}"
+      ConnectionStrings__WebApiDatabase: "Server=host.docker.internal;Port=3306;Database=${EZENITY_DATABASE_NAME};User=${EZENITY_DATABASE_USER};Password=${EZENITY_DATABASE_PASSWORD};"
+      AppSettings__Secret: "${EZENITY_SECRET_KEY}"
     networks:
       - ezenity_net
     # Don't start by default. Only when explicitly invoked.
