@@ -38,6 +38,10 @@ services:
       # Your Startup.cs production CORS reads this env var directly:
       # Configuration["EZENITY_ALLOWED_ORIGINS"]
       EZENITY_ALLOWED_ORIGINS: "${EZENITY_ALLOWED_ORIGINS}"
+
+      # Debugging
+      Logging__LogLevel__Microsoft.Hosting.Lifetime: "Information"
+      Logging__LogLevel__Microsoft: "Information"
     ports:
       - "127.0.0.1:5001:8080"
     networks:
