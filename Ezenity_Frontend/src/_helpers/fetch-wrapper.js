@@ -73,7 +73,7 @@ function handleResponse(response) {
 
             //const error = (data && data.message) || response.statusText;
             const msg =
-                (isJson && data && (data.message || data.error)) ||
+                (isJson && data && (data.message || data.error || data.title)) ||
                 response.statusText ||
                 (typeof data === "string" ? data : "Request failed");
             return Promise.reject(msg);
