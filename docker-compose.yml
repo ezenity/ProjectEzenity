@@ -42,6 +42,7 @@ services:
       # Debugging
       Logging__LogLevel__Microsoft.Hosting.Lifetime: "Information"
       Logging__LogLevel__Microsoft: "Information"
+      ezenity_log_dir: /var/log
     ports:
       - "127.0.0.1:5001:8080"
     networks:
