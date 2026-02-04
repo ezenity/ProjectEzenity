@@ -4,7 +4,8 @@ import config from "config";
 import { fetchWrapper, history } from "@/_helpers";
 
 const userSubject = new BehaviorSubject(null);
-const baseUrl = `${config.apiUrl}/Accounts`;
+const apiRoot = config.apiUrl.replace(/\/+$/, ""); // remove trailing slashes
+const baseUrl = `${apiRoot}/Accounts`;
 
 export const accountService = {
   login,
