@@ -62,6 +62,7 @@ namespace Ezenity.API
             }
             catch (Exception ex)
             {
+                Console.Error.WriteLine(ex.ToString());
                 // Log fatal errors and terminate the application.
                 Log.Fatal(ex, "Host terminated unexpectedly");
             }
