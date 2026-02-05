@@ -118,18 +118,28 @@ namespace Ezenity.API
                 options.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status503ServiceUnavailable));
 
                 // Remove all default formatters and add only the JSON:API formatter
-                options.OutputFormatters.Clear();
-                options.OutputFormatters.Add(new SystemTextJsonOutputFormatter(new System.Text.Json.JsonSerializerOptions
-                {
-                    // Configure System.Text.Json settings
-                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
-                    WriteIndented = true,
-                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-                }));
+                // IMPORTANT (NET 8):
+                // We do NOT clear OutputFormatters here anymore, because custom SystemTextJsonOutputFormatter construction
+                // can throw due to TypeInfoResolver requirements. We keep the built-in JSON formatter and configure it via AddJsonOptions.
+                // options.OutputFormatters.Clear();
+                //options.OutputFormatters.Add(new SystemTextJsonOutputFormatter(new System.Text.Json.JsonSerializerOptions
+                //{
+                //    // Configure System.Text.Json settings
+                //    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+                //    WriteIndented = true,
+                //    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                //}));
 
                 // Default the supported media type as 'application/vnd.api+json'
                 options.FormatterMappings.SetMediaTypeMappingForFormat("json", "application/vnd.api+json");
 
+            })
+            .AddJsonOptions(options =>
+            {
+                // Configure System.Text.Json settings
+                options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.WriteIndented = true;
+                options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
             });
 
             // Add minimal MVC services required for Razor views
