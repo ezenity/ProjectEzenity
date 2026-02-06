@@ -71,7 +71,7 @@ namespace Ezenity.API.API.Controllers
         /// <response code="404">Returns a not found response if the account does not exist.</response>
         /// <response code="500">Returns if an internal server error occurs.</response>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
-        [HttpGet("{id}", Name = "get-account-by-id")]
+        [HttpGet("{id:int}", Name = "get-account-by-id")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<AccountResponse>), StatusCodes.Status401Unauthorized)]
@@ -367,7 +367,7 @@ namespace Ezenity.API.API.Controllers
         /// <exception cref="AuthorizationException">Thrown when the caller lacks necessary permissions.</exception>
         /// <exception cref="DeletionFailedException">Thrown if the deletion fails for some specific reason.</exception>
         /// <exception cref="Exception">Thrown when an unexpected error occurs.</exception>
-        [HttpDelete("{id}", Name = "delete-account")]
+        [HttpDelete("{id:int}", Name = "delete-account")]
         [AuthorizeV2("Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status400BadRequest)]
@@ -375,9 +375,9 @@ namespace Ezenity.API.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status500InternalServerError)]
         [ProducesDefaultResponseType]
-        public override async Task<ActionResult<ApiResponse<DeleteResponse>>> DeleteAsync(int DeleteAccountId)
+        public override async Task<ActionResult<ApiResponse<DeleteResponse>>> DeleteAsync(int id)
         {
-            var deletedAccountData = await _accountService.DeleteAsync(DeleteAccountId);
+            var deletedAccountData = await _accountService.DeleteAsync(id);
 
             return Ok(new ApiResponse<DeleteResponse>
             {
