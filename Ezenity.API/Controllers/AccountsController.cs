@@ -529,7 +529,7 @@ namespace Ezenity.API.API.Controllers
             // Retrieve the account loaded by the LoadAccountFilter
             var loadedAccount = Entity;
 
-            if(loadedAccount != null || loadedAccount.OwnsToken(token))
+            if(loadedAccount == null || !loadedAccount.OwnsToken(token))
                 return Unauthorized(new { message = "Unauthorized" });
 
             await _accountService.RevokeTokenAsync(token, ipAddress());
