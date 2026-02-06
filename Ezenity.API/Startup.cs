@@ -74,8 +74,24 @@ namespace Ezenity.API
             // Configure the database context
             var connectionString = connectionStringSettings.WebApiDatabase;
             Console.WriteLine($"Database Connection String: {connectionString}");
-            services.AddDbContext<DataContext>(options => options.UseMySql(connectionString,ServerVersion.AutoDetect(connectionString)));
+            services.AddDbContext<DataContext>(options =>
+                options.UseMySql(connectionString,ServerVersion.AutoDetect(connectionString)));
             // services.AddAWSSecretsManager(Configuration["AWS:SecretsManager:SecretName"]);
+
+            // NOTE: .NET 8 requires TypeInfoResolver when JsonSerializerOptions becomes read-only.
+            // Since you're creating JsonSerializerOptions manually for SystemTextJsonOutputFormatter,
+            // you MUST set TypeInfoResolver to avoid:
+            // "JsonSerializerOptions instance must specify a TypeInfoResolver setting before being marked as read-only."
+            var jsonFormatterOptions = new JsonSerializerOptions
+            {
+                // Configure System.Text.Json settings
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+
+                // CRITICAL for .NET 8 when the options are "frozen" / made read-only internally:
+                TypeInfoResolver = new DefaultJsonTypeInfoResolver()
+            };
 
             services.AddControllers(options =>
             {
@@ -121,7 +137,7 @@ namespace Ezenity.API
                 // IMPORTANT (NET 8):
                 // We do NOT clear OutputFormatters here anymore, because custom SystemTextJsonOutputFormatter construction
                 // can throw due to TypeInfoResolver requirements. We keep the built-in JSON formatter and configure it via AddJsonOptions.
-                // options.OutputFormatters.Clear();
+                options.OutputFormatters.Clear();
                 //options.OutputFormatters.Add(new SystemTextJsonOutputFormatter(new System.Text.Json.JsonSerializerOptions
                 //{
                 //    // Configure System.Text.Json settings
@@ -129,18 +145,19 @@ namespace Ezenity.API
                 //    WriteIndented = true,
                 //    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
                 //}));
+                options.OutputFormatters.Add(new SystemTextJsonOutputFormatter(jsonFormatterOptions));
 
                 // Default the supported media type as 'application/vnd.api+json'
                 options.FormatterMappings.SetMediaTypeMappingForFormat("json", "application/vnd.api+json");
 
-            })
-            .AddJsonOptions(options =>
-            {
-                // Configure System.Text.Json settings
-                options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-                options.JsonSerializerOptions.WriteIndented = true;
-                options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
             });
+            //.AddJsonOptions(options =>
+            //{
+            //    // Configure System.Text.Json settings
+            //    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+            //    options.JsonSerializerOptions.WriteIndented = true;
+            //    options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+            //});
 
             // Add minimal MVC services required for Razor views
             services.AddRazorPages().AddRazorRuntimeCompilation(options =>
@@ -197,9 +214,12 @@ namespace Ezenity.API
 
             services.Configure<JsonOptions>(options =>
             {
-                options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                 options.JsonSerializerOptions.WriteIndented = true;
-                options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+
+                // Keep it consistent with the formatter requirement in .NET 8
+                options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
             });
 
             // Configure SwaggerGen
@@ -221,10 +241,13 @@ namespace Ezenity.API
                     options.SubstituteApiVersionInUrl = true;
                 });
 
+                // Helps Swashbuckle discover endpoints in many setups
+                services.AddEndpointsApiExplorer();
+
                 services.AddSwaggerGen();
 
                 // Required if you're using Newtonsoft package
-                // services.AddSwaggerGenNewtonsoftSupport(); 
+                // services.AddSwaggerGenNewtonsoftSupport();
 
                 services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
@@ -306,14 +329,14 @@ namespace Ezenity.API
 
             app.UseMiddleware<JwtMiddleware>();
 
+            // Swagger (can later limit to non-prod)
+            ConfigureSwagger(app, provider, logger);
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
                 endpoints.MapHealthChecks("/health");
             });
-
-            // Swagger (you can later limit to non-prod if you want)
-            ConfigureSwagger(app, provider, logger);
 
             // Optional migrations on startup (controlled)
             TryApplyMigrations(app, env, logger);
@@ -353,7 +376,6 @@ namespace Ezenity.API
 
                 options.RoutePrefix = "swagger";
             });
-
         }
 
         private static void TryApplyMigrations(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
