@@ -1,5 +1,6 @@
 ﻿//using Asp.Versioning;
 //using Asp.Versioning.ApiExplorer;
+using Asp.Versioning.ApiExplorer;
 using AutoMapper;
 using AutoMapper.Internal;
 using Ezenity.API.Configurations;
