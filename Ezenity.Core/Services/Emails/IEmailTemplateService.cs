@@ -2,7 +2,7 @@
 using Ezenity.DTOs.Models;
 using Ezenity.DTOs.Models.EmailTemplates;
 
-namespace Ezenity.Core.Services.Common
+namespace Ezenity.Core.Services.Emails
 {
     /// <summary>
     /// Service for managing email templates.
