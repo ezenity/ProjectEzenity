@@ -179,8 +179,13 @@ namespace Ezenity.Infrastructure.Services.Emails
                         try
                         {
                             // await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, SecureSocketOptions.SslOnConnect);
-                            await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, SecureSocketOptions.StartTlsWhenAvailable);
+                            //await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, SecureSocketOptions.StartTlsWhenAvailable);
                             //await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort);
+                            await smtpClient.ConnectAsync(
+                                _appSettings.SmtpHost,
+                                _appSettings.SmtpPort,
+                                SecureSocketOptions.StartTls
+                            );
 
                             Console.WriteLine("After smtpClient.ConnectAsync()");
                             Console.WriteLine("SMTP Host: {0}", _appSettings.SmtpHost);
