@@ -1,10 +1,12 @@
-﻿using Asp.Versioning.ApiExplorer;
+﻿//using Asp.Versioning.ApiExplorer;
 using Ezenity.API.Filters;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.AspNetCore
+using Swashbuckle.AspNetCore.SwaggerGen
+using Swashbuckle.AspNetCore.SwaggerUI
 using System;
 using System.IO;
 using System.Linq;

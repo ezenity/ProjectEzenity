@@ -1,5 +1,5 @@
-﻿using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
+﻿//using Asp.Versioning;
+//using Asp.Versioning.ApiExplorer;
 using AutoMapper;
 using AutoMapper.Internal;
 using Ezenity.API.Configurations;
@@ -30,7 +30,9 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.AspNetCore
+using Swashbuckle.AspNetCore.SwaggerGen
+using Swashbuckle.AspNetCore.SwaggerUI
 using System;
 using System.Reflection;
 using System.Linq;
