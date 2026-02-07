@@ -1,6 +1,6 @@
 ﻿using Ezenity.Core.Entities.Emails;
 
-namespace Ezenity.Core.Services.Common
+namespace Ezenity.Core.Services.Emails
 {
     /// <summary>
     /// Service for sending emails.

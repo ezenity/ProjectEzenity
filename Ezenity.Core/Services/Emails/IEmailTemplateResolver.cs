@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Ezenity.Core.Interfaces
+namespace Ezenity.Core.Services.Emails
 {
   public interface IEmailTemplateResolver
   {
