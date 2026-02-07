@@ -368,7 +368,7 @@ namespace Ezenity.API
             {
                 // Loop through the API versions and create a swagger endpoint for each
                 //foreach (var description in provider.ApiVersionDescriptions)
-                foreach (var desc in app
+                foreach (var description in app
                                         .ApplicationServices
                                         .GetRequiredService<IApiVersionDescriptionProvider>()
                                         .ApiVersionDescriptions
