@@ -178,14 +178,16 @@ namespace Ezenity.API
             // services.AddAWSSecretsManager(Configuration["AWS:SecretsManager:SecretName"]);
 
             // Configure dependecy injection for application services
-            services.AddScoped<IAccountService, AccountService>();
-            services.AddScoped<IEmailService, EmailService>();
-            services.AddScoped<IEmailTemplateService, EmailTemplateService>();
-            services.AddScoped<ISectionService, SectionService>();
             services.AddScoped<IPasswordService, PasswordService>();
-            services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IDataContext, DataContext>();
             services.AddScoped<ITokenHelper, TokenHelper>();
+
+            services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ISectionService, SectionService>();
+
+            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 
             // Filter DI
             services.AddScoped<LoadAccountFilter>();
