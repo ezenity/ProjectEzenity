@@ -2,6 +2,7 @@
 using Ezenity.Core.Interfaces;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,7 +31,9 @@ namespace Ezenity.Infrastructure.Helpers
       }
 
       var templatePath = Path.Combine(basePath, _appSettings.EmailTemplateBasePath, $"{templateName}.cshtml");
-      Console.WriteLine($"Computed Path: {templatePath}");
+
+      //Console.WriteLine($"Computed Path: {templatePath}");
+
       return templatePath;
     }
   }
