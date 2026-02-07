@@ -223,7 +223,8 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
             var viewPath = _emailTemplateResolver.GetTemplatePath(templateName);
 
             // Render the view to a string
-            string renderedTemplate = await _razorRenderer.RenderViewToStringAsync(templateName, model);
+            //string renderedTemplate = await _razorRenderer.RenderViewToStringAsync(templateName, model);
+            string renderedTemplate = await _razorRenderer.RenderViewToStringAsync(viewPath, model);
 
             return renderedTemplate;
         }

@@ -94,8 +94,15 @@ namespace Ezenity.Infrastructure.Services.Emails
             {
                 // Fallback: use TemplateBody and replace placeholders manually (if you store it)
                 // If your EmailTemplate entity doesn't have TemplateBody anymore, adjust/remove this.
-                var raw = emailTemplate.TemplateBody ?? string.Empty;
-                bodyHtml = ReplacePlaceholders(raw, emailTemplate.PlaceholderValues);
+                //var raw = emailTemplate.TemplateBody ?? string.Empty;
+                //bodyHtml = ReplacePlaceholders(raw, emailTemplate.PlaceholderValues);
+
+                // If ContentViewPath is missing, this template is misconfigured in DB.
+                // Fail fast instead of silently sending empty emails.
+                throw new AppException(
+                    $"Email template '{message.TemplateName}' is missing ContentViewPath. " +
+                    "Update the template record to point to a .cshtml view."
+                );
             }
 
             // Subject from template wins (unless you intentionally want message.Subject override)
