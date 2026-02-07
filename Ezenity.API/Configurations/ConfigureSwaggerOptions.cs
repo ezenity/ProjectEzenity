@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning.ApiExplorer;
+using Ezenity.API.Filters;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
