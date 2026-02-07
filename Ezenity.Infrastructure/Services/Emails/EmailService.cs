@@ -240,11 +240,17 @@ namespace Ezenity.Infrastructure.Services.Emails
                         }
                         else
                         {
-                            emailMessage.From.Add(new MailboxAddress(message.From, message.From));
+                            //emailMessage.From.Add(new MailboxAddress(message.From, message.From));
+                            emailMessage.From.Add(
+                                MailboxAddress.Parse(_appSettings.SmtpFrom)
+                            );
                             Console.WriteLine("After From.Add() {0}", emailMessage.From.ToString() );
                             Console.WriteLine("PROD");
                         }
                         emailMessage.To.Add(new MailboxAddress(message.To, message.To));
+
+                        //emailMessage.ReplyTo.Add(MailboxAddress.Parse(message.From));
+
                         Console.WriteLine("After To.Add() {0}", emailMessage.To.ToString() );
                         emailMessage.Subject = message.Subject;
                         Console.WriteLine("After Subject {0}", emailMessage.Subject);
