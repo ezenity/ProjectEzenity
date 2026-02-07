@@ -1,4 +1,5 @@
 ﻿using Ezenity.Core.Services.Emails;
+using Ezenity.Core.Interfaces;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
