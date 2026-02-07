@@ -10,6 +10,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using Ezenity.Infrastructure.Helpers;
 using Ezenity.Core.Services.Common;
+using Ezenity.Core.Services.Emails;
 using Ezenity.Infrastructure.Services.Accounts;
 using Ezenity.DTOs.Models.Accounts;
 using Ezenity.Core.Entities.Accounts;
