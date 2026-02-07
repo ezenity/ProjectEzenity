@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Ezenity.Core.Entities.EmailTemplates;
+using Ezenity.Core.Services.Emails;
 using Ezenity.DTOs.Models.EmailTemplates;
 using Ezenity.DTOs.Models;
 using Ezenity.Core.Services.Common;
