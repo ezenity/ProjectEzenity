@@ -98,7 +98,8 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
             if (emailTemplate == null)
                 throw new ResourceNotFoundException($"Email Template ID, {id}, was not found.");
 
-            return _mapper.Map<EmailTemplateResponse>(emailTemplate);
+            //return _mapper.Map<EmailTemplateResponse>(emailTemplate);
+            return emailTemplate;
         }
 
         /// <summary>
