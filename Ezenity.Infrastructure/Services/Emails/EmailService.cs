@@ -179,8 +179,8 @@ namespace Ezenity.Infrastructure.Services.Emails
                         try
                         {
                             // await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, SecureSocketOptions.SslOnConnect);
-                            // await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, SecureSocketOptions.StartTlsWhenAvailable);
-                            await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort);
+                            await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, SecureSocketOptions.StartTlsWhenAvailable);
+                            //await smtpClient.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort);
 
                             Console.WriteLine("After smtpClient.ConnectAsync()");
                             Console.WriteLine("SMTP Host: {0}", _appSettings.SmtpHost);
@@ -205,10 +205,10 @@ namespace Ezenity.Infrastructure.Services.Emails
                         {
                             /// https://support.google.com/mail/?p=InvalidSecondFactor s22-20020a814516000000b00609f87d6d1esm974290ywa.48 - gsmtp
                             Console.WriteLine("Before smtpClient.AuthenticateAsync()");
-                            Console.WriteLine("SMTP User: {0} \n SMTP PW: {1}", _appSettings.SmtpUser, _appSettings.SmtpPass);
+                            //Console.WriteLine("SMTP User: {0} \n SMTP PW: {1}", _appSettings.SmtpUser, _appSettings.SmtpPass);
                             await smtpClient.AuthenticateAsync(_appSettings.SmtpUser, _appSettings.SmtpPass);
                             Console.WriteLine("After smtpClient.AuthenticateAsync()");
-                            Console.WriteLine("SMTP User: {0} \n SMTP PW: {1}", _appSettings.SmtpUser, _appSettings.SmtpPass);
+                            //Console.WriteLine("SMTP User: {0} \n SMTP PW: {1}", _appSettings.SmtpUser, _appSettings.SmtpPass);
 
                         } catch (Core.Helpers.Exceptions.AuthenticationException ex)
                         {
