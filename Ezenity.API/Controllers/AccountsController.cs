@@ -22,8 +22,8 @@ namespace Ezenity.API.API.Controllers
     /// Handles HTTP requests and responses related to Account entities.
     /// </summary>
     [ApiController]
-    /*[Route("api/v{version:apiVersion}/accounts")]*/
-    [Route("api/accounts", Name = "api/accounts")]
+    [Route("api/v{version:apiVersion}/accounts")]
+    //[Route("api/accounts", Name = "api/accounts")]
     [ApiVersion("1.0")]
     [Produces("application/vnd.api+json")]
     public class AccountsController : BaseController<Account, AccountResponse, CreateAccountRequest, UpdateAccountRequest, DeleteResponse>

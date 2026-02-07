@@ -357,15 +357,25 @@ namespace Ezenity.API
         private static void ConfigureSwagger(IApplicationBuilder app, IApiVersionDescriptionProvider provider, ILogger<Startup> logger)
         {
             // Add Swagger and Swagger UI here using the provided IApiVersionDescrptionProvider
-            app.UseSwagger();
+            //app.UseSwagger();
+            app.UseSwagger(c =>
+            {
+                // This makes swagger.json live under /api/swagger/{documentName}/swagger.json
+                c.RouteTemplate = "api/swagger/{documentName}/swagger.json";
+            });
 
             app.UseSwaggerUI(options =>
             {
                 // Loop through the API versions and create a swagger endpoint for each
-                foreach (var description in provider.ApiVersionDescriptions)
+                //foreach (var description in provider.ApiVersionDescriptions)
+                foreach (var desc in app
+                                        .ApplicationServices
+                                        .GetRequiredService<IApiVersionDescriptionProvider>()
+                                        .ApiVersionDescriptions
+                        )
                 {
-                    logger.LogInformation("Swagger API Version: {GroupName}", description.GroupName);
-                    options.SwaggerEndpoint($"/swagger/api-{description.GroupName}/swagger.json", $"API {description.GroupName.ToUpperInvariant()}");
+                    //logger.LogInformation("Swagger API Version: {GroupName}", description.GroupName);
+                    options.SwaggerEndpoint($"/api/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
                 }
 
                 // options.OAuthClientId("");

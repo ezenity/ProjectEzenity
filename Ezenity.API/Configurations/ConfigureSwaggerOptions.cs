@@ -46,7 +46,8 @@ namespace Ezenity.API.Configurations
                 _logger.LogInformation("CustomSwaggerOptions() | ForEach - Description Api Version: {descriptionGroupName}", description.GroupName);
 
                 options.SwaggerDoc(
-                    $"api-{description.GroupName}",
+                    //$"api-{description.GroupName}",
+                    description.GroupName, // doc name is "v1", "v2", etc.
                     new OpenApiInfo
                     {
                         Title = $"Ezenity API {description.ApiVersion}",
@@ -69,8 +70,17 @@ namespace Ezenity.API.Configurations
 
             options.DocInclusionPredicate((documentName, apiDescription) =>
             {
-                return apiDescription.TryGetMethodInfo(out MethodInfo methodInfo) &&
-                        methodInfo.DeclaringType.GetCustomAttributes(true).OfType<ApiVersionAttribute>().SelectMany(attribute => attribute.Versions).Any(v => $"api-v{v}" == documentName);
+                //return apiDescription
+                //            .TryGetMethodInfo(out MethodInfo methodInfo) &&
+                //       methodInfo
+                //            .DeclaringType
+                //            .GetCustomAttributes(true)
+                //            .OfType<ApiVersionAttribute>()
+                //            .SelectMany(attribute => attribute.Versions)
+                //            .Any(v => $"api-v{v}" == documentName);
+
+                // With ApiExplorer GroupNameFormat = "'v'VVV", apiDescription.GroupName is "v1", "v2", etc.
+                return string.Equals(apiDescription.GroupName, documentName, StringComparison.OrdinalIgnoreCase);
 
             });
 

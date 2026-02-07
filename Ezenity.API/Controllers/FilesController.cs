@@ -1,14 +1,17 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using Asp.Versioning;
 using System;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace Ezenity.API.Controllers
 {
-    [Route("api/files")]
     [ApiController]
+    [Route("api/v{version:apiVersion}/files")]
+    [ApiVersion("1.0")]
+    [Produces("application/vnd.api+json", "application/json", "application/xml")]
     public class FilesController : ControllerBase
     {
         private readonly FileExtensionContentTypeProvider _fileExtensionContentTypeProvider;
