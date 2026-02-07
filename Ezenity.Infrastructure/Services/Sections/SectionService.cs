@@ -3,6 +3,7 @@ using Ezenity.Core.Entities.Sections;
 using Ezenity.Core.Helpers.Exceptions;
 using Ezenity.Core.Interfaces;
 using Ezenity.Core.Services.Common;
+using Ezenity.Core.Services.Emails;
 using Ezenity.DTOs.Models;
 using Ezenity.DTOs.Models.Pages;
 using Ezenity.DTOs.Models.Sections;
