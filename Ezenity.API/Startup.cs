@@ -7,6 +7,7 @@ using Ezenity.API.Filters;
 using Ezenity.API.Middleware;
 using Ezenity.Core.Interfaces;
 using Ezenity.Core.Services.Common;
+using Ezenity.Core.Services.Emails;
 using Ezenity.Infrastructure.Data;
 using Ezenity.Infrastructure.Factories;
 using Ezenity.Infrastructure.Helpers;
