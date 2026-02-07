@@ -1,4 +1,5 @@
 ﻿using Ezenity.Core.Entities.Emails;
+using System.Threading.Tasks;
 
 namespace Ezenity.Core.Services.Emails
 {
