@@ -7,6 +7,9 @@ import { isGateUnlocked } from "@/_helpers/gate";
  * --------------
  * Client-side gating for routes you want hidden behind the skull pattern.
  * If gate isn't unlocked -> redirect to "/".
+ *
+ * IMPORTANT:
+ * This is only UX gating — not real security.
  */
 function GateGuardRoute({ component: Component, ...rest }) {
     return (
