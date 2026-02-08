@@ -229,10 +229,9 @@ namespace Ezenity.Infrastructure.Services.Emails
                     SecureSocketOptions.StartTlsWhenAvailable;
 
                 // CONNECT
-                //await client.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, socketOptions);
-                await client.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort,
-                                MailKit.Security.SecureSocketOptions.SslOnConnect);
-
+                await client.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, socketOptions);
+                //await client.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort,
+                //                MailKit.Security.SecureSocketOptions.SslOnConnect);
 
                 // optional but good:
                 client.AuthenticationMechanisms.Remove("XOAUTH2");
@@ -244,17 +243,21 @@ namespace Ezenity.Infrastructure.Services.Emails
                 //var user = (_appSettings.SmtpUser ?? "").Trim();
                 //var pass = (_appSettings.SmtpPass ?? "").Trim();
 
-                var user = (_appSettings.SmtpUser ?? "").TrimEnd('\r', '\n');
-                var pass = (_appSettings.SmtpPass ?? "").TrimEnd('\r', '\n');
+                //var user = (_appSettings.SmtpUser ?? "").TrimEnd('\r', '\n');
+                //var pass = (_appSettings.SmtpPass ?? "").TrimEnd('\r', '\n');
+
+                var host = _appSettings.SmtpHost;
+                var port = _appSettings.SmtpPort;
+                var user = _appSettings.SmtpUser;
+                var pass = _appSettings.SmtpPass;
 
                 _logger.LogInformation(
-                  "SMTP config: host={Host}, port={Port}, ssl={Ssl}, user='{UserMasked}', userLen={UserLen}, passLen={PassLen}",
-                  _appSettings.SmtpHost,
-                  _appSettings.SmtpPort,
-                  _appSettings.SmtpEnableSsl,
-                  string.IsNullOrWhiteSpace(user) ? "(empty)" : $"{user[..Math.Min(2, user.Length)]}***{user[^Math.Min(3, user.Length)..]}",
-                  user?.Length ?? 0,
-                  pass?.Length ?? 0
+                  "SMTP config: Host={Host}, Port={Port}, User='{User}', PassLength={Len}, Ssl={Ssl}",
+                  host,
+                  port,
+                  user,
+                  pass?.Length ?? 0,
+                  _appSettings.SmtpEnabledSsl
                 );
 
                 // Optional: if your secret ended up stored with quotes (common in env vars / CI)

@@ -54,7 +54,7 @@ namespace Ezenity.Core.Interfaces
         /// <summary>
         /// Gets a value indicating whether SSL is enabled for SMTP communications.
         /// </summary>
-        bool SmtpEnableSsl { get; }
+        bool SmtpEnabledSsl { get; }
 
         /// <summary>
         /// Gets the access token used for some third-party services or internal processes.

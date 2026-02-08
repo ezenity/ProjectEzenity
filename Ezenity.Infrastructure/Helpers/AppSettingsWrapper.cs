@@ -63,7 +63,7 @@ namespace Ezenity.Infrastructure.Helpers
         /// <summary>
         /// Gets a value indicating whether SSL is enabled for SMTP communications.
         /// </summary>
-        public bool SmtpEnableSsl => _appSettings.SmtpEnableSsl;
+        public bool SmtpEnabledSsl => _appSettings.SmtpEnabledSsl;
 
         /// <summary>
         /// Gets the access token used for some third-party services or internal processes.

@@ -30,7 +30,7 @@ services:
       AppSettings__SmtpPass: "${EZENITY_SMTP_PASSWORD}"
       AppSettings__SmtpHost: "${EZENITY_SMTP_HOST}"
       AppSettings__SmtpPort: "${EZENITY_SMTP_PORT}"
-      AppSettings__SmtpEnabledSsl: "${EZENITY_SMTP_ENABLE_SSL}"
+      AppSettings__SmtpEnabledSsl: "${EZENITY_SMTP_ENABLED_SSL}"
       AppSettings__EmailFrom: "${EZENITY_EMAIL_FROM}"
       AppSettings__EmailMessageIdDomain: "${EZENITY_EMAIL_MESSAGE_ID_DOMAIN}"
       AppSettings__EmailTemplateBasePath: "${EZENITY_EMAIL_TEMPLATE_BASE_PATH}"

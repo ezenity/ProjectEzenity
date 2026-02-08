@@ -32,7 +32,7 @@ namespace Ezenity.Infrastructure.Helpers
             SmtpPort = smtpPort;
             SmtpUser = smtpUser;
             SmtpPass = smtpPass;
-            SmtpEnableSsl = smtpEnableSsl;
+            SmtpEnabledSsl = smtpEnabledSsl;
             AccessToken = accessToken;
             EmailMessageIdDomain = emailMessageIdDomain;
             EmailTemplateBasePath = emailTemplateBasePath;
@@ -81,7 +81,7 @@ namespace Ezenity.Infrastructure.Helpers
         /// <summary>
         /// Gets a value indicating whether SSL is enabled for SMTP communications.
         /// </summary>
-        public bool SmtpEnableSsl { get; }
+        public bool SmtpEnabledSsl { get; }
 
         /// <summary>
         /// Gets the access token used for some third-party services or internal processes.
