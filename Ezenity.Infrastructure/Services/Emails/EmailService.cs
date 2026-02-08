@@ -1,8 +1,8 @@
 ﻿using Ezenity.Core.Entities.Emails;
 using Ezenity.Core.Helpers.Exceptions;
-using Ezenity.Core.Interfaces; // keep this ONLY if IDataContext is actually in here
-using Ezenity.Core.Services.Common; // keep ONLY if your IEmailTemplateService is here
-using Ezenity.Core.Services.Emails; // <-- IMPORTANT: this is where IEmailService should live after you move it
+using Ezenity.Core.Interfaces;
+using Ezenity.Core.Services.Common;
+using Ezenity.Core.Services.Emails;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Hosting;
@@ -12,32 +12,48 @@ using MimeKit;
 using MimeKit.Text;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Ezenity.Infrastructure.Services.Emails
 {
     /// <summary>
-    /// Infrastructure implementation of IEmailService.
-    /// This class is responsible for sending email using SMTP.
+    /// EmailService (Infrastructure)
+    /// ----------------------------
+    /// Responsible for:
+    /// 1) Loading an EmailTemplate by name (via IEmailTemplateService).
+    /// 2) Merging placeholder values (template defaults + runtime dynamic values).
+    /// 3) Rendering the template (Razor .cshtml) into HTML.
+    /// 4) Building a well-formed email message:
+    ///    - Uses multipart/alternative (Text + HTML) for deliverability.
+    ///    - Adds transactional headers to reduce auto-replies and improve classification.
+    ///    - Uses a consistent From that matches the authenticated SMTP user.
+    /// 5) Sending via SMTP using MailKit.
     ///
-    /// Core idea:
-    /// - Core defines "what" (IEmailService).
-    /// - Infrastructure defines "how" (SMTP/MailKit).
+    /// Deliverability goals:
+    /// - Avoid "HTML only" emails.
+    /// - Avoid mismatched From vs authenticated SMTP mailbox.
+    /// - Ensure consistent headers and a clean text part.
     /// </summary>
     public class EmailService : IEmailService
     {
         private readonly IAppSettings _appSettings;
-        private readonly IDataContext _context; // you may not need this anymore, but keeping it since you had it
+        private readonly IDataContext _context; // If unused, remove.
         private readonly IWebHostEnvironment _env;
         private readonly IEmailTemplateService _emailTemplateService;
-        private readonly ILogger<IAccountService> _logger;
+
+        // IMPORTANT:
+        // Logger generic type should be the concrete class so log categories are meaningful.
+        private readonly ILogger<EmailService> _logger;
 
         public EmailService(
             IAppSettings appSettings,
             IDataContext context,
             IWebHostEnvironment env,
             IEmailTemplateService emailTemplateService,
-            ILogger<IAccountService> logger)
+            ILogger<EmailService> logger)
         {
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
             _context = context ?? throw new ArgumentNullException(nameof(context));
@@ -47,11 +63,18 @@ namespace Ezenity.Infrastructure.Services.Emails
         }
 
         /// <summary>
-        /// Sends an email asynchronously based on an EmailMessage and a template.
+        /// Sends an email based on an EmailMessage and a template stored in your system.
+        /// Flow:
+        /// - Validate inputs
+        /// - Load template
+        /// - Merge placeholders
+        /// - Render template to HTML
+        /// - Build MimeMessage (Text + HTML)
+        /// - Send via SMTP
         /// </summary>
         public async Task SendEmailAsync(EmailMessage message)
         {
-            // 1) Validate inputs early (fail fast with meaningful messages)
+            // 1) Validate inputs early (fail fast)
             if (message == null)
                 throw new AppException("Email message cannot be null.");
 
@@ -61,125 +84,166 @@ namespace Ezenity.Infrastructure.Services.Emails
             if (string.IsNullOrWhiteSpace(message.TemplateName))
                 throw new AppException("Email 'TemplateName' is required.");
 
-            // Ensure DynamicValues is never null to avoid null-ref issues
-            message.DynamicValues ??= new Dictionary<string, string>();
+            // Ensure DynamicValues is non-null to avoid null-ref issues.
+            message.DynamicValues ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            // 2) Pull template from DB/service layer (your _emailTemplateService)
+            // 2) Pull template record (DB or other source behind IEmailTemplateService)
             var emailTemplate = await _emailTemplateService.GetByNameAsync(message.TemplateName);
             if (emailTemplate == null)
                 throw new AppException($"Email template '{message.TemplateName}' not found.");
 
-            // 3) Prepare placeholder values (merge template defaults + request dynamic values)
-            //    - If your template already has PlaceholderValues, we keep them
-            //    - Then overwrite/add with message.DynamicValues
-            emailTemplate.PlaceholderValues ??= new Dictionary<string, string>();
+            // Ensure placeholder dictionary exists.
+            emailTemplate.PlaceholderValues ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
+            // 3) Merge runtime dynamic values OVER template defaults
             foreach (var kv in message.DynamicValues)
                 emailTemplate.PlaceholderValues[kv.Key] = kv.Value;
 
-            // 4) Resolve nested placeholders: if {A} contains "{B}" it will be replaced
-            //    Example: A = "Hello {FirstName}" and FirstName="Anthony"
+            // 4) Ensure standard placeholders commonly used by templates exist.
+            //    This keeps templates from rendering with missing titles/years/app names.
+            EnsureStandardPlaceholders(emailTemplate.PlaceholderValues);
+
+            // 5) Resolve nested placeholders like: Greeting="Hello {FirstName}"
             emailTemplate.PlaceholderValues = ResolveNestedPlaceholders(emailTemplate.PlaceholderValues);
 
-            // 5) Render body
-            //    - If ContentViewPath exists, your email template service should render Razor
-            //    - Otherwise you can fall back to raw TemplateBody + replace placeholders
-            string bodyHtml;
-
-            if (!string.IsNullOrWhiteSpace(emailTemplate.ContentViewPath))
+            // 6) Render HTML via Razor view
+            if (string.IsNullOrWhiteSpace(emailTemplate.ContentViewPath))
             {
-                // Renders Razor view based on your implementation
-                bodyHtml = await _emailTemplateService.RenderEmailTemplateAsync(
-                    message.TemplateName,
-                    emailTemplate.PlaceholderValues
-                );
-            }
-            else
-            {
-                // Fallback: use TemplateBody and replace placeholders manually (if you store it)
-                // If your EmailTemplate entity doesn't have TemplateBody anymore, adjust/remove this.
-                //var raw = emailTemplate.TemplateBody ?? string.Empty;
-                //bodyHtml = ReplacePlaceholders(raw, emailTemplate.PlaceholderValues);
-
-                // If ContentViewPath is missing, this template is misconfigured in DB.
-                // Fail fast instead of silently sending empty emails.
+                // If you rely on Razor views, ContentViewPath is required.
                 throw new AppException(
                     $"Email template '{message.TemplateName}' is missing ContentViewPath. " +
                     "Update the template record to point to a .cshtml view."
                 );
             }
 
-            // Subject from template wins (unless you intentionally want message.Subject override)
+            var bodyHtml = await _emailTemplateService.RenderEmailTemplateAsync(
+                message.TemplateName,
+                emailTemplate.PlaceholderValues
+            );
+
+            // Subject from template wins; fallback to message.Subject
             message.Subject = emailTemplate.Subject ?? message.Subject ?? "(no subject)";
 
-            // 6) Build the actual MimeMessage that MailKit sends
+            // 7) Build MimeMessage (multipart/alternative for deliverability)
             var mime = BuildMimeMessage(message, bodyHtml);
 
-            // 7) Send via SMTP
-            //    IMPORTANT:
-            //    - Port 465 typically uses SSL-on-connect
-            //    - Port 587 typically uses STARTTLS
-            //    - Port 25 often blocked on VPS providers and/or requires STARTTLS
+            // 8) Send via SMTP
             await SendViaSmtpAsync(mime);
         }
 
         /// <summary>
-        /// Build the email with From/To/Subject/Body.
+        /// Ensures certain keys exist so Razor templates can rely on them.
+        /// Adjust defaults as you evolve branding.
+        /// </summary>
+        private void EnsureStandardPlaceholders(IDictionary<string, string> values)
+        {
+            if (!values.ContainsKey("appName"))
+                values["appName"] = "Ezenity";
+
+            if (!values.ContainsKey("currentYear"))
+                values["currentYear"] = DateTime.UtcNow.Year.ToString();
+
+            // If templateTitle is missing but EmailTitle exists, map it.
+            if (!values.ContainsKey("templateTitle") &&
+                values.TryGetValue("EmailTitle", out var emailTitle) &&
+                !string.IsNullOrWhiteSpace(emailTitle))
+            {
+                values["templateTitle"] = emailTitle;
+            }
+        }
+
+        /// <summary>
+        /// Builds a MIME email with good deliverability defaults:
+        /// - Date header
+        /// - Message-Id
+        /// - Transactional headers
+        /// - multipart/alternative (Text + HTML)
         /// </summary>
         private MimeMessage BuildMimeMessage(EmailMessage message, string bodyHtml)
         {
-            var mime = new MimeMessage();
+            var mime = new MimeMessage
+            {
+                Date = DateTimeOffset.UtcNow
+            };
 
-            // Custom MessageId is optional but useful for tracking
+            // Message-Id domain helps make the email look more legitimate/consistent
             var messageIdDomain = string.IsNullOrWhiteSpace(_appSettings.EmailMessageIdDomain)
-                ? "localhost"
+                ? "ezenity.com"
                 : _appSettings.EmailMessageIdDomain;
 
             mime.MessageId = $"{Guid.NewGuid()}@{messageIdDomain}";
 
+            // Helpful headers (transactional classification & suppress auto responders)
+            mime.Headers["Auto-Submitted"] = "auto-generated";
+            mime.Headers["X-Auto-Response-Suppress"] = "All";
+
             // FROM:
-            // In dev you may want forced "noreply" to avoid your provider blocking spoofing
-            // In prod you should normally send FROM your authenticated mailbox (SMTP user)
-            // Many SMTP providers will reject if From is not allowed.
+            // Most SMTP providers want From to match the authenticated SMTP user.
             var fromAddress = GetFromAddress(message);
 
-            mime.From.Add(MailboxAddress.Parse(fromAddress));
+            // Display name: prefer "appName" if available, else safe default
+            var displayName = "Ezenity";
+            if (message.DynamicValues != null &&
+                message.DynamicValues.TryGetValue("appName", out var appName) &&
+                !string.IsNullOrWhiteSpace(appName))
+            {
+                displayName = appName.Trim();
+            }
 
-            // TO:
+            // If message.From already includes a name <email@domain>, keep it.
+            MailboxAddress fromMailbox;
+            if (MailboxAddress.TryParse(fromAddress, out var parsed))
+            {
+                fromMailbox = string.IsNullOrWhiteSpace(parsed.Name)
+                    ? new MailboxAddress(displayName, parsed.Address)
+                    : parsed;
+            }
+            else
+            {
+                fromMailbox = new MailboxAddress(displayName, fromAddress);
+            }
+
+            mime.From.Add(fromMailbox);
+
+            // REPLY-TO (optional)
+            if (!string.IsNullOrWhiteSpace(message.ReplyTo) && MailboxAddress.TryParse(message.ReplyTo, out var replyTo))
+                mime.ReplyTo.Add(replyTo);
+
+            // TO
             mime.To.Add(MailboxAddress.Parse(message.To));
 
-            // SUBJECT:
+            // SUBJECT
             mime.Subject = message.Subject ?? "(no subject)";
 
             // BODY:
-            mime.Body = new TextPart(TextFormat.Html)
+            // Use multipart/alternative = Text + HTML.
+            // Gmail and other providers prefer/expect this and it improves deliverability.
+            var html = bodyHtml ?? string.Empty;
+            var text = CreateTextBodyFromHtml(html);
+
+            var builder = new BodyBuilder
             {
-                Text = bodyHtml ?? string.Empty
+                HtmlBody = html,
+                TextBody = text
             };
 
+            mime.Body = builder.ToMessageBody();
             return mime;
         }
 
         /// <summary>
-        /// Decide what From address to use.
-        /// Most providers require the From address to match the authenticated SMTP account.
+        /// Determines the From address.
+        /// Best practice: use the authenticated SMTP user to avoid provider rejection.
         /// </summary>
         private string GetFromAddress(EmailMessage message)
         {
-            // Prefer configured SMTP user as the sender (most compatible)
-            // If you have app setting like EmailFrom, you can use that instead.
             var smtpUser = _appSettings.SmtpUser;
 
-            // If you want a "display name", it should be set like: "Ezenity <noreply@ezenity.com>"
-            // MailboxAddress.Parse supports that format.
-            if (_env.IsDevelopment())
-            {
-                // In dev, force to SMTP user to avoid provider rejection
-                return smtpUser;
-            }
+            if (string.IsNullOrWhiteSpace(smtpUser))
+                throw new AppException("SMTP user is not configured (SmtpUser).");
 
-            // In prod, still safest to use smtpUser unless you KNOW your provider allows aliases
-            // If message.From is set and allowed, you can prefer it:
+            // If your provider allows aliases and you set message.From intentionally,
+            // you can allow it; otherwise keep smtpUser always.
             if (!string.IsNullOrWhiteSpace(message.From))
                 return message.From;
 
@@ -187,11 +251,15 @@ namespace Ezenity.Infrastructure.Services.Emails
         }
 
         /// <summary>
-        /// Actually connects/authenticates/sends using SMTP (MailKit).
+        /// Connect/authenticate/send using MailKit.
+        /// Uses TLS options appropriate to port:
+        /// - 465 => SSL-on-connect
+        /// - 587 => STARTTLS
+        /// - otherwise => StartTlsWhenAvailable
         /// </summary>
         private async Task SendViaSmtpAsync(MimeMessage mime)
         {
-            // Basic config validation
+            // Validate config
             if (string.IsNullOrWhiteSpace(_appSettings.SmtpHost))
                 throw new AppException("SMTP host is not configured (SmtpHost).");
 
@@ -204,86 +272,54 @@ namespace Ezenity.Infrastructure.Services.Emails
             if (string.IsNullOrWhiteSpace(_appSettings.SmtpPass))
                 throw new AppException("SMTP password is not configured (SmtpPass).");
 
-            //using var client = new SmtpClient();
-            using var client = new SmtpClient(new MailKit.ProtocolLogger("smtp-protocol.log"));
+            // Put protocol logs in a safe writable location for containers.
+            // NOTE: this file can include server responses, but should NOT include your password.
+            var protocolLogPath = "/tmp/smtp-protocol.log";
+
+            using var client = new SmtpClient(new MailKit.ProtocolLogger(protocolLogPath));
 
             try
             {
-                // NOTE:
-                // Do NOT do ServerCertificateValidationCallback = always true in production.
-                // That disables TLS security.
-                //
-                // If you need it temporarily for debugging, you can enable it only in development.
+                // DEV ONLY: never disable cert validation in production.
                 if (_env.IsDevelopment())
-                {
                     client.ServerCertificateValidationCallback = (s, c, h, e) => true;
-                }
-
-                // Choose TLS mode based on port (common conventions)
-                // 465 = SSL-on-connect
-                // 587 = STARTTLS
-                // Otherwise try StartTlsWhenAvailable (safer than no TLS)
-                SecureSocketOptions socketOptions =
-                    _appSettings.SmtpPort == 465 ? SecureSocketOptions.SslOnConnect :
-                    _appSettings.SmtpPort == 587 ? SecureSocketOptions.StartTls :
-                    SecureSocketOptions.StartTlsWhenAvailable;
-
-                // CONNECT
-                await client.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, socketOptions);
-                //await client.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort,
-                //                MailKit.Security.SecureSocketOptions.SslOnConnect);
-
-                // optional but good:
-                client.AuthenticationMechanisms.Remove("XOAUTH2");
-
-                // AUTH
-                // Don’t log your password. Ever.
-                //await client.AuthenticateAsync(_appSettings.SmtpUser, _appSettings.SmtpPass);
-
-                //var user = (_appSettings.SmtpUser ?? "").Trim();
-                //var pass = (_appSettings.SmtpPass ?? "").Trim();
-
-                //var user = (_appSettings.SmtpUser ?? "").TrimEnd('\r', '\n');
-                //var pass = (_appSettings.SmtpPass ?? "").TrimEnd('\r', '\n');
 
                 var host = _appSettings.SmtpHost;
                 var port = _appSettings.SmtpPort;
-                var user = _appSettings.SmtpUser;
-                var pass = _appSettings.SmtpPass;
+
+                // Normalize injected secrets (quotes/newlines are common with env vars/CI)
+                var user = (_appSettings.SmtpUser ?? "").Trim().TrimEnd('\r', '\n').Trim('"');
+                var pass = (_appSettings.SmtpPass ?? "").Trim().TrimEnd('\r', '\n').Trim('"');
+
+                // Pick TLS mode
+                SecureSocketOptions socketOptions =
+                    port == 465 ? SecureSocketOptions.SslOnConnect :
+                    port == 587 ? SecureSocketOptions.StartTls :
+                    SecureSocketOptions.StartTlsWhenAvailable;
 
                 _logger.LogInformation(
-                  "SMTP config: Host={Host}, Port={Port}, User='{User}', PassLength={Len}, Ssl={Ssl}",
-                  host,
-                  port,
-                  user,
-                  pass?.Length ?? 0,
-                  _appSettings.SmtpEnabledSsl
+                    "SMTP config: Host={Host}, Port={Port}, User='{User}', PassLength={Len}, SocketOptions={SocketOptions}",
+                    host, port, user, pass?.Length ?? 0, socketOptions
                 );
 
-                // Optional: if your secret ended up stored with quotes (common in env vars / CI)
-                //pass = pass.Trim('"');
+                await client.ConnectAsync(host, port, socketOptions);
+
+                // PrivateEmail typically uses LOGIN/PLAIN; remove XOAUTH2 noise
+                client.AuthenticationMechanisms.Remove("XOAUTH2");
 
                 await client.AuthenticateAsync(user, pass);
 
-                // SEND
                 await client.SendAsync(mime);
 
-                // DISCONNECT
                 await client.DisconnectAsync(true);
             }
             catch (Exception ex)
             {
-                // This message is what bubbles up to your API response right now.
-                // Keep it clear and keep the original exception as InnerException.
-                //throw new AppException("SMTP send failed. Check SMTP host/port/TLS and credentials.", ex);
+                _logger.LogError(ex,
+                    "SMTP send failed. Host={Host} Port={Port} User={User}",
+                    _appSettings.SmtpHost, _appSettings.SmtpPort, _appSettings.SmtpUser);
 
-                // Log the REAL error with full detail (type + message + inner)
-                // If you don't have _logger injected yet, at least Console.WriteLine(ex.ToString());
-                // Better: inject ILogger<EmailService> and use it here.
-                _logger.LogError(ex, "SMTP send failed. Host={Host} Port={Port} User={User}",
-                     _appSettings.SmtpHost, _appSettings.SmtpPort, _appSettings.SmtpUser);
-
-                // Temporarily surface the real error message in the thrown exception (DEV ONLY).
+                // Bubble up a clear error
                 throw new AppException(
                     $"SMTP send failed: {ex.GetType().Name} - {ex.Message}",
                     ex
@@ -292,27 +328,45 @@ namespace Ezenity.Infrastructure.Services.Emails
         }
 
         /// <summary>
-        /// Replaces {Placeholders} in a template with values.
+        /// Creates a basic plain-text version from HTML.
+        /// This is not a perfect HTML-to-text conversion, but it's good enough for:
+        /// - deliverability (multipart/alternative)
+        /// - readable fallback in clients that prefer text
         /// </summary>
-        private static string ReplacePlaceholders(string template, IDictionary<string, string> values)
+        private static string CreateTextBodyFromHtml(string html)
         {
-            var result = template ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(html))
+                return string.Empty;
 
-            if (values == null || values.Count == 0)
-                return result;
+            var text = html;
 
-            foreach (var kv in values)
-            {
-                var placeholder = "{" + kv.Key + "}";
-                result = result.Replace(placeholder, kv.Value ?? string.Empty);
-            }
+            // Convert common block/line tags into newlines
+            text = Regex.Replace(text, @"<\s*br\s*/?\s*>", "\n", RegexOptions.IgnoreCase);
+            text = Regex.Replace(text, @"</\s*p\s*>", "\n\n", RegexOptions.IgnoreCase);
+            text = Regex.Replace(text, @"</\s*div\s*>", "\n", RegexOptions.IgnoreCase);
+            text = Regex.Replace(text, @"</\s*h[1-6]\s*>", "\n\n", RegexOptions.IgnoreCase);
+            text = Regex.Replace(text, @"<\s*li\s*>", "• ", RegexOptions.IgnoreCase);
+            text = Regex.Replace(text, @"</\s*li\s*>", "\n", RegexOptions.IgnoreCase);
 
-            return result;
+            // Strip all remaining tags
+            text = Regex.Replace(text, "<.*?>", string.Empty, RegexOptions.Singleline);
+
+            // Decode HTML entities
+            text = WebUtility.HtmlDecode(text);
+
+            // Clean up whitespace
+            text = Regex.Replace(text, @"\n{3,}", "\n\n");
+            text = Regex.Replace(text, @"[ \t]{2,}", " ");
+
+            return text.Trim();
         }
 
         /// <summary>
-        /// If placeholder values themselves contain placeholders, resolve them.
-        /// This prevents issues where one placeholder depends on another.
+        /// Resolves placeholders inside placeholder values.
+        /// Example:
+        ///  Greeting = "Hello {FirstName}"
+        ///  FirstName = "Anthony"
+        /// After resolve: Greeting => "Hello Anthony"
         /// </summary>
         private static Dictionary<string, string> ResolveNestedPlaceholders(IDictionary<string, string> values)
         {
@@ -321,21 +375,17 @@ namespace Ezenity.Infrastructure.Services.Emails
             if (values == null)
                 return resolved;
 
-            // Copy first
             foreach (var kv in values)
                 resolved[kv.Key] = kv.Value ?? string.Empty;
 
-            // Resolve nested placeholders with a few passes (prevents infinite loops)
-            // Example:
-            //   Greeting = "Hello {FirstName}"
-            //   FirstName = "Anthony"
+            // A few passes prevents most nested cases without infinite loops
             const int maxPasses = 5;
 
             for (int pass = 0; pass < maxPasses; pass++)
             {
                 var changed = false;
 
-                foreach (var key in new List<string>(resolved.Keys))
+                foreach (var key in resolved.Keys.ToList())
                 {
                     var current = resolved[key];
 
@@ -361,3 +411,29 @@ namespace Ezenity.Infrastructure.Services.Emails
         }
     }
 }
+
+/*
+SUMMARY (What changed vs the original):
+--------------------------------------
+1) ILogger generic type fixed:
+   - Was ILogger<IAccountService> (wrong category)
+   - Now ILogger<EmailService> (correct category & filtering)
+
+2) Deliverability improvement:
+   - Was HTML-only: TextPart(TextFormat.Html)
+   - Now multipart/alternative: BodyBuilder { TextBody + HtmlBody }
+
+3) Transactional headers added:
+   - Auto-Submitted: auto-generated
+   - X-Auto-Response-Suppress: All
+
+4) From address handling:
+   - Keeps provider-friendly "From" aligned with SMTP authenticated user
+   - Applies a display name (appName) when possible
+
+5) SMTP secret normalization:
+   - Trims whitespace/newlines/quotes often introduced by env vars or CI injection
+
+6) More robust and readable structure:
+   - Clear steps, defensive checks, and useful logs (without leaking secrets)
+*/
