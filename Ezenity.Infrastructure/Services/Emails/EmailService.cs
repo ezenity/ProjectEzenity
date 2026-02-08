@@ -232,7 +232,14 @@ namespace Ezenity.Infrastructure.Services.Emails
 
                 // AUTH
                 // Don’t log your password. Ever.
-                await client.AuthenticateAsync(_appSettings.SmtpUser, _appSettings.SmtpPass);
+                //await client.AuthenticateAsync(_appSettings.SmtpUser, _appSettings.SmtpPass);
+                var user = (_appSettings.SmtpUser ?? "").Trim();
+                var pass = (_appSettings.SmtpPass ?? "").Trim();
+
+                // Optional: if your secret ended up stored with quotes (common in env vars / CI)
+                pass = pass.Trim('"');
+
+                await client.AuthenticateAsync(user, pass);
 
                 // SEND
                 await client.SendAsync(mime);
