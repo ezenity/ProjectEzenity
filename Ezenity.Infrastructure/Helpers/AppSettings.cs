@@ -22,7 +22,7 @@ namespace Ezenity.Infrastructure.Helpers
         /// <param name="smtpEnableSsl">A value indicating whether SSL is enabled for SMTP communications.</param>
         /// <param name="accessToken">The access token used for some third-party services or internal processes.</param>
         /// <param name="emailMessageIdDomain">The email domain that is being used for a message id in an email.</param>
-        public AppSettings(string baseUrl, string secret, int refreshTokenTTL, string emailFrom, string smtpHost, int smtpPort, string smtpUser, string smtpPass, bool smtpEnableSsl, string accessToken, string emailMessageIdDomain, string emailTemplateBasePath)
+        public AppSettings(string baseUrl, string secret, int refreshTokenTTL, string emailFrom, string smtpHost, int smtpPort, string smtpUser, string smtpPass, bool smtpEnabledSsl, string accessToken, string emailMessageIdDomain, string emailTemplateBasePath)
         {
             BaseUrl = baseUrl;
             Secret = secret;
