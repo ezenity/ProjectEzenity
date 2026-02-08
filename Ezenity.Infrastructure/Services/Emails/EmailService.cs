@@ -30,14 +30,14 @@ namespace Ezenity.Infrastructure.Services.Emails
         private readonly IDataContext _context; // you may not need this anymore, but keeping it since you had it
         private readonly IWebHostEnvironment _env;
         private readonly IEmailTemplateService _emailTemplateService;
-        private readonly ILogger<AccountService> _logger;
+        private readonly ILogger<IAccountService> _logger;
 
         public EmailService(
             IAppSettings appSettings,
             IDataContext context,
             IWebHostEnvironment env,
             IEmailTemplateService emailTemplateService,
-            ILogger<AccountService> logger)
+            ILogger<IAccountService> logger)
         {
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
             _context = context ?? throw new ArgumentNullException(nameof(context));
