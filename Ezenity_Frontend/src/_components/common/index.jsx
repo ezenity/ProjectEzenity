@@ -1,4 +1,3 @@
-export * from "./Alert";
-export * from "./Nav";
-export * from "./PrivateRoute";
 export * from "./GateGuardRoute";
+export * from "./DynamicForm";
+export * from "./Section";
