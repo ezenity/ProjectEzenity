@@ -1,0 +1,18 @@
+@model IDictionary<string, string>
+
+    @{
+    // Treat whatever path is in __layout as the layout page
+    Layout = Model.TryGetValue("__layout", out var layoutPath) ? layoutPath : null;
+
+    // Your layout uses ViewData["EmailTitle"]
+    if (ViewData["EmailTitle"] == null)
+    {
+        if (Model.TryGetValue("EmailTitle", out var emailTitle))
+            ViewData["EmailTitle"] = emailTitle;
+        else if (Model.TryGetValue("templateTitle", out var templateTitle))
+            ViewData["EmailTitle"] = templateTitle;
+    }
+    }
+
+    @* If you WANT @RenderBody() to output something, put it here.
+        Otherwise leave it empty and RenderBody will render nothing. *@
