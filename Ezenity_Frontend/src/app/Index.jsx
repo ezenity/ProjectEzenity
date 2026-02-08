@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Route, Switch, Redirect, useLocation } from "react-router-dom";
 
 import { Role } from "@/_helpers";
+import { isGateUnlocked } from "@/_helpers/gate";
 import { accountService } from "@/_services";
-import { Nav, PrivateRoute, Alert } from "@/_components";
+import { Nav, PrivateRoute, Alert, GateGuardRoute } from "@/_components";
+
 import { Home } from "@/home";
 import { Profile } from "@/profile";
 import { Admin } from "@/admin";
@@ -11,52 +13,56 @@ import { Account } from "@/account";
 import { Legal } from "@/legal";
 import { Footer } from "@/footer";
 import { About } from "@/about";
+import { GatePage } from "@/gate";
 
 function App() {
-  const { pathname } = useLocation();
-  const [user, setUser] = useState({});
+    const { pathname } = useLocation();
+    const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const subscription = accountService.user.subscribe((x) => setUser(x));
-    return subscription.unsubscribe;
-  }, []);
+    useEffect(() => {
+        const subscription = accountService.user.subscribe((x) => setUser(x));
+        return subscription.unsubscribe;
+    }, []);
 
-  const gateUnlocked = sessionStorage.getItem("ez_gate_unlocked") === "1";
-  const isGate = pathname === "/";
+    // Gate is only “active” on the root route, until unlocked
+    const gateActive = pathname === "/" && !isGateUnlocked();
 
-  return (
-    // <div className={'app-container' + (user && " bg-light")}>
-    <div className="app-container" >
+    return (
+        <div className="app-container">
+            {!gateActive && <Nav />}
+            {!gateActive && <Alert />}
 
-    {/* Hide Nav/Alert on gate unless it has been unlocked */}
-    {(!isGate || gateUnlocked) && <Nav />}
-    {(!isGate || gateUnlocked) && <Alert />}
+            <Switch>
+                <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} />
 
-      <Switch>
-        <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} />
+                {/* Root: Gate until unlocked, then show Home */}
+                <Route
+                    exact
+                    path="/"
+                    render={() => (isGateUnlocked() ? <Home /> : <GatePage />)}
+                />
 
-        {/* Publicly accessable routes */}
-        <Route exact path="/" component={Home} />
-        <Route path="/about" component={About} />
-        <Route path="/account" component={Account} />
-        <Route path="/legal" component={Legal} />
-              <Route path="/footer" component={Footer} />
+                {/* Public routes you still want accessible */}
+                <Route path="/about" component={About} />
+                <Route path="/legal" component={Legal} />
+                <Route path="/footer" component={Footer} />
+                <Route path="/github" component={() => (window.location = "https://www.github.com/ezenity/")} />
+                <Route path="/instagram" component={() => (window.location = "https://www.instagram.com/midnight_gd/")} />
+                <Route path="/facebook" component={() => (window.location = "https://www.facebook.com/project.ezenity/")} />
+                <Route path="/linkedin" component={() => (window.location = "https://www.linkedin.com/in/anthonymmacallister/")} />
+                <Route path="/jenkins" component={() => (window.location = "https://www.ezenity.com/jenkins/")} />
 
-        <Route path="/github" component={() => (window.location="https://www.github.com/ezenity/" )} />
-        <Route path="/instagram" component={() => (window.location="https://www.instagram.com/midnight_gd/" )} />
-        <Route path="/facebook" component={() => (window.location="https://www.facebook.com/project.ezenity/" )} />
-        <Route path="/linkedin" component={() => (window.location="https://www.linkedin.com/in/anthonymmacallister/" )} />
-        <Route path="/jenkins" component={() => (window.location="https://www.ezenity.com/jenkins/" )} />
-      
-        {/* Routes requiring authentication */}
-        {/* <PrivateRoute exact path="/" component={Home} /> */}
-        <PrivateRoute path="/profile" component={Profile} />
-        <PrivateRoute path="/admin" roles={[Role.Admin]} component={Admin} />
+                {/* Gate-protected account routes (login/register/forgot-password/etc.) */}
+                <GateGuardRoute path="/account" component={Account} />
 
-        <Redirect from="*" to="/" />
-      </Switch>
-    </div>
-  );
+                {/* Auth-required routes */}
+                <PrivateRoute path="/profile" component={Profile} />
+                <PrivateRoute path="/admin" roles={[Role.Admin]} component={Admin} />
+
+                <Redirect from="*" to="/" />
+            </Switch>
+        </div>
+    );
 }
 
 export { App };
