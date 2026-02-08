@@ -1,0 +1,69 @@
+@model IDictionary<string, string>
+    @using System
+
+    @functions {
+    public string Get(string key, string fallback = "")
+        => (Model != null && Model.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v)) ? v : fallback;
+    }
+
+    @{
+    var appName = Get("appName", "Ezenity");
+    var title = (ViewData["EmailTitle"] as string) ?? Get("templateTitle", "Notification");
+    var preheader = Get("preheader", "");
+    var year = Get("currentYear", DateTime.UtcNow.Year.ToString());
+    var siteUrl = Get("siteUrl", "https://ezenity.com");
+    var supportEmail = Get("supportEmail", "support@ezenity.com");
+    }
+
+    <!doctype html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>@title</title>
+    </head>
+    <body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+        <!-- Preheader (hidden preview text) -->
+        <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+            @preheader
+        </div>
+
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f4f4f4;padding:24px 0;">
+            <tr>
+                <td align="center">
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;">
+                        <!-- Header -->
+                        <tr>
+                            <td style="background:#111827;color:#ffffff;padding:20px 24px;font-size:18px;font-weight:bold;">
+                                <a href="@siteUrl" style="color:#ffffff;text-decoration:none;">@appName</a>
+                            </td>
+                        </tr>
+
+                        <!-- Title -->
+                        <tr>
+                            <td style="padding:20px 24px 0 24px;">
+                                <h1 style="margin:0;font-size:22px;line-height:28px;color:#111827;">@title</h1>
+                            </td>
+                        </tr>
+
+                        <!-- Body -->
+                        <tr>
+                            <td style="padding:16px 24px 24px 24px;color:#111827;font-size:14px;line-height:20px;">
+                                @RenderBody()
+                            </td>
+                        </tr>
+
+                        <!-- Footer -->
+                        <tr>
+                            <td style="border-top:1px solid #e5e7eb;padding:16px 24px;color:#6b7280;font-size:12px;line-height:18px;">
+                                <div>If you need help, contact <a href="mailto:@supportEmail" style="color:#111827;text-decoration:underline;">@supportEmail</a>.</div>
+                                <div style="margin-top:8px;">&copy; @appName @year</div>
+                            </td>
+                        </tr>
+
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>

@@ -29,5 +29,8 @@
         /// Gets or sets the sender's email address.
         /// </summary>
         public string From { get; set; }
+
+
+        public string ReplyTo { get; set; }
     }
 }
