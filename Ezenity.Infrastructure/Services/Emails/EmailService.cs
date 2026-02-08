@@ -229,16 +229,26 @@ namespace Ezenity.Infrastructure.Services.Emails
                     SecureSocketOptions.StartTlsWhenAvailable;
 
                 // CONNECT
-                await client.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, socketOptions);
+                //await client.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort, socketOptions);
+                await client.ConnectAsync(_appSettings.SmtpHost, _appSettings.SmtpPort,
+                                MailKit.Security.SecureSocketOptions.SslOnConnect);
+
+
+                // optional but good:
+                client.AuthenticationMechanisms.Remove("XOAUTH2");
 
                 // AUTH
                 // Don’t log your password. Ever.
                 //await client.AuthenticateAsync(_appSettings.SmtpUser, _appSettings.SmtpPass);
-                var user = (_appSettings.SmtpUser ?? "").Trim();
-                var pass = (_appSettings.SmtpPass ?? "").Trim();
+
+                //var user = (_appSettings.SmtpUser ?? "").Trim();
+                //var pass = (_appSettings.SmtpPass ?? "").Trim();
+
+                var user = (_appSettings.SmtpUser ?? "").TrimEnd('\r', '\n');
+                var pass = (_appSettings.SmtpPass ?? "").TrimEnd('\r', '\n');
 
                 // Optional: if your secret ended up stored with quotes (common in env vars / CI)
-                pass = pass.Trim('"');
+                //pass = pass.Trim('"');
 
                 await client.AuthenticateAsync(user, pass);
 
