@@ -30,7 +30,9 @@
         /// </summary>
         public string From { get; set; }
 
-
+        /// <summary>
+        /// Optional reply-to address (ex: support@ezenity.com).
+        /// </summary>
         public string ReplyTo { get; set; }
     }
 }
