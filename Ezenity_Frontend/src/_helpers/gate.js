@@ -18,3 +18,5 @@ export function setGateUnlocked() {
 export function clearGateUnlocked() {
     sessionStorage.removeItem(UNLOCK_KEY);
 }
+
+export { UNLOCK_KEY };
