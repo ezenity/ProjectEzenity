@@ -5,7 +5,7 @@
  * (Not real security—just UI/UX gating.)
  */
 
-export const UNLOCK_KEY = "ez_gate_unlocked";
+const UNLOCK_KEY = "ez_gate_unlocked";
 
 export function isGateUnlocked() {
     return sessionStorage.getItem(UNLOCK_KEY) === "1";

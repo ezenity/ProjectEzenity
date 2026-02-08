@@ -4,7 +4,6 @@ import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
 import { getService, alertService } from '@/_services';
-import { secService, alertService } from '@/_services';
 
 function DynamicForm({ entityType }) {
   const { id } = useParams();
