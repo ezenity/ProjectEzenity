@@ -21,15 +21,17 @@ function App() {
     return subscription.unsubscribe;
   }, []);
 
-  // console.log(pathname);
-
-
+  const gateUnlocked = sessionStorage.getItem("ez_gate_unlocked") === "1";
+  const isGate = pathname === "/";
 
   return (
     // <div className={'app-container' + (user && " bg-light")}>
     <div className="app-container" >
-      <Nav />
-      <Alert />
+
+    {/* Hide Nav/Alert on gate unless it has been unlocked */}
+    {(!isGate || gateUnlocked) && <Nav />}
+    {(!isGate || gateUnlocked) && <Alert />}
+
       <Switch>
         <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} />
 
@@ -38,7 +40,8 @@ function App() {
         <Route path="/about" component={About} />
         <Route path="/account" component={Account} />
         <Route path="/legal" component={Legal} />
-        <Route path="/footer" component={Footer} />
+              <Route path="/footer" component={Footer} />
+
         <Route path="/github" component={() => (window.location="https://www.github.com/ezenity/" )} />
         <Route path="/instagram" component={() => (window.location="https://www.instagram.com/midnight_gd/" )} />
         <Route path="/facebook" component={() => (window.location="https://www.facebook.com/project.ezenity/" )} />

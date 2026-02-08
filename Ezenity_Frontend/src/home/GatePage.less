@@ -1,0 +1,461 @@
+/**
+ * GatePage.less
+ * -------------
+ * Animated gradient background + lava shimmer + shooting stars,
+ * skull reveal + pulse, unlock panel.
+ */
+
+.gateRoot {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #05070c;
+    color: #e5e7eb;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.bgLayer {
+    position: absolute;
+    inset: 0;
+}
+
+/* Intro layers: fade sequence (one-time) */
+.bgGreen {
+    background: radial-gradient(1100px 700px at 30% 30%, rgba(34, 197, 94, 0.90), rgba(2, 6, 23, 0.96));
+    animation: fadeGreen 5.2s linear forwards;
+}
+
+.bgRed {
+    background: radial-gradient(900px 650px at 70% 35%, rgba(127, 29, 29, 0.92), rgba(2, 6, 23, 0.98));
+    opacity: 0;
+    animation: fadeRed 5.2s linear forwards;
+}
+
+.bgSteel {
+    background: radial-gradient(1200px 900px at 50% 60%, rgba(148, 163, 184, 0.25), rgba(2, 6, 23, 0.98));
+    opacity: 0;
+    animation: fadeSteel 5.2s linear forwards;
+}
+
+.bgGold {
+    background: radial-gradient(900px 700px at 55% 50%, rgba(234, 179, 8, 0.22), rgba(2, 6, 23, 0.98)), radial-gradient(600px 420px at 20% 70%, rgba(250, 204, 21, 0.10), rgba(2, 6, 23, 0.98));
+    opacity: 0;
+    animation: fadeGold 5.2s linear forwards;
+}
+
+/* Lava shimmer (always loops, subtle) */
+.lava {
+    background: radial-gradient(circle at 20% 40%, rgba(234, 179, 8, 0.10), transparent 45%), radial-gradient(circle at 70% 60%, rgba(239, 68, 68, 0.08), transparent 50%), radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.06), transparent 55%);
+    filter: blur(18px) saturate(1.2);
+    opacity: 0.45;
+    mix-blend-mode: screen;
+    animation: lavaMove 16s linear infinite;
+}
+
+/* Shooting stars */
+.stars {
+    pointer-events: none;
+    opacity: 0.55;
+}
+
+    .stars::before,
+    .stars::after {
+        content: "";
+        position: absolute;
+        width: 220px;
+        height: 2px;
+        left: -240px;
+        top: 30%;
+        background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.95), transparent);
+        filter: blur(0.2px);
+        transform: rotate(12deg);
+        animation: starRun 6.5s linear infinite;
+    }
+
+    .stars::after {
+        top: 62%;
+        height: 3px;
+        opacity: 0.8;
+        animation-duration: 8.2s;
+        animation-delay: 1.4s;
+    }
+
+/* Vignette so edges are darker */
+.vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(900px 600px at 50% 40%, rgba(0,0,0,0), rgba(0,0,0,0.55));
+    pointer-events: none;
+}
+
+/* Content layout */
+.content {
+    position: relative;
+    z-index: 5;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 22px;
+    text-align: center;
+}
+
+.brandRow {
+    margin-bottom: 22px;
+    opacity: 0.95;
+}
+
+.brandName {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+}
+
+.brandTag {
+    margin-top: 6px;
+    font-size: 12px;
+    opacity: 0.75;
+    letter-spacing: 0.4px;
+}
+
+/* Skull stage */
+.skullStage {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 700ms ease, transform 700ms ease;
+}
+
+    .skullStage.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+.skullRow {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.skullBtn {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    outline: none;
+    color: rgba(226, 232, 240, 0.92);
+    filter: drop-shadow(0 12px 30px rgba(0,0,0,0.55));
+    transform-origin: center;
+    animation: skullPulse 2.8s ease-in-out infinite;
+}
+
+    .skullBtn:disabled {
+        cursor: default;
+        opacity: 0.55;
+        animation: none;
+    }
+
+    .skullBtn.small {
+        width: 70px;
+        height: 70px;
+        opacity: 0.85;
+    }
+
+    .skullBtn.big {
+        width: 112px;
+        height: 112px;
+    }
+
+    .skullBtn.small {
+        animation-delay: 0.12s;
+    }
+
+    .skullBtn.big {
+        animation-delay: 0.0s;
+    }
+
+.skullSvg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Hint dots (optional progress UI) */
+.hint {
+    margin-top: 18px;
+    height: 18px;
+}
+
+.hintDotRow {
+    display: inline-flex;
+    gap: 8px;
+    opacity: 0.45;
+}
+
+.hintDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.35);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.15) inset;
+}
+
+    .hintDot.on {
+        background: rgba(250, 204, 21, 0.70);
+    }
+
+/* Unlock panel */
+.panel {
+    margin-top: 18px;
+    width: min(520px, 92vw);
+    background: rgba(17, 24, 39, 0.62);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 12px;
+    padding: 16px;
+    transform: translateY(10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 420ms ease, transform 420ms ease;
+    backdrop-filter: blur(12px);
+}
+
+    .panel.open {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+.panelTitle {
+    font-weight: 800;
+    letter-spacing: 0.4px;
+}
+
+.panelText {
+    margin-top: 6px;
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.panelActions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 14px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 13px;
+    color: rgba(226, 232, 240, 0.95);
+    background: rgba(148, 163, 184, 0.16);
+    border: 1px solid rgba(148, 163, 184, 0.20);
+}
+
+    .btn.primary {
+        background: rgba(250, 204, 21, 0.18);
+        border-color: rgba(250, 204, 21, 0.28);
+    }
+
+.linkBtn {
+    margin-top: 10px;
+    background: transparent;
+    border: 0;
+    color: rgba(148, 163, 184, 0.85);
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.footerLine {
+    position: absolute;
+    bottom: 14px;
+    left: 0;
+    right: 0;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    font-size: 11px;
+    opacity: 0.55;
+}
+
+    .footerLine .dot {
+        opacity: 0.65;
+    }
+
+/* Wrong input shake */
+.shake .content {
+    animation: shake 520ms ease;
+}
+
+/* Animations */
+@keyframes fadeGreen {
+    0% {
+        opacity: 1;
+    }
+
+    45% {
+        opacity: 1;
+    }
+
+    70% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes fadeRed {
+    0% {
+        opacity: 0;
+    }
+
+    25% {
+        opacity: 0;
+    }
+
+    45% {
+        opacity: 1;
+    }
+
+    72% {
+        opacity: 0.35;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes fadeSteel {
+    0% {
+        opacity: 0;
+    }
+
+    55% {
+        opacity: 0;
+    }
+
+    78% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeGold {
+    0% {
+        opacity: 0;
+    }
+
+    62% {
+        opacity: 0;
+    }
+
+    85% {
+        opacity: 0.55;
+    }
+
+    100% {
+        opacity: 0.9;
+    }
+}
+
+@keyframes lavaMove {
+    0% {
+        transform: translate3d(-3%, -2%, 0) scale(1.02);
+    }
+
+    50% {
+        transform: translate3d(3%, 2%, 0) scale(1.05);
+    }
+
+    100% {
+        transform: translate3d(-3%, -2%, 0) scale(1.02);
+    }
+}
+
+@keyframes starRun {
+    0% {
+        transform: translateX(0) rotate(12deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0.8;
+    }
+
+    60% {
+        opacity: 0.75;
+    }
+
+    100% {
+        transform: translateX(calc(100vw + 500px)) rotate(12deg);
+        opacity: 0;
+    }
+}
+
+@keyframes skullPulse {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+        opacity: 0.92;
+    }
+
+    50% {
+        transform: translateY(-3px) scale(1.03);
+        opacity: 1;
+    }
+}
+
+@keyframes shake {
+    0% {
+        transform: translateX(0);
+    }
+
+    15% {
+        transform: translateX(-6px);
+    }
+
+    30% {
+        transform: translateX(5px);
+    }
+
+    45% {
+        transform: translateX(-4px);
+    }
+
+    60% {
+        transform: translateX(3px);
+    }
+
+    75% {
+        transform: translateX(-2px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+/* Mobile tweak */
+@media (max-width: 520px) {
+    .skullRow {
+        gap: 14px;
+    }
+
+    .skullBtn.small {
+        width: 58px;
+        height: 58px;
+    }
+
+    .skullBtn.big {
+        width: 92px;
+        height: 92px;
+    }
+}
