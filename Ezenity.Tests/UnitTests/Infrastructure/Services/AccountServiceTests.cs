@@ -61,7 +61,7 @@ namespace Ezenity.Tests.AccountTests
             mockAppSettings.Setup(m => m.SmtpPort).Returns(465);
             mockAppSettings.Setup(m => m.SmtpUser).Returns("test@ezenity.com");
             mockAppSettings.Setup(m => m.SmtpPass).Returns("test12345");
-            mockAppSettings.Setup(m => m.SmtpEnableSsl).Returns(true);
+            mockAppSettings.Setup(m => m.SmtpEnabledSsl).Returns(true);
             mockAppSettings.Setup(m => m.AccessToken).Returns("testAccessToken");
 
             // Mock the IMapper to return a non-null Account object
