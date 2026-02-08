@@ -39,9 +39,11 @@ namespace Ezenity.RazorViews
 
         using (var stringWriter = new StringWriter())
         {
-          var viewResult = _viewEngine.GetView("~/", viewName, false);
+          //var viewResult = _viewEngine.GetView("~/", viewName, false);
+          var viewResult = _viewEngine.GetView(executingFilePath: null, viewPath: viewName, isMainPage: false);
 
-          if (!viewResult.Success)
+
+          if (!viewResult.Success && !IsPath(viewName))
           {
             viewResult = _viewEngine.FindView(actionContext, viewName, false);
           }
@@ -50,9 +52,9 @@ namespace Ezenity.RazorViews
           {
             var searchedLocations = viewResult.SearchedLocations ?? Enumerable.Empty<string>();
             var error = $"View '{viewName}' not found. Searched in locations: {string.Join(", ", searchedLocations)}";
-            Console.WriteLine($"View name: {viewName}"); // Log view name
-            Console.WriteLine($"Searched Locations: {string.Join(", ", searchedLocations)}"); // Log searched locations
-            Console.WriteLine(error); // Log this error or throw a more detailed exception
+            //Console.WriteLine($"View name: {viewName}"); // Log view name
+            //Console.WriteLine($"Searched Locations: {string.Join(", ", searchedLocations)}"); // Log searched locations
+            //Console.WriteLine(error); // Log this error or throw a more detailed exception
             throw new InvalidOperationException(error);
           }
 
@@ -76,5 +78,9 @@ namespace Ezenity.RazorViews
         }
       }
     }
+
+    static bool IsPath(string name) =>
+        name.StartsWith("~/", StringComparison.Ordinal) ||
+        name.StartsWith("/", StringComparison.Ordinal);
   }
 }

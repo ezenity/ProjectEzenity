@@ -21,20 +21,26 @@ namespace Ezenity.Infrastructure.Helpers
       _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     }
 
+    //public string GetTemplatePath(string templateName)
+    //{
+    //  string basePath = AppDomain.CurrentDomain.BaseDirectory;
+
+    //  if(_hostEnvironment.IsDevelopment())
+    //  {
+    //    basePath = Path.Combine(basePath);
+    //  }
+
+    //  var templatePath = Path.Combine(basePath, _appSettings.EmailTemplateBasePath, $"{templateName}.cshtml");
+
+    //  //Console.WriteLine($"Computed Path: {templatePath}");
+
+    //  return templatePath;
+    //}
+
     public string GetTemplatePath(string templateName)
     {
-      string basePath = AppDomain.CurrentDomain.BaseDirectory;
-
-      if(_hostEnvironment.IsDevelopment())
-      {
-        basePath = Path.Combine(basePath);
-      }
-
-      var templatePath = Path.Combine(basePath, _appSettings.EmailTemplateBasePath, $"{templateName}.cshtml");
-
-      //Console.WriteLine($"Computed Path: {templatePath}");
-
-      return templatePath;
+        // Razor wants a virtual app-relative path, not /srv/... physical path
+        return $"~/Areas/EmailTemplates/Views/{templateName}.cshtml";
     }
   }
 }
