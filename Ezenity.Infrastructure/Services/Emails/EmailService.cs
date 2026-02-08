@@ -251,7 +251,7 @@ namespace Ezenity.Infrastructure.Services.Emails
                   "SMTP config: host={Host}, port={Port}, ssl={Ssl}, user='{UserMasked}', userLen={UserLen}, passLen={PassLen}",
                   _appSettings.SmtpHost,
                   _appSettings.SmtpPort,
-                  _appSettings.SmtpEnabledSsl,
+                  _appSettings.SmtpEnableSsl,
                   string.IsNullOrWhiteSpace(user) ? "(empty)" : $"{user[..Math.Min(2, user.Length)]}***{user[^Math.Min(3, user.Length)..]}",
                   user?.Length ?? 0,
                   pass?.Length ?? 0
