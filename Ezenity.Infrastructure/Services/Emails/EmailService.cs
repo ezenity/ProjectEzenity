@@ -247,6 +247,16 @@ namespace Ezenity.Infrastructure.Services.Emails
                 var user = (_appSettings.SmtpUser ?? "").TrimEnd('\r', '\n');
                 var pass = (_appSettings.SmtpPass ?? "").TrimEnd('\r', '\n');
 
+                _logger.LogInformation(
+                  "SMTP config: host={Host}, port={Port}, ssl={Ssl}, user='{UserMasked}', userLen={UserLen}, passLen={PassLen}",
+                  _appSettings.SmtpHost,
+                  _appSettings.SmtpPort,
+                  _appSettings.SmtpEnabledSsl,
+                  string.IsNullOrWhiteSpace(user) ? "(empty)" : $"{user[..Math.Min(2, user.Length)]}***{user[^Math.Min(3, user.Length)..]}",
+                  user?.Length ?? 0,
+                  pass?.Length ?? 0
+                );
+
                 // Optional: if your secret ended up stored with quotes (common in env vars / CI)
                 //pass = pass.Trim('"');
 
