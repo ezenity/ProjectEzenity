@@ -244,7 +244,7 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
                     ["__layout"] = viewPath
                 };
 
-                const string hostView = "/Areas/EmailTemplates/Views/_EmailLayoutHost.cshtml";
+                const string hostView = "~/Views/EmailTemplates/_EmailLayoutHost.cshtml";
 
                 var html = await _razorRenderer.RenderViewToStringAsync(hostView, wrapperModel);
 

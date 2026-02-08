@@ -1,10 +1,18 @@
-﻿using Ezenity.Core.Services.Emails;
-using Ezenity.Core.Interfaces;
+﻿using Ezenity.Core.Interfaces;
 using Microsoft.Extensions.Hosting;
 using System;
 
 namespace Ezenity.Infrastructure.Helpers
 {
+    /// <summary>
+    /// Resolves the Razor view path for an email template.
+    ///
+    /// IMPORTANT:
+    /// - ICompositeViewEngine resolves *virtual* paths (~/Views/.. or /Views/..),
+    ///   not physical disk paths like /srv/.../file.cshtml.
+    /// - Since your templates live under Ezenity.RazorViews/Views/*,
+    ///   we return a virtual path under /Views/EmailTemplates.
+    /// </summary>
     public class EmailTemplateResolver : IEmailTemplateResolver
     {
         private readonly IHostEnvironment _hostEnvironment;
@@ -16,35 +24,24 @@ namespace Ezenity.Infrastructure.Helpers
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         }
 
+        /// <summary>
+        /// Returns a Razor view *virtual* path for the template.
+        /// Example: templateName = "EmailVerification"
+        /// Returns: "~/Views/EmailTemplates/EmailVerification.cshtml"
+        /// </summary>
         public string GetTemplatePath(string templateName)
         {
             if (string.IsNullOrWhiteSpace(templateName))
                 throw new ArgumentException("Template name cannot be null/empty.", nameof(templateName));
 
-            // Allow templateName to be passed with or without ".cshtml"
-            var fileName = templateName.EndsWith(".cshtml", StringComparison.OrdinalIgnoreCase)
-                ? templateName
-                : templateName + ".cshtml";
+            // Normalize input just in case someone passes "EmailVerification.cshtml"
+            templateName = templateName.Trim();
 
-            // Example values you can use:
-            // "Areas/EmailTemplates/Views"  (if templates live under Ezenity.API/Areas/EmailTemplates/Views)
-            // "Views"                      (if templates live under Ezenity.RazorViews/Views)
-            var baseVirtual = _appSettings.EmailTemplateBasePath;
+            if (templateName.EndsWith(".cshtml", StringComparison.OrdinalIgnoreCase))
+                templateName = templateName[..^".cshtml".Length];
 
-            if (string.IsNullOrWhiteSpace(baseVirtual))
-                baseVirtual = "Views";
-                //baseVirtual = "Areas/EmailTemplates/Views";
-
-            // Normalize to a clean virtual path segment
-            baseVirtual = baseVirtual
-                .Replace('\\', '/')
-                .Trim()
-                .TrimStart('~')
-                .TrimStart('/')
-                .TrimEnd('/');
-
-            // MVC view engine expects app-relative paths like "~/{...}"
-            return $"~/{baseVirtual}/{fileName}";
+            // Your new location (RazorViews project):
+            return $"~/Views/EmailTemplates/{templateName}.cshtml";
         }
     }
 }

@@ -1,86 +1,109 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Ezenity.Core.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using Ezenity.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Ezenity.RazorViews
 {
-  public class RazorViewRenderer : IRazorViewRenderer
-  {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IWebHostEnvironment _hostingEnvironment;
-    private readonly ICompositeViewEngine _viewEngine;
-
-    public RazorViewRenderer(IServiceProvider serviceProvider, IWebHostEnvironment hostingEnvironment, ICompositeViewEngine viewEngine)
+    /// <summary>
+    /// Renders a Razor view to a string (used for HTML emails).
+    ///
+    /// Key notes:
+    /// - Use isMainPage: TRUE so Layout + _ViewStart can run (email layout support).
+    /// - Supports absolute app-relative view paths like:
+    ///     "~/Views/EmailTemplates/EmailVerification.cshtml"
+    ///     "/Views/EmailTemplates/EmailVerification.cshtml"
+    /// - If the view cannot be found, throws an exception that includes searched locations.
+    /// </summary>
+    public class RazorViewRenderer : IRazorViewRenderer
     {
-      _serviceProvider = serviceProvider;
-      _hostingEnvironment = hostingEnvironment;
-      _viewEngine = viewEngine;
-    }
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ICompositeViewEngine _viewEngine;
 
-    public async Task<string> RenderViewToStringAsync<TModel>(string viewName, TModel model)
-    {
-      var scopeFactory = _serviceProvider.GetRequiredService<IServiceScopeFactory>();
-
-      using (var scope = scopeFactory.CreateScope())
-      {
-        var tempDataProvider = scope.ServiceProvider.GetRequiredService<ITempDataProvider>();
-
-        var actionContext = new ActionContext(
-            new DefaultHttpContext { RequestServices = scope.ServiceProvider },
-            new Microsoft.AspNetCore.Routing.RouteData(),
-            new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor()
-        );
-
-        using (var stringWriter = new StringWriter())
+        public RazorViewRenderer(IServiceProvider serviceProvider, ICompositeViewEngine viewEngine)
         {
-          //var viewResult = _viewEngine.GetView("~/", viewName, false);
-          var viewResult = _viewEngine.GetView(executingFilePath: null, viewPath: viewName, isMainPage: false);
-
-
-          if (!viewResult.Success && !IsPath(viewName))
-          {
-            viewResult = _viewEngine.FindView(actionContext, viewName, false);
-          }
-
-          if (!viewResult.Success)
-          {
-            var searchedLocations = viewResult.SearchedLocations ?? Enumerable.Empty<string>();
-            var error = $"View '{viewName}' not found. Searched in locations: {string.Join(", ", searchedLocations)}";
-            //Console.WriteLine($"View name: {viewName}"); // Log view name
-            //Console.WriteLine($"Searched Locations: {string.Join(", ", searchedLocations)}"); // Log searched locations
-            //Console.WriteLine(error); // Log this error or throw a more detailed exception
-            throw new InvalidOperationException(error);
-          }
-
-          var viewDictionary = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
-          {
-            Model = model
-          };
-
-          var viewContext = new ViewContext(
-              actionContext,
-              viewResult.View,
-              viewDictionary,
-              new TempDataDictionary(actionContext.HttpContext, tempDataProvider),
-              stringWriter,
-              new HtmlHelperOptions()
-          );
-
-          await viewResult.View.RenderAsync(viewContext);
-
-          return stringWriter.ToString();
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _viewEngine = viewEngine ?? throw new ArgumentNullException(nameof(viewEngine));
         }
-      }
-    }
 
-    static bool IsPath(string name) =>
-        name.StartsWith("~/", StringComparison.Ordinal) ||
-        name.StartsWith("/", StringComparison.Ordinal);
-  }
+        /// <summary>
+        /// Render the specified Razor view to a string.
+        /// </summary>
+        public async Task<string> RenderViewToStringAsync<TModel>(string viewName, TModel model)
+        {
+            if (string.IsNullOrWhiteSpace(viewName))
+                throw new ArgumentException("viewName cannot be null/empty.", nameof(viewName));
+
+            var scopeFactory = _serviceProvider.GetRequiredService<IServiceScopeFactory>();
+
+            using var scope = scopeFactory.CreateScope();
+
+            var tempDataProvider = scope.ServiceProvider.GetRequiredService<ITempDataProvider>();
+
+            // Minimal ActionContext for rendering
+            var actionContext = new ActionContext(
+                new DefaultHttpContext { RequestServices = scope.ServiceProvider },
+                new Microsoft.AspNetCore.Routing.RouteData(),
+                new ActionDescriptor()
+            );
+
+            await using var stringWriter = new StringWriter();
+
+            // IMPORTANT: isMainPage = true so Layout works
+            var isMainPage = true;
+
+            // 1) If viewName is a path (~/ or /), use GetView
+            var viewResult = _viewEngine.GetView(executingFilePath: null, viewPath: viewName, isMainPage: isMainPage);
+
+            // 2) Otherwise, try FindView (view location searching)
+            if (!viewResult.Success && !IsPath(viewName))
+            {
+                viewResult = _viewEngine.FindView(actionContext, viewName, isMainPage: isMainPage);
+            }
+
+            if (!viewResult.Success)
+            {
+                var searchedLocations = viewResult.SearchedLocations ?? Enumerable.Empty<string>();
+                var error =
+                    $"View '{viewName}' not found. " +
+                    $"Searched in: {string.Join(", ", searchedLocations)}";
+
+                throw new InvalidOperationException(error);
+            }
+
+            var viewDictionary = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
+            {
+                Model = model
+            };
+
+            var viewContext = new ViewContext(
+                actionContext,
+                viewResult.View,
+                viewDictionary,
+                new TempDataDictionary(actionContext.HttpContext, tempDataProvider),
+                stringWriter,
+                new HtmlHelperOptions()
+            );
+
+            await viewResult.View.RenderAsync(viewContext);
+
+            return stringWriter.ToString();
+        }
+
+        /// <summary>
+        /// Determines whether a view name is a virtual path.
+        /// </summary>
+        private static bool IsPath(string name) =>
+            name.StartsWith("~/", StringComparison.Ordinal) ||
+            name.StartsWith("/", StringComparison.Ordinal);
+    }
 }
