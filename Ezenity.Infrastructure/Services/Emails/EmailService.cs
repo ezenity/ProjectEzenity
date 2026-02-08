@@ -204,7 +204,8 @@ namespace Ezenity.Infrastructure.Services.Emails
             if (string.IsNullOrWhiteSpace(_appSettings.SmtpPass))
                 throw new AppException("SMTP password is not configured (SmtpPass).");
 
-            using var client = new SmtpClient();
+            //using var client = new SmtpClient();
+            using var client = new SmtpClient(new MailKit.ProtocolLogger("smtp-protocol.log"));
 
             try
             {
