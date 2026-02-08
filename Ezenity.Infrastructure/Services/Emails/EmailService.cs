@@ -29,17 +29,20 @@ namespace Ezenity.Infrastructure.Services.Emails
         private readonly IDataContext _context; // you may not need this anymore, but keeping it since you had it
         private readonly IWebHostEnvironment _env;
         private readonly IEmailTemplateService _emailTemplateService;
+        private readonly ILogger<AccountService> _logger;
 
         public EmailService(
             IAppSettings appSettings,
             IDataContext context,
             IWebHostEnvironment env,
-            IEmailTemplateService emailTemplateService)
+            IEmailTemplateService emailTemplateService,
+            ILogger<AccountService> logger)
         {
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _env = env ?? throw new ArgumentNullException(nameof(env));
             _emailTemplateService = emailTemplateService ?? throw new ArgumentNullException(nameof(emailTemplateService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -240,7 +243,19 @@ namespace Ezenity.Infrastructure.Services.Emails
             {
                 // This message is what bubbles up to your API response right now.
                 // Keep it clear and keep the original exception as InnerException.
-                throw new AppException("SMTP send failed. Check SMTP host/port/TLS and credentials.", ex);
+                //throw new AppException("SMTP send failed. Check SMTP host/port/TLS and credentials.", ex);
+
+                // Log the REAL error with full detail (type + message + inner)
+                // If you don't have _logger injected yet, at least Console.WriteLine(ex.ToString());
+                // Better: inject ILogger<EmailService> and use it here.
+                _logger.LogError(ex, "SMTP send failed. Host={Host} Port={Port} User={User}",
+                     _appSettings.SmtpHost, _appSettings.SmtpPort, _appSettings.SmtpUser);
+
+                // Temporarily surface the real error message in the thrown exception (DEV ONLY).
+                throw new AppException(
+                    $"SMTP send failed: {ex.GetType().Name} - {ex.Message}",
+                    ex
+                );
             }
         }
 
