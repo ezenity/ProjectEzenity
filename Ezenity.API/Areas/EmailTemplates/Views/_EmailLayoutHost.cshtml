@@ -1,18 +1,116 @@
+@using System
 @model IDictionary<string, string>
 
     @{
-    // Treat whatever path is in __layout as the layout page
-    Layout = Model.TryGetValue("__layout", out var layoutPath) ? layoutPath : null;
+    string Get(string key, string fallback = "")
+        => Model != null && Model.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : fallback;
 
-    // Your layout uses ViewData["EmailTitle"]
-    if (ViewData["EmailTitle"] == null)
-    {
-        if (Model.TryGetValue("EmailTitle", out var emailTitle))
-            ViewData["EmailTitle"] = emailTitle;
-        else if (Model.TryGetValue("templateTitle", out var templateTitle))
-            ViewData["EmailTitle"] = templateTitle;
+    // If you pass __layout, this view becomes the body. If you don't, it renders a full HTML email.
+    var layout = Get("__layout", "");
+    Layout = string.IsNullOrWhiteSpace(layout) ? null : layout;
+
+    var appName = Get("appName", "Ezenity");
+    var title = Get("templateTitle", Get("EmailTitle", appName));
+    var firstName = Get("firstName", "there");
+    var bodyContent = Get("bodyContent", "");
+    var actionUrl = Get("actionUrl", Get("verificationUrl", Get("resetUrl", "")));
+    var actionText = Get("actionText", string.IsNullOrWhiteSpace(actionUrl) ? "" : "Open");
+    var year = Get("currentYear", DateTime.UtcNow.Year.ToString());
+    var supportEmail = Get("supportEmail", $"support@{appName.ToLowerInvariant()}.com");
+
+    ViewData["EmailTitle"] = title;
     }
-}
 
-@* If you WANT @RenderBody() to output something, put it here.
-    Otherwise leave it empty and RenderBody will render nothing. *@
+    @{
+    // This is the inner content used by BOTH the "standalone" version and the "layout" version.
+    }
+    @functions{
+    // Razor-only helper for consistent button markup (works in normal Razor views).
+    public static string Safe(string s) => s ?? "";
+    }
+
+    @{
+    var inner = @<text>
+            <p style="margin:0 0 12px 0;">Hello @firstName,</p>
+
+            @if (!string.IsNullOrWhiteSpace(bodyContent))
+        {
+            <p style="margin:0 0 16px 0;">@bodyContent</p>
+        }
+
+            @if (!string.IsNullOrWhiteSpace(actionUrl))
+        {
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;">
+                <tr>
+                    <td bgcolor="#2563eb" style="border-radius:6px;">
+                        <a href="@actionUrl"
+                           style="display:inline-block;padding:12px 18px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#ffffff;text-decoration:none;font-weight:700;">
+                            @actionText
+                        </a>
+                    </td>
+                </tr>
+            </table>
+
+            <p style="margin:0 0 8px 0;color:#444;">
+                If the button doesn’t work, copy and paste this link into your browser:
+            </p>
+            <p style="margin:0;word-break:break-all;">
+                <a href="@actionUrl" style="color:#2563eb;text-decoration:underline;">@actionUrl</a>
+            </p>
+        }
+
+            <p style="margin:16px 0 0 0;color:#666;font-size:12px;line-height:18px;">
+                If you didn’t request this, you can safely ignore this email. Need help? Contact @supportEmail.
+            </p>
+    </text>;
+
+    // If a layout is provided, output only the inner body for RenderBody().
+    if (Layout != null)
+    {
+    @inner
+        return;
+    }
+    }
+
+    <!doctype html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="x-apple-disable-message-reformatting" />
+        <title>@ViewData["EmailTitle"]</title>
+    </head>
+    <body style="margin:0;padding:0;background-color:#f4f4f4;">
+        <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+            @ViewData["EmailTitle"]
+        </div>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;">
+            <tr>
+                <td align="center" style="padding:24px;">
+                    <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                           style="width:600px;max-width:600px;background:#ffffff;border-radius:8px;overflow:hidden;">
+                        <tr>
+                            <td style="padding:20px 24px;background:#111827;color:#ffffff;font-family:Arial,Helvetica,sans-serif;">
+                                <div style="font-size:16px;font-weight:700;">@appName</div>
+                                <div style="font-size:12px;opacity:0.9;margin-top:6px;">@ViewData["EmailTitle"]</div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="padding:24px;font-family:Arial,Helvetica,sans-serif;color:#111;font-size:14px;line-height:20px;">
+                                @inner
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="padding:14px 24px;background:#f9fafb;color:#6b7280;font-family:Arial,Helvetica,sans-serif;font-size:12px;">
+                                © @appName @year — Automated message, please do not reply.
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>
