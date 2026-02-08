@@ -18,7 +18,7 @@ namespace Ezenity.API.Configurations
     /// <summary>
     /// Configures Swagger to accurately represent API versioning and strict JSON:API behavior.
     /// </summary>
-    public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
+    public class ConfigureSwaggerOptions : IConfigureOptions<Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions>
     {
         private readonly IApiVersionDescriptionProvider _provider;
         private readonly ILogger<ConfigureSwaggerOptions> _logger;
@@ -31,7 +31,7 @@ namespace Ezenity.API.Configurations
             _logger = logger;
         }
 
-        public void Configure(SwaggerGenOptions options)
+        public void Configure(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions options)
         {
             // One Swagger document per API version
             foreach (var description in _provider.ApiVersionDescriptions)
@@ -67,7 +67,7 @@ namespace Ezenity.API.Configurations
             IncludeXmlComments(options);
         }
 
-        private void ConfigureSecurity(SwaggerGenOptions options)
+        private void ConfigureSecurity(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions options)
         {
             // Single, clean JWT Bearer definition
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -98,7 +98,7 @@ namespace Ezenity.API.Configurations
             });
         }
 
-        private void ConfigureOperationFilters(SwaggerGenOptions options)
+        private void ConfigureOperationFilters(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions options)
         {
             // 🔑 CRITICAL FIX:
             // Force x-api-version to be a HEADER, never part of Content-Type
@@ -111,7 +111,7 @@ namespace Ezenity.API.Configurations
             options.OperationFilter<GetEmailTemplateFilter>();
         }
 
-        private void IncludeXmlComments(SwaggerGenOptions options)
+        private void IncludeXmlComments(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions options)
         {
             var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
             var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
