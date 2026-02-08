@@ -12,7 +12,7 @@
         else if (Model.TryGetValue("templateTitle", out var templateTitle))
             ViewData["EmailTitle"] = templateTitle;
     }
-    }
+}
 
-    @* If you WANT @RenderBody() to output something, put it here.
-        Otherwise leave it empty and RenderBody will render nothing. *@
+@* If you WANT @RenderBody() to output something, put it here.
+    Otherwise leave it empty and RenderBody will render nothing. *@

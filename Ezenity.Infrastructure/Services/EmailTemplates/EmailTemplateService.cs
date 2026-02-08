@@ -211,23 +211,60 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
         }
 
         public async Task<string> RenderEmailTemplateAsync(string templateName, Dictionary<string, string> model)
-        { 
+        {
             var emailTemplateExists = await _context.EmailTemplates.AnyAsync(t => t.TemplateName == templateName);
-
             if (!emailTemplateExists)
-            {
                 throw new AppException($"Email template '{templateName}' not found.");
-            }
 
-            // Assuming the ContentViewPath property or similar to construct the view path
-            //string viewPath = $"EmailTemplates/Templates/{templateName}.cshtml";
+            model ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            // Optional: make sure year exists (since your template uses it)
+            if (!model.ContainsKey("currentYear"))
+                model["currentYear"] = DateTime.UtcNow.Year.ToString();
+
             var viewPath = _emailTemplateResolver.GetTemplatePath(templateName);
 
-            // Render the view to a string
-            //string renderedTemplate = await _razorRenderer.RenderViewToStringAsync(templateName, model);
-            string renderedTemplate = await _razorRenderer.RenderViewToStringAsync(viewPath, model);
+            try
+            {
+                // First try: render normally
+                var html = await _razorRenderer.RenderViewToStringAsync(viewPath, model);
 
-            return renderedTemplate;
+                // Optional: support {{token}} syntax without changing cshtml
+                html = ReplaceDoubleCurlyTokens(html, model);
+
+                return html;
+            }
+            catch (InvalidOperationException ex)
+                when (ex.Message.Contains("RenderBody invocation", StringComparison.OrdinalIgnoreCase))
+            {
+                // This template is a LAYOUT (contains @RenderBody()).
+                // Render it as a layout by rendering a host view that sets Layout = viewPath.
+                var wrapperModel = new Dictionary<string, string>(model, StringComparer.OrdinalIgnoreCase)
+                {
+                    ["__layout"] = viewPath
+                };
+
+                const string hostView = "/Areas/EmailTemplates/Views/_EmailLayoutHost.cshtml";
+
+                var html = await _razorRenderer.RenderViewToStringAsync(hostView, wrapperModel);
+
+                // Optional: support {{token}} syntax without changing cshtml
+                html = ReplaceDoubleCurlyTokens(html, model);
+
+                return html;
+            }
+        }
+
+        private static string ReplaceDoubleCurlyTokens(string html, IDictionary<string, string> model)
+        {
+            if (string.IsNullOrEmpty(html) || model == null) return html;
+
+            foreach (var kv in model)
+            {
+                html = html.Replace("{{" + kv.Key + "}}", kv.Value ?? string.Empty);
+            }
+
+            return html;
         }
 
         /// //////////////////
