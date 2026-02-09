@@ -156,15 +156,15 @@ export default function GatePage() {
 
             {/* HUD ELEMENTS */}
             <div className="hud hudLeft" aria-hidden="true">
-                <div className="hudTitle">MIDNIGHT RIDERS</div>
+                <div className="hudTitle">AFTER HOURS CREW</div>
                 <div className="hudLine" />
-                <div className="hudText">Earn rep • coins • emblems</div>
+                <div className="hudText">Earn Rep • Stack Emblems • Earn Coins</div>
             </div>
 
             <div className="hud hudRight" aria-hidden="true">
-                <div className="hudTitle">NIGHT OPS</div>
+                <div className="hudTitle">THE VAULT</div>
                 <div className="hudLine" />
-                <div className="hudText">Invite-only access</div>
+                <div className="hudText">Verified Riders Only</div>
             </div>
 
             {/* CONTENT */}
