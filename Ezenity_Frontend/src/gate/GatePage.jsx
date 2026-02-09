@@ -1,16 +1,13 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { accountService } from "@/_services";
+import { isGateUnlocked, unlockGate } from "@/_helpers/gate";
 import "./GatePage.less";
 
-// Your real coin assets
 import coin_Main from "@/images/skulls/skull-coin-3.png";
 import emblem_One from "@/images/skulls/skull-emblem-1.png";
 import emblem_Three from "@/images/skulls/skull-emblem-3.png";
 
-const UNLOCK_KEY = "ez_gate_unlocked";
-
-// Change this pattern whenever you want (IDs must match coinConfig ids)
 const SECRET_PATTERN = ["coinMain", "emblemOne", "emblemThree", "coinMain"];
 
 export default function GatePage() {
@@ -24,42 +21,24 @@ export default function GatePage() {
     const timers = useRef([]);
     const resetTimer = useRef(null);
 
-    const user = accountService.userValue;
-
     const coinConfig = useMemo(
         () => [
-            // Layout matches your “one large + two small” idea, with MORE spacing
-            {
-                id: "emblemOne",
-                img: emblem_One,
-                size: "sm",
-                style: { "--x": "-455px", "--y": "-80px" }, // left/top
-            },
-            {
-                id: "emblemThree",
-                img: emblem_Three,
-                size: "sm",
-                style: { "--x": "485px", "--y": "-80px" }, // left/bottom
-            },
-            {
-                id: "coinMain",
-                img: coin_Main,
-                size: "lg",
-                style: { "--x": "0px", "--y": "-20px" }, // right/large
-            },
+            { id: "emblemOne", img: emblem_One, size: "sm" },
+            { id: "emblemThree", img: emblem_Three, size: "sm" },
+            { id: "coinMain", img: coin_Main, size: "lg" },
         ],
         []
     );
 
     useEffect(() => {
         // If already unlocked this session, go straight in
-        if (sessionStorage.getItem(UNLOCK_KEY) === "1") {
-            if (user) history.replace("/profile");
-            else history.replace("/account/login");
+        if (isGateUnlocked()) {
+            const current = accountService.userValue;
+            history.replace(current ? "/profile" : "/account/login");
             return;
         }
 
-        const t = setTimeout(() => setPhase("ready"), 1400);
+        const t = setTimeout(() => setPhase("ready"), 900);
         timers.current.push(t);
 
         return () => {
@@ -67,13 +46,11 @@ export default function GatePage() {
             timers.current = [];
             if (resetTimer.current) clearTimeout(resetTimer.current);
         };
-    }, []);
+    }, [history]);
 
     function armResetTimeout() {
         if (resetTimer.current) clearTimeout(resetTimer.current);
-        resetTimer.current = setTimeout(() => {
-            setInput([]);
-        }, 3000);
+        resetTimer.current = setTimeout(() => setInput([]), 2500);
     }
 
     function triggerShake() {
@@ -85,7 +62,6 @@ export default function GatePage() {
     function onCoinClick(id) {
         if (phase !== "ready") return;
 
-        // click feedback (ring/burst)
         setLastHit(id);
         const hitT = setTimeout(() => setLastHit(null), 220);
         timers.current.push(hitT);
@@ -94,7 +70,7 @@ export default function GatePage() {
         setInput(next);
         armResetTimeout();
 
-        // prefix validation: fail fast
+        // prefix validation
         for (let i = 0; i < next.length; i++) {
             if (SECRET_PATTERN[i] !== next[i]) {
                 triggerShake();
@@ -103,17 +79,15 @@ export default function GatePage() {
             }
         }
 
-        // success
+        // completed
         if (next.length === SECRET_PATTERN.length) {
             setPhase("entering");
-            sessionStorage.setItem(UNLOCK_KEY, "1");
+            unlockGate(); // <--- IMPORTANT: matches GateGuardRoute + App
 
-            // IMPORTANT: ACTUALLY NAVIGATE (fixes your “Entering…” hang)
             const t = setTimeout(() => {
                 const current = accountService.userValue;
-                if (current) history.push("/profile");
-                else history.push("/account/login");
-            }, 700);
+                history.push(current ? "/profile" : "/account/login");
+            }, 450);
 
             timers.current.push(t);
         }
@@ -121,14 +95,12 @@ export default function GatePage() {
 
     return (
         <div className={`gateRoot2 ${shake ? "shake" : ""} phase-${phase}`}>
-            {/* background */}
             <div className="bg2 base" />
             <div className="bg2 haze" />
             <div className="bg2 embers" />
             <div className="bg2 streaks" />
             <div className="vignette2" />
 
-            {/* content */}
             <div className="content2">
                 <div className="brand2">
                     <div className="brandName2">Ezenity</div>
@@ -141,7 +113,7 @@ export default function GatePage() {
                             key={c.id}
                             type="button"
                             className={`coinBtn ${c.size} ${lastHit === c.id ? "is-hit" : ""}`}
-                            style={c.style}
+                            data-id={c.id}
                             onClick={() => onCoinClick(c.id)}
                             disabled={phase !== "ready"}
                             aria-label={`sigil-${c.id}`}

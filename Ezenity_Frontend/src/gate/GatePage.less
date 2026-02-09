@@ -103,9 +103,9 @@
 /* Sigil zone */
 .sigil2 {
     position: relative;
-    width: min(900px, 96vw);
-    height: min(520px, 62vh);
-    transform: translateY(10px);
+    width: min(1100px, 96vw);
+    height: min(620px, 66vh);
+    margin: 0 auto;
 }
 
 /* Coin buttons */
@@ -113,7 +113,7 @@
     position: absolute;
     left: 50%;
     top: 50%;
-    transform: translate(-50%, -50%) translate(var(--x), var(--y)) scale(1);
+    transform: translate(-50%, -50%) translate3d(var(--x, 0px), var(--y, 0px), 0) scale(1);
     border: 0;
     background: transparent;
     padding: 0;
@@ -122,35 +122,53 @@
     transform-origin: center;
     transition: transform 140ms ease, filter 140ms ease;
     animation: coinBreathe 3.2s ease-in-out infinite;
+    touch-action: manipulation;
 }
 
-    .coinBtn:disabled {
-        cursor: default;
-        opacity: 0.65;
-        animation: none;
-    }
+.coinBtn:disabled {
+    cursor: default;
+    opacity: 0.7;
+    animation: none;
+}
 
-    .coinBtn.sm {
-        width: clamp(110px, 12vw, 180px);
-        height: clamp(110px, 12vw, 180px);
-    }
+/* Sizes */
+.coinBtn.sm {
+    width: clamp(110px, 16vw, 190px);
+    height: clamp(110px, 16vw, 190px);
+}
 
-    .coinBtn.lg {
-        width: clamp(180px, 18vw, 300px);
-        height: clamp(180px, 18vw, 300px);
-    }
+.coinBtn.lg {
+    width: clamp(190px, 22vw, 340px);
+    height: clamp(190px, 22vw, 340px);
+}
 
-    .coinBtn:hover:not(:disabled) {
-        transform: translate(-50%, -50%) translate(var(--x), var(--y)) scale(1.03);
-        filter: drop-shadow(0 22px 54px rgba(0,0,0,0.75));
-    }
+/* Desktop layout (spread out, but safely within viewport) */
+.coinBtn[data-id="coinMain"] {
+    --x: 0px;
+    --y: clamp(-10px, -1vh, 10px);
+}
+
+.coinBtn[data-id="emblemOne"] {
+    --x: clamp(-320px, -28vw, -120px);
+    --y: clamp(-90px, -8vh, -40px);
+}
+
+.coinBtn[data-id="emblemThree"] {
+    --x: clamp(120px, 28vw, 320px);
+    --y: clamp(-90px, -8vh, -40px);
+}
+
+.coinBtn:hover:not(:disabled) {
+    transform: translate(-50%, -50%) translate3d(var(--x, 0px), var(--y, 0px), 0) scale(1.03);
+    filter: drop-shadow(0 22px 54px rgba(0,0,0,0.75));
+}
 
 .coinImg {
     width: 100%;
     height: 100%;
     object-fit: contain;
     user-select: none;
-    pointer-events: none; /* IMPORTANT: click goes to the button */
+    pointer-events: none;
 }
 
 /* ring + burst feedback */
@@ -328,9 +346,35 @@
     }
 }
 
-/* Responsive tweak */
+/* Mobile: keep all coins visible by moving the small ones BELOW the main coin */
 @media (max-width: 620px) {
     .sigil2 {
-        height: min(420px, 60vh);
+        width: 96vw;
+        height: min(640px, 70vh);
+    }
+
+    .coinBtn.sm {
+        width: clamp(95px, 22vw, 140px);
+        height: clamp(95px, 22vw, 140px);
+    }
+
+    .coinBtn.lg {
+        width: clamp(180px, 55vw, 260px);
+        height: clamp(180px, 55vw, 260px);
+    }
+
+    .coinBtn[data-id="coinMain"] {
+        --x: 0px;
+        --y: -40px;
+    }
+
+    .coinBtn[data-id="emblemOne"] {
+        --x: clamp(-120px, -22vw, -85px);
+        --y: 150px;
+    }
+
+    .coinBtn[data-id="emblemThree"] {
+        --x: clamp(85px, 22vw, 120px);
+        --y: 150px;
     }
 }
