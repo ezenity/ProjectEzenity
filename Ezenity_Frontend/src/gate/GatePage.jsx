@@ -1,44 +1,42 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useHistory } from "react-router-dom";
+ï»¿import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import "./GatePage.less";
 
-/**
- * GatePage
- * --------
- * Full-screen animated landing "gate" with a click-pattern unlock.
- *
- * Behavior:
- * 1) Plays a one-time intro background animation (green -> red -> black/silver -> gold)
- * 2) Shows skulls that pulse forever
- * 3) User must click skulls in a specific pattern to "unlock"
- * 4) After unlock, shows Login/Register actions (and sets a session flag)
- *
- * Notes:
- * - This is NOT real security (client-side logic can be bypassed).
- * - If you want to require the gate before accessing routes, use GateGuardRoute.
- */
+// Keep the key consistent with your helper + guard
+const UNLOCK_KEY = "ez_gate_unlocked";
+
 export default function GatePage() {
-    const history = useHistory();
+    // Pattern: matches â€œone big + two smallâ€ layout
+    // Allowed IDs: "smallTop", "smallBottom", "big"
+    const requiredPattern = useMemo(
+        () => ["big", "smallTop", "smallBottom", "big"],
+        []
+    );
 
-    // You can change this pattern any time:
-    // Allowed IDs: "left", "center", "right"
-    const requiredPattern = useMemo(() => ["left", "right", "center", "center", "left"], []);
-
-    // Timing
-    const INTRO_MS = 5200;        // how long before skulls become active
-    const RESET_AFTER_MS = 3000;  // if user pauses too long, reset progress
+    const INTRO_MS = 2600;       // faster, punchier intro
+    const RESET_AFTER_MS = 2200; // reset if user pauses
 
     const [introDone, setIntroDone] = useState(false);
     const [armed, setArmed] = useState(false);
-    const [progress, setProgress] = useState(0);
     const [unlocked, setUnlocked] = useState(false);
 
-    // UI feedback (shake on wrong input)
+    const [progress, setProgress] = useState(0); // internal only (no UI)
     const [shake, setShake] = useState(false);
 
-    const resetTimerRef = useRef(null);
+    // per-click feedback (no progress reveal)
+    const [hitId, setHitId] = useState(null);
+    const hitTimer = useRef(null);
+    const resetTimer = useRef(null);
 
     useEffect(() => {
+        // if already unlocked in this tab session, just show panel immediately
+        if (sessionStorage.getItem(UNLOCK_KEY) === "1") {
+            setIntroDone(true);
+            setArmed(false);
+            setUnlocked(true);
+            return;
+        }
+
         const t = setTimeout(() => {
             setIntroDone(true);
             setArmed(true);
@@ -47,26 +45,23 @@ export default function GatePage() {
         return () => clearTimeout(t);
     }, []);
 
-    function resetProgress() {
-        setProgress(0);
-        if (resetTimerRef.current) {
-            clearTimeout(resetTimerRef.current);
-            resetTimerRef.current = null;
-        }
-    }
-
     function armResetTimer() {
-        if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
-        resetTimerRef.current = setTimeout(() => {
-            resetProgress();
-        }, RESET_AFTER_MS);
+        if (resetTimer.current) clearTimeout(resetTimer.current);
+        resetTimer.current = setTimeout(() => setProgress(0), RESET_AFTER_MS);
     }
 
-    function onSkullTap(id) {
+    function pulseHit(id) {
+        setHitId(id);
+        if (hitTimer.current) clearTimeout(hitTimer.current);
+        hitTimer.current = setTimeout(() => setHitId(null), 220);
+    }
+
+    function onTap(id) {
         if (!armed || unlocked) return;
 
-        const expected = requiredPattern[progress];
+        pulseHit(id);
 
+        const expected = requiredPattern[progress];
         if (id === expected) {
             const next = progress + 1;
             setProgress(next);
@@ -74,95 +69,64 @@ export default function GatePage() {
 
             if (next >= requiredPattern.length) {
                 // unlocked
+                sessionStorage.setItem(UNLOCK_KEY, "1");
                 setUnlocked(true);
                 setArmed(false);
-                resetProgress();
-
-                // Session flag so you can gate routes if desired
-                sessionStorage.setItem("ez_gate_unlocked", "1");
-
-                // Optional: auto-navigate directly after unlock:
-                // history.push("/account/login");
+                setProgress(0);
             }
             return;
         }
 
-        // Wrong input -> reset + shake
+        // wrong input -> shake + reset
         setShake(true);
-        resetProgress();
-        window.setTimeout(() => setShake(false), 520);
-    }
-
-    function clearGate() {
-        sessionStorage.removeItem("ez_gate_unlocked");
-        history.push("/");
-        window.location.reload();
+        setProgress(0);
+        setTimeout(() => setShake(false), 520);
     }
 
     return (
         <div className={`gateRoot ${introDone ? "introDone" : "introPlaying"} ${shake ? "shake" : ""}`}>
-            {/* BACKGROUND LAYERS */}
-            <div className="bgLayer bgGreen" />
-            <div className="bgLayer bgRed" />
-            <div className="bgLayer bgSteel" />
-            <div className="bgLayer bgGold" />
+            {/* BACKGROUND */}
+            <div className="bgLayer bgBase" />
+            <div className="bgLayer bgBurst" />
             <div className="bgLayer lava" />
             <div className="bgLayer stars" />
-
-            {/* VIGNETTE */}
             <div className="vignette" />
 
             {/* CONTENT */}
             <div className="content">
                 <div className="brandRow">
                     <div className="brandName">Ezenity</div>
-                    <div className="brandTag">Underground • Invite-only • Ride smart</div>
+                    <div className="brandTag">Underground â™¦ Invite-only â™¦ Ride smart</div>
                 </div>
 
-                {/* SKULLS */}
-                <div className={`skullStage ${introDone ? "show" : ""}`}>
-                    <SkullRow
+                {/* SIGIL / SKULLS */}
+                <div className={`sigilStage ${introDone ? "show" : ""}`}>
+                    <SigilSkulls
                         disabled={!armed || unlocked}
-                        onTap={onSkullTap}
+                        onTap={onTap}
+                        hitId={hitId}
                     />
+                    {!unlocked && (
+                        <div className="subHint">
+                            Tap the sigil.
+                        </div>
+                    )}
                 </div>
 
-                {/* SUBTLE PROGRESS (optional but helpful) */}
-                {!unlocked && (
-                    <div className="hint">
-                        <span className="hintDotRow" aria-hidden="true">
-                            {requiredPattern.map((_, i) => (
-                                <span key={i} className={`hintDot ${i < progress ? "on" : ""}`} />
-                            ))}
-                        </span>
-                    </div>
-                )}
-
-                {/* UNLOCK PANEL */}
+                {/* UNLOCK PANEL (only after success) */}
                 <div className={`panel ${unlocked ? "open" : ""}`}>
                     <div className="panelTitle">Access granted</div>
-                    <div className="panelText">
-                        Welcome in. Choose where you’re headed.
-                    </div>
+                    <div className="panelText">Choose where youâ€™re headed.</div>
 
                     <div className="panelActions">
-                        <Link className="btn primary" to="/account/login">
-                            Login
-                        </Link>
-                        <Link className="btn" to="/account/register">
-                            Register
-                        </Link>
+                        <Link className="btn primary" to="/account/login">Login</Link>
+                        <Link className="btn" to="/account/register">Register</Link>
                     </div>
-
-                    {/* DEV/ADMIN convenience (remove if you don’t want it) */}
-                    <button className="linkBtn" onClick={clearGate} type="button">
-                        Reset gate (local)
-                    </button>
                 </div>
 
                 <div className="footerLine">
-                    <span>© {new Date().getFullYear()} Ezenity</span>
-                    <span className="dot">•</span>
+                    <span>Â© {new Date().getFullYear()} Ezenity</span>
+                    <span className="dot">â€¢</span>
                     <span>Automated message, please do not reply</span>
                 </div>
             </div>
@@ -170,80 +134,62 @@ export default function GatePage() {
     );
 }
 
-/**
- * SkullRow
- * --------
- * Three skulls: big center + two smaller.
- * IDs used for the pattern: left, center, right
- */
-function SkullRow({ disabled, onTap }) {
+function SigilSkulls({ disabled, onTap, hitId }) {
     return (
-        <div className="skullRow">
+        <div className="sigil">
+            <div className="sigil__ring" aria-hidden="true" />
+
             <button
-                className="skullBtn small"
+                className={`sigil__skull sigil__skull--smallTop ${hitId === "smallTop" ? "is-hit" : ""}`}
                 type="button"
-                onClick={() => onTap("left")}
                 disabled={disabled}
-                aria-label="Left skull"
+                onClick={() => onTap("smallTop")}
+                aria-label="Small skull top"
             >
                 <SkullIcon />
             </button>
 
             <button
-                className="skullBtn big"
+                className={`sigil__skull sigil__skull--smallBottom ${hitId === "smallBottom" ? "is-hit" : ""}`}
                 type="button"
-                onClick={() => onTap("center")}
                 disabled={disabled}
-                aria-label="Center skull"
+                onClick={() => onTap("smallBottom")}
+                aria-label="Small skull bottom"
             >
                 <SkullIcon />
             </button>
 
             <button
-                className="skullBtn small"
+                className={`sigil__skull sigil__skull--big ${hitId === "big" ? "is-hit" : ""}`}
                 type="button"
-                onClick={() => onTap("right")}
                 disabled={disabled}
-                aria-label="Right skull"
+                onClick={() => onTap("big")}
+                aria-label="Big skull"
             >
                 <SkullIcon />
             </button>
+
+            {/* Crossbones accent (non-click) */}
+            <div className="sigil__bones" aria-hidden="true" />
         </div>
     );
 }
 
-/**
- * SkullIcon
- * ---------
- * Simple inline SVG skull (placeholder).
- * Replace with your own pirate-skull image anytime:
- * - import skullPng from "@/images/pirate-skull.png";
- * - return <img src={skullPng} alt="" />
- */
 function SkullIcon() {
     return (
-        <svg
-            className="skullSvg"
-            viewBox="0 0 128 128"
-            role="img"
-            aria-hidden="true"
-        >
-            {/* head */}
+        <svg className="skullSvg" viewBox="0 0 128 128" aria-hidden="true">
             <path
                 d="M64 10c-24 0-42 18-42 42 0 18 8 28 18 34v16c0 6 6 10 12 10h24c6 0 12-4 12-10V86c10-6 18-16 18-34 0-24-18-42-42-42z"
                 fill="currentColor"
                 opacity="0.92"
             />
-            {/* eyes */}
             <circle cx="46" cy="52" r="10" fill="#0b0f18" opacity="0.95" />
             <circle cx="82" cy="52" r="10" fill="#0b0f18" opacity="0.95" />
-            {/* nose */}
             <path
                 d="M64 62c-6 0-9 7-9 12 0 6 4 10 9 10s9-4 9-10c0-5-3-12-9-12z"
                 fill="#0b0f18"
                 opacity="0.9"
             />
-            {/* teeth */}
             <path
                 d="M44 92h40v14c0 4-4 6-8 6H52c-4 0-8-2-8-6V92z"
                 fill="currentColor"
