@@ -7,14 +7,23 @@
 
 const UNLOCK_KEY = "ez_gate_unlocked";
 
+/*
+ * Read
+ */
 export function isGateUnlocked() {
     return sessionStorage.getItem(UNLOCK_KEY) === "1";
 }
 
+/*
+ * Write
+ */
 export function setGateUnlocked() {
     sessionStorage.setItem(UNLOCK_KEY, "1");
 }
 
+/*
+ * Reset
+ */
 export function clearGateUnlocked() {
     sessionStorage.removeItem(UNLOCK_KEY);
 }

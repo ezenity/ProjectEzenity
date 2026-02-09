@@ -15,12 +15,11 @@ function GateGuardRoute({ component: Component, ...rest }) {
     return (
         <Route
             {...rest}
-            render={(props) => {
-                if (!isGateUnlocked()) {
-                    return <Redirect to={{ pathname: "/", state: { from: props.location } }} />;
-                }
-                return <Component {...props} />;
-            }}
+            render={(props) =>
+                isGateUnlocked()
+                    ? <Component {...props} />
+                    : <Redirect to={{ pathname: "/", state: { from: props.location } }} />
+            }
         />
     );
 }

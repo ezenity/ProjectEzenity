@@ -82,7 +82,7 @@ export default function GatePage() {
         // completed
         if (next.length === SECRET_PATTERN.length) {
             setPhase("entering");
-            unlockGate(); // <--- IMPORTANT: matches GateGuardRoute + App
+            setGateUnlocked(); // <--- IMPORTANT: matches GateGuardRoute + App
 
             const t = setTimeout(() => {
                 const current = accountService.userValue;
