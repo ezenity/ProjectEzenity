@@ -1,169 +1,167 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { accountService } from "@/_services";
-import { isGateUnlocked, unlockGate } from "@/_helpers/gate";
-import sigilCoin from "@/images/skulls/skull-coin-3.png";
 import "./GatePage.less";
 
-/**
- * GatePage
- * - No progress dots / no "X/Y"
- * - Stronger visuals (fog/embers/noise + intro sweep)
- * - Click feedback (glow + pulse) but no length indicator
- * - Unlock => /profile if logged in, else /account/login
- *
- * NOTE: UX gate only. Not security.
- */
+// Your real coin assets
+import coinMain from "@/images/skulls/skull-coin-3.png";
+import coinA from "@/images/skulls/skull-emblem-1.png";
+import coinB from "@/images/skulls/skull-emblem-3.png";
 
-// Choose ANY ids you want, just keep them consistent
-const SIGILS = [
-    { id: "alpha", size: "xl", x: "60%", y: "52%", r: "6deg", delay: "0.0s" },  // big
-    { id: "beta", size: "md", x: "46%", y: "44%", r: "-10deg", delay: "0.2s" }, // small
-    { id: "gamma", size: "sm", x: "44%", y: "63%", r: "12deg", delay: "0.35s" }, // small
-];
+const UNLOCK_KEY = "ez_gate_unlocked";
 
-// Your secret pattern (no UI reveals)
-const REQUIRED_PATTERN = ["beta", "alpha", "gamma", "alpha"];
+// Change this pattern whenever you want (IDs must match coinConfig ids)
+const SECRET_PATTERN = ["main", "a", "b", "main"]; // example
 
 export default function GatePage() {
     const history = useHistory();
 
-    const requiredPattern = useMemo(() => REQUIRED_PATTERN, []);
-    const [phase, setPhase] = useState("intro"); // intro | armed | unlocking
-    const [seq, setSeq] = useState([]);
-    const [flash, setFlash] = useState(""); // good | bad | ""
-    const [lastHit, setLastHit] = useState(""); // which sigil was clicked (for glow)
-    const resetTimerRef = useRef(null);
+    const [phase, setPhase] = useState("intro"); // intro -> ready -> entering
+    const [input, setInput] = useState([]);
+    const [shake, setShake] = useState(false);
+    const [lastHit, setLastHit] = useState(null);
+
+    const timers = useRef([]);
+    const resetTimer = useRef(null);
+
+    const user = accountService.userValue;
+
+    const coinConfig = useMemo(
+        () => [
+            // Layout matches your “one large + two small” idea, with MORE spacing
+            {
+                id: "a",
+                img: coinA,
+                size: "sm",
+                style: { "--x": "-220px", "--y": "-55px" }, // left/top
+            },
+            {
+                id: "b",
+                img: coinB,
+                size: "sm",
+                style: { "--x": "-240px", "--y": "150px" }, // left/bottom
+            },
+            {
+                id: "main",
+                img: coinMain,
+                size: "lg",
+                style: { "--x": "170px", "--y": "40px" }, // right/large
+            },
+        ],
+        []
+    );
 
     useEffect(() => {
-        // If already unlocked in this tab, bounce them forward
-        if (isGateUnlocked()) {
-            routeAfterUnlock();
+        // If already unlocked this session, go straight in
+        if (sessionStorage.getItem(UNLOCK_KEY) === "1") {
+            if (user) history.replace("/profile");
+            else history.replace("/account/login");
             return;
         }
 
-        // Intro plays briefly, then arms
-        const t = setTimeout(() => setPhase("armed"), 1800);
-        return () => clearTimeout(t);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        const t = setTimeout(() => setPhase("ready"), 1400);
+        timers.current.push(t);
+
+        return () => {
+            timers.current.forEach(clearTimeout);
+            timers.current = [];
+            if (resetTimer.current) clearTimeout(resetTimer.current);
+        };
     }, []);
 
-    function routeAfterUnlock() {
-        if (accountService.userValue) history.replace("/profile");
-        else history.replace("/account/login");
+    function armResetTimeout() {
+        if (resetTimer.current) clearTimeout(resetTimer.current);
+        resetTimer.current = setTimeout(() => {
+            setInput([]);
+        }, 3000);
     }
 
-    function pulse(type) {
-        setFlash(type);
-        window.setTimeout(() => setFlash(""), 420);
+    function triggerShake() {
+        setShake(true);
+        const t = setTimeout(() => setShake(false), 520);
+        timers.current.push(t);
     }
 
-    function resetAttempt() {
-        setSeq([]);
-        if (resetTimerRef.current) {
-            clearTimeout(resetTimerRef.current);
-            resetTimerRef.current = null;
-        }
-    }
+    function onCoinClick(id) {
+        if (phase !== "ready") return;
 
-    function armResetTimer() {
-        if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
-        resetTimerRef.current = setTimeout(() => resetAttempt(), 2200);
-    }
-
-    function onSigilClick(id) {
-        // Always show "clicked" feedback even during intro (so it never feels dead)
+        // click feedback (ring/burst)
         setLastHit(id);
-        window.setTimeout(() => setLastHit(""), 180);
+        const hitT = setTimeout(() => setLastHit(null), 220);
+        timers.current.push(hitT);
 
-        if (phase !== "armed") {
-            pulse("bad"); // “not ready” vibe
-            return;
-        }
+        const next = [...input, id];
+        setInput(next);
+        armResetTimeout();
 
-        const next = [...seq, id];
-
-        // Fail-fast prefix check (but DO NOT display progress length)
+        // prefix validation: fail fast
         for (let i = 0; i < next.length; i++) {
-            if (requiredPattern[i] !== next[i]) {
-                pulse("bad");
-                resetAttempt();
+            if (SECRET_PATTERN[i] !== next[i]) {
+                triggerShake();
+                setInput([]);
                 return;
             }
         }
 
-        // Correct so far
-        pulse("good");
-        setSeq(next);
-        armResetTimer();
+        // success
+        if (next.length === SECRET_PATTERN.length) {
+            setPhase("entering");
+            sessionStorage.setItem(UNLOCK_KEY, "1");
 
-        // Completed
-        if (next.length === requiredPattern.length) {
-            setPhase("unlocking");
-            unlockGate();
+            // IMPORTANT: ACTUALLY NAVIGATE (fixes your “Entering…” hang)
+            const t = setTimeout(() => {
+                const current = accountService.userValue;
+                if (current) history.push("/profile");
+                else history.push("/account/login");
+            }, 700);
 
-            // dramatic exit delay
-            window.setTimeout(() => routeAfterUnlock(), 700);
+            timers.current.push(t);
         }
     }
 
     return (
-        <div className={`gateRoot gateRoot--${phase} ${flash ? `gateRoot--${flash}` : ""}`}>
-            {/* BACKGROUND / FX (pointer-events disabled in CSS so clicks always work) */}
-            <div className="gateLayer gateLayer--green" aria-hidden="true" />
-            <div className="gateLayer gateLayer--red" aria-hidden="true" />
-            <div className="gateLayer gateLayer--steel" aria-hidden="true" />
-            <div className="gateLayer gateLayer--gold" aria-hidden="true" />
-            <div className="gateLayer gateLayer--lava" aria-hidden="true" />
-            <div className="gateFog" aria-hidden="true" />
-            <div className="gateNoise" aria-hidden="true" />
-            <div className="gateEmbers" aria-hidden="true" />
-            <div className="gateMeteor" aria-hidden="true" />
+        <div className={`gateRoot2 ${shake ? "shake" : ""} phase-${phase}`}>
+            {/* background */}
+            <div className="bg2 base" />
+            <div className="bg2 haze" />
+            <div className="bg2 embers" />
+            <div className="bg2 streaks" />
+            <div className="vignette2" />
 
-            <div className="gateContent">
-                <div className="gateBrand">
-                    <div className="gateTitle">Ezenity</div>
-                    <div className="gateTag">Underground ◆ Invite-only ◆ Ride smart</div>
+            {/* content */}
+            <div className="content2">
+                <div className="brand2">
+                    <div className="brandName2">Ezenity</div>
+                    <div className="brandTag2">Underground ♦ Invite-only ♦ Ride smart</div>
                 </div>
 
-                {/* Sigils scattered (not just dead center) */}
-                <div className="sigilField" aria-label="Gate sigils">
-                    {SIGILS.map((s) => (
+                <div className="sigil2" aria-label="Gate sigil">
+                    {coinConfig.map((c) => (
                         <button
-                            key={s.id}
+                            key={c.id}
                             type="button"
-                            className={[
-                                "sigil",
-                                `sigil--${s.size}`,
-                                lastHit === s.id ? "is-hit" : "",
-                                phase !== "armed" ? "is-dim" : "",
-                            ].join(" ")}
-                            style={{
-                                "--x": s.x,
-                                "--y": s.y,
-                                "--r": s.r,
-                                "--d": s.delay,
-                            }}
-                            onClick={() => onSigilClick(s.id)}
-                            aria-label={`Sigil ${s.id}`}
+                            className={`coinBtn ${c.size} ${lastHit === c.id ? "is-hit" : ""}`}
+                            style={c.style}
+                            onClick={() => onCoinClick(c.id)}
+                            disabled={phase !== "ready"}
+                            aria-label={`sigil-${c.id}`}
                         >
-                            <span className="sigil__ring" aria-hidden="true" />
-                            <img className="sigil__img" src={sigilCoin} alt="" draggable="false" />
-                            <span className="sigil__shine" aria-hidden="true" />
+                            <span className="coinRing" aria-hidden="true" />
+                            <img className="coinImg" src={c.img} alt="" draggable="false" />
+                            <span className="coinBurst" aria-hidden="true" />
                         </button>
                     ))}
                 </div>
 
-                {/* No progress indicator */}
-                <div className="gateHint">
+                <div className="status2">
                     {phase === "intro" && <span>Loading…</span>}
-                    {phase === "armed" && <span>Tap the sigils.</span>}
-                    {phase === "unlocking" && <span>Entering…</span>}
+                    {phase === "ready" && <span>Tap the sigil.</span>}
+                    {phase === "entering" && <span>Entering…</span>}
                 </div>
 
-                <div className="gateFooter">
+                <div className="footer2">
                     <span>© {new Date().getFullYear()} Ezenity</span>
-                    <span className="sep">•</span>
+                    <span className="dot">•</span>
                     <span>Automated message, please do not reply</span>
                 </div>
             </div>
