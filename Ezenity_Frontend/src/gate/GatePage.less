@@ -584,9 +584,50 @@
 }
 
 /* Mobile: keep all coins visible by moving the small ones BELOW the main coin */
+/* Mobile + small windows: keep HUD visible */
 @media (max-width: 620px) {
+    /* Keep HUD on-screen and compact */
     .hud {
-        display: none;
+        display: block; /* <-- this is the key change */
+        position: fixed;
+        top: 12px;
+        z-index: 10;
+        width: calc(50% - 18px);
+        padding: 10px 10px 8px;
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+        background: rgba(0, 0, 0, 0.38);
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        box-shadow: 0 14px 30px rgba(0,0,0,0.45);
+        pointer-events: none; /* HUD is decorative; prevents blocking taps */
+    }
+
+    .hudLeft {
+        left: 12px;
+    }
+
+    .hudRight {
+        right: 12px;
+    }
+
+    .hudTitle {
+        font-size: 10px;
+        letter-spacing: 0.85px;
+    }
+
+    .hudText {
+        font-size: 10px;
+        opacity: 0.8;
+    }
+
+    .hudLine {
+        margin: 6px 0 5px;
+    }
+
+    /* Push your main content down so HUD doesn't overlap */
+    .content2 {
+        justify-content: flex-start;
+        padding-top: 110px;
     }
 
     .sigil2 {
@@ -617,6 +658,30 @@
     .coinBtn[data-id="emblemThree"] {
         --x: clamp(70px, 20vw, 120px);
         --y: 205px;
+    }
+}
+
+/* Very small phones: stack HUD cards vertically */
+@media (max-width: 420px) {
+    .hud {
+        width: calc(100% - 24px);
+    }
+
+    .hudLeft {
+        left: 12px;
+        right: 12px;
+        top: 12px;
+    }
+
+    .hudRight {
+        left: 12px;
+        right: 12px;
+        top: 76px; /* below the first HUD */
+        text-align: left; /* reads better stacked */
+    }
+
+    .content2 {
+        padding-top: 160px; /* make room for both stacked HUD cards */
     }
 }
 
