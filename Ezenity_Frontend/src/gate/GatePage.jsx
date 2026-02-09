@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { accountService } from "@/_services";
-import { isGateUnlocked, unlockGate } from "@/_helpers/gate";
+import { isGateUnlocked, setGateUnlocked } from "@/_helpers/gate";
 import "./GatePage.less";
 
 import coin_Main from "@/images/skulls/skull-coin-3.png";
@@ -82,6 +82,7 @@ export default function GatePage() {
         // completed
         if (next.length === SECRET_PATTERN.length) {
             setPhase("entering");
+
             setGateUnlocked(); // <--- IMPORTANT: matches GateGuardRoute + App
 
             const t = setTimeout(() => {
