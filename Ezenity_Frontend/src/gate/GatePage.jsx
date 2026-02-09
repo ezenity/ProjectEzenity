@@ -4,14 +4,14 @@ import { accountService } from "@/_services";
 import "./GatePage.less";
 
 // Your real coin assets
-import coinMain from "@/images/skulls/skull-coin-3.png";
-import coinA from "@/images/skulls/skull-emblem-1.png";
-import coinB from "@/images/skulls/skull-emblem-3.png";
+import coin_Main from "@/images/skulls/skull-coin-3.png";
+import emblem_One from "@/images/skulls/skull-emblem-1.png";
+import emblem_Three from "@/images/skulls/skull-emblem-3.png";
 
 const UNLOCK_KEY = "ez_gate_unlocked";
 
 // Change this pattern whenever you want (IDs must match coinConfig ids)
-const SECRET_PATTERN = ["main", "a", "b", "main"]; // example
+const SECRET_PATTERN = ["coinMain", "emblemOne", "emblemThree", "coinMain"];
 
 export default function GatePage() {
     const history = useHistory();
@@ -30,22 +30,22 @@ export default function GatePage() {
         () => [
             // Layout matches your “one large + two small” idea, with MORE spacing
             {
-                id: "a",
-                img: coinA,
+                id: "emblemOne",
+                img: emblem_One,
                 size: "sm",
-                style: { "--x": "-220px", "--y": "-55px" }, // left/top
+                style: { "--x": "-455px", "--y": "-80px" }, // left/top
             },
             {
-                id: "b",
-                img: coinB,
+                id: "emblemThree",
+                img: emblem_Three,
                 size: "sm",
-                style: { "--x": "-240px", "--y": "150px" }, // left/bottom
+                style: { "--x": "485px", "--y": "-80px" }, // left/bottom
             },
             {
-                id: "main",
-                img: coinMain,
+                id: "coinMain",
+                img: coin_Main,
                 size: "lg",
-                style: { "--x": "170px", "--y": "40px" }, // right/large
+                style: { "--x": "0px", "--y": "-20px" }, // right/large
             },
         ],
         []
