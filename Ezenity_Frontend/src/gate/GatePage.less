@@ -124,7 +124,7 @@
     position: absolute;
     top: 18px;
     z-index: 6;
-    width: 220px;
+    width: 250px;
     padding: 12px 12px 10px;
     border-radius: 12px;
     background: rgba(0,0,0,0.35);
@@ -135,11 +135,11 @@
 }
 
 .hudLeft {
-    left: 18px;
+    left: 80px;
 }
 
 .hudRight {
-    right: 18px;
+    right: 80px;
     text-align: right;
 }
 
@@ -585,7 +585,7 @@
 
 /* Mobile: keep all coins visible by moving the small ones BELOW the main coin */
 /* Mobile + small windows: keep HUD visible */
-@media (max-width: 620px) {
+@media (max-width: 670px) {
     /* Keep HUD on-screen and compact */
     .hud {
         display: block; /* <-- this is the key change */
@@ -662,7 +662,7 @@
 }
 
 /* Very small phones: stack HUD cards vertically */
-@media (max-width: 420px) {
+@media (max-width: 470px) {
     .hud {
         width: calc(100% - 24px);
     }
