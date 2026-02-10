@@ -19,9 +19,29 @@ function App() {
     const { pathname } = useLocation();
     const [user, setUser] = useState(null);
 
+    //useEffect(() => {
+    //    const subscription = accountService.user.subscribe((x) => setUser(x));
+    //    return subscription.unsubscribe;
+    //}, []);
+
     useEffect(() => {
-        const subscription = accountService.user.subscribe((x) => setUser(x));
-        return subscription.unsubscribe;
+        let isMounted = true;
+
+        // 1) Try to refresh session on app start.
+        // If there is no cookie yet, ignore the error (that’s normal for guests).
+        accountService
+            .refreshToken()
+            .catch(() => null);
+
+        // 2) Subscribe to user updates
+        const subscription = accountService.user.subscribe((x) => {
+            if (isMounted) setUser(x);
+        });
+
+        return () => {
+            isMounted = false;
+            subscription.unsubscribe();
+        };
     }, []);
 
     // Gate is only “active” on the root route, until unlocked
