@@ -8,7 +8,7 @@ function Overview() {
     const steps = [
         {
             title: "Get Invited",
-            desc: "Project Ezenity is invite-only. Your invite is your entry point to the community.",
+            desc: "After Hours Crew is invite-only. Your invite is your entry point to the community.",
         },
         {
             title: "Earn Your Newcomer Emblem",
@@ -67,7 +67,7 @@ function Overview() {
     return (
         <div>
             <div className="mb-3">
-                <h3 className="mb-1">Project Ezenity</h3>
+                <h3 className="mb-1">After Hours Crew</h3>
                 <div className="text-muted">
                     A private rider network built around reputation, progression, and real community.
                 </div>
@@ -164,7 +164,7 @@ function Overview() {
 
             <h4 className="mb-2">Why this exists</h4>
             <p className="text-muted mb-0">
-                Project Ezenity is built for riders who want a real network: progression, accountability,
+                After Hours Crew is built for riders who want a real network: progression, accountability,
                 and community momentum — not random follows. The platform rewards participation and respect.
             </p>
         </div>
