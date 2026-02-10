@@ -459,23 +459,32 @@ namespace Ezenity.API.API.Controllers
         public async Task<ActionResult<ApiResponse<AuthenticateResponse>>> RefreshTokenAsync()
         {
             var refreshToken = Request.Cookies["refreshToken"];
-            if (string.IsNullOrEmpty(refreshToken))
-                throw new ResourceNotFoundException("Refresh token is missing.");
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return Unauthorized(new ApiResponse<AuthenticateResponse>
+                {
+                    StatusCode = 401,
+                    IsSuccess = false,
+                    Message = "Refresh token is missing."
+                });
+            }
+
             var response = await _accountService.RefreshTokenAsync(refreshToken, ipAddress());
             setTokenCookie(response.RefreshToken);
 
             var apiResponse = new ApiResponse<AuthenticateResponse>
             {
                 StatusCode = 200,
-                Message = "Token refreshed successfully.",
                 IsSuccess = true,
+                Message = "Token refreshed successfully.",
                 Data = response
             };
 
             // Sanitize the IP address by removing new lines and non-numeric or common characters
-            string sanitizedIp = System.Text.RegularExpressions.Regex.Replace(ipAddress(), "[^0-9.]", "");
+            //string sanitizedIp = System.Text.RegularExpressions.Regex.Replace(ipAddress(), "[^0-9.]", "");
 
-            _logger.LogInformation($"Token refreshed successfully for IP: {sanitizedIp}");
+            //_logger.LogInformation($"Token refreshed successfully for IP: {sanitizedIp}");
 
             return Ok(apiResponse);
 
