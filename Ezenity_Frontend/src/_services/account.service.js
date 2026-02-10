@@ -32,6 +32,8 @@ function login(email, password) {
   return fetchWrapper
     .post(`${baseUrl}/authenticate`, { email, password })
     .then((user) => {
+      const user = unwrap(res);
+
       // normalize token field names (supports multiple backend shapes)
       const jwtToken = user?.jwtToken || user?.token || user?.accessToken;
       const normalized = jwtToken ? { ...user, jwtToken } : user;
@@ -54,12 +56,23 @@ function logout() {
 }
 
 function refreshToken() {
-  return fetchWrapper.post(`${baseUrl}/refresh-token`, {}).then((user) => {
-    // publish user to subscribers and start timer to refresh token
-    userSubject.next(user);
-    startRefreshTokenTimerSafe();
-    return user;
-  });
+    return fetchWrapper
+        .post(`${baseUrl}/refresh-token`, {})
+        .then((user) => {
+            const user = unwrap(res);
+
+            // publish user to subscribers and start timer to refresh token
+            userSubject.next(user);
+            startRefreshTokenTimerSafe();
+            return user;
+        })
+        .catch(() => {
+            // If there's no cookie yet (logged out), this is normal.
+            // Keep user as null and don't blow up the UI.
+            userSubject.next(null);
+            stopRefreshTokenTimer();
+            return null;
+        });;
 }
 
 function register(params) {
@@ -124,6 +137,7 @@ function _delete(id) {
 // helper functions
 
 let refreshTokenTimeout;
+const unwrap = (res) => (res && typeof res === "object" && "data" in res ? res.data : res);
 
 
 /** Obsolete */
