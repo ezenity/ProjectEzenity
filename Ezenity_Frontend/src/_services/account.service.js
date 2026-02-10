@@ -31,10 +31,16 @@ function login(email, password) {
   return fetchWrapper
     .post(`${baseUrl}/authenticate`, { email, password })
     .then((user) => {
-      // publish user to subscribers and start timer to refresh token
-      userSubject.next(user);
-      startRefreshTokenTimer();
-      return user;
+      // normalize token field names (supports multiple backend shapes)
+      const jwtToken = user?.jwtToken || user?.token || user?.accessToken;
+      const normalized = jwtToken ? { ...user, jwtToken } : user;
+
+      userSubject.next(normalized);
+
+      // only start timer if token looks like a JWT
+      startRefreshTokenTimerSafe();
+
+      return normalized;
     });
 }
 
@@ -50,7 +56,7 @@ function refreshToken() {
   return fetchWrapper.post(`${baseUrl}/refresh-token`, {}).then((user) => {
     // publish user to subscribers and start timer to refresh token
     userSubject.next(user);
-    startRefreshTokenTimer();
+    startRefreshTokenTimerSafe();
     return user;
   });
 }
@@ -118,6 +124,8 @@ function _delete(id) {
 
 let refreshTokenTimeout;
 
+
+/** Obsolete */
 function startRefreshTokenTimer() {
   // parse json object from base64 encoded jwt token
   const jwtToken = JSON.parse(atob(userSubject.value.jwtToken.split(".")[1]));
@@ -127,6 +135,29 @@ function startRefreshTokenTimer() {
   const expires = new Date(jwtToken.exp * 1000);
   const timeout = expires.getTime() - Date.now() - 60 * 1000;
   refreshTokenTimeout = setTimeout(refreshToken, timeout);
+}
+
+function startRefreshTokenTimerSafe() {
+    stopRefreshTokenTimer();
+
+    const token = userSubject.value?.jwtToken;
+    if (!token) return;
+
+    const parts = token.split(".");
+    if (parts.length !== 3) return; // not a JWT, don’t crash the app
+
+    try {
+        const payload = JSON.parse(atob(parts[1]));
+        const expires = new Date(payload.exp * 1000);
+        const timeout = expires.getTime() - Date.now() - 60 * 1000;
+
+        // guard: don’t schedule negative/instant refresh loops
+        if (Number.isFinite(timeout) && timeout > 0) {
+            refreshTokenTimeout = setTimeout(refreshToken, timeout);
+        }
+    } catch {
+        // if payload parsing fails, skip timer rather than breaking login
+    }
 }
 
 function stopRefreshTokenTimer() {

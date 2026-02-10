@@ -1,81 +1,99 @@
-import config from 'config';
-import { accountService } from '@/_services';
+import config from "config";
+import { accountService } from "@/_services";
 
-export const fetchWrapper = {
-    get,
-    post,
-    put,
-    delete: _delete
-}
+export const fetchWrapper = { get, post, put, delete: _delete };
 
 function get(url) {
-    const requestOptions = {
-        method: 'GET',
-        headers: authHeader(url)
-    };
-    return fetch(url, requestOptions).then(handleResponse);
+    return request(url, { method: "GET" });
 }
 
 function post(url, body) {
-    const requestOptions = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeader(url) },
-        credentials: 'include',
-        body: JSON.stringify(body)
-    };
-    return fetch(url, requestOptions).then(handleResponse);
+    return request(url, {
+        method: "POST",
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
 }
 
 function put(url, body) {
-    const requestOptions = {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...authHeader(url) },
-        body: JSON.stringify(body)
-    };
-    return fetch(url, requestOptions).then(handleResponse);    
+    return request(url, {
+        method: "PUT",
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
 }
 
-// prefixed with underscored because delete is a reserved word in javascript
 function _delete(url) {
-    const requestOptions = {
-        method: 'DELETE',
-        headers: authHeader(url)
+    return request(url, { method: "DELETE" });
+}
+
+function request(url, options) {
+    const isApi = isApiUrl(url);
+
+    const headers = {
+        Accept: "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(isApi ? authHeader() : {}),
+        ...(options.headers || {}),
     };
+
+    const requestOptions = {
+        ...options,
+        headers,
+        // If your API sets/uses cookies (refresh token), you need this on ALL calls
+        ...(isApi ? { credentials: "include" } : {}),
+    };
+
     return fetch(url, requestOptions).then(handleResponse);
 }
 
-// helper functions
-
-function authHeader(url) {
-    // return auth header with jwt if user is logged in and request is to the api url
+function authHeader() {
     const user = accountService.userValue;
-    const isLoggedIn = user && user.jwtToken;
-    const isApiUrl = url.startsWith(config.apiUrl);
-    if (isLoggedIn && isApiUrl) {
-        return { Authorization: `Bearer ${user.jwtToken}` };
-    } else {
-        return {};
-    }
+    const token = user?.jwtToken || user?.token || user?.accessToken; // tolerate different backend shapes
+    return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function isApiUrl(url) {
+    // Works with absolute or relative URLs
+    const apiBase = new URL(config.apiUrl, window.location.origin);
+    const target = new URL(url, window.location.origin);
+
+    // Same origin AND path starts with api base path
+    return (
+        target.origin === apiBase.origin &&
+        target.pathname.startsWith(apiBase.pathname.replace(/\/+$/, "") + "/")
+    );
 }
 
 function handleResponse(response) {
-    return response.text().then(text => {
-        const contentType = response.headers.get("content-type") || "";
-        const isJson = contentType.includes("application/json") || contentType.includes("application/vnd.api+json");
+    // 204 No Content: don’t try to parse a body
+    if (response.status === 204) return Promise.resolve(null);
 
-        const data = isJson && text ? JSON.parse(text) : text;
-        
+    const contentType = response.headers.get("content-type") || "";
+
+    return response.text().then((text) => {
+        const isJson =
+            contentType.includes("application/json") ||
+            contentType.includes("application/vnd.api+json");
+
+        let data = text;
+        if (isJson && text) {
+            try {
+                data = JSON.parse(text);
+            } catch {
+                // keep as text if server returned invalid JSON
+                data = text;
+            }
+        }
+
         if (!response.ok) {
             if ([401, 403].includes(response.status) && accountService.userValue) {
-                // auto logout if 401 Unauthorized or 403 Forbidden response returned from api
                 accountService.logout();
             }
 
-            //const error = (data && data.message) || response.statusText;
             const msg =
                 (isJson && data && (data.message || data.error || data.title)) ||
                 response.statusText ||
                 (typeof data === "string" ? data : "Request failed");
+
             return Promise.reject(msg);
         }
 
