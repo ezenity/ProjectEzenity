@@ -31,7 +31,7 @@ export const accountService = {
 function login(email, password) {
   return fetchWrapper
     .post(`${baseUrl}/authenticate`, { email, password })
-    .then((user) => {
+    .then((res) => {
       const user = unwrap(res);
 
       // normalize token field names (supports multiple backend shapes)
@@ -58,7 +58,7 @@ function logout() {
 function refreshToken() {
     return fetchWrapper
         .post(`${baseUrl}/refresh-token`, {})
-        .then((user) => {
+        .then((res) => {
             const user = unwrap(res);
 
             // publish user to subscribers and start timer to refresh token
