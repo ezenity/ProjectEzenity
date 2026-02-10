@@ -1,7 +1,7 @@
 import config from "config";
 import { accountService } from "@/_services";
 
-export const fetchWrapper = { get, post, put, delete: _delete };
+export const fetchWrapper = { get, post, put, patch, delete: _delete };
 
 function get(url) {
     return request(url, { method: "GET" });
@@ -17,6 +17,13 @@ function post(url, body) {
 function put(url, body) {
     return request(url, {
         method: "PUT",
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+}
+
+function patch(url, body) {
+    return request(url, {
+        method: "PATCH",
         body: body !== undefined ? JSON.stringify(body) : undefined,
     });
 }

@@ -4,3 +4,4 @@ export * from './history';
 export * from './role';
 export * from './gate';
 export * from './fallback-image';
+export * from './api-url';
