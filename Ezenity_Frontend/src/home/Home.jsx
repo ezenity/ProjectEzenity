@@ -24,7 +24,7 @@ function Home() {
             <div className="container">
                 <div className="mb-4">
                     <h1 className="mb-2">
-                        {user ? `Welcome back, ${user.firstName}!` : "Welcome to Project Ezenity"}
+                        {user ? `Welcome back, ${user.firstName}!` : "Welcome to After Hours Crew"}
                     </h1>
                     <p className="text-muted mb-0">
                         Invite-only rider community focused on progression: Rep → Emblems → Coins → access.
