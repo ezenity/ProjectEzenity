@@ -248,6 +248,19 @@ namespace Ezenity.Infrastructure.Data
             });
         }
 
+        /// <summary>
+        /// Configures the database schema for all file/media storage entities.
+        /// </summary>
+        /// <remarks>
+        /// This configuration is responsible for mapping your file-related domain to tables that support:
+        /// - Persisting **file metadata** (stable IDs, original name, stored name/path, content type, size, scope, created timestamps, etc.)
+        /// - Fast retrieval for UI use-cases (listing, filtering by scope/owner/type/date) via **indexes**
+        /// - Relationships to the rest of the app (e.g., uploader account, profile media, vault submissions/attachments)
+        /// - Safe delete behavior (commonly: avoid accidental cascading deletes of “blobs” when domain rows are removed)
+        ///
+        /// The actual bytes typically live in filesystem/object storage; the DB stores metadata + relations.
+        /// </remarks>
+        /// <param name="modelBuilder">The model builder used by Entity Framework Core.</param>
         private void ConfigureFiles(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<FileAsset>(entity =>
@@ -268,6 +281,23 @@ namespace Ezenity.Infrastructure.Data
             });
         }
 
+        /// <summary>
+        /// Configures the database schema for all Vault domain entities (missions, milestones, objectives, rewards, and user progress).
+        /// </summary>
+        /// <remarks>
+        /// This configuration supports “THE VAULT” feature set, typically including:
+        /// - Defining vault content (missions/milestones/tasks/objectives) and their presentation/order/visibility
+        /// - Reward definitions (rep, coins, emblem/coin unlocks) tied to vault items
+        /// - User state (completion/approval status, timestamps, audit trail)
+        /// - User-generated content for verification (submissions/attachments like uploaded media, external links)
+        /// - Social proof & moderation (comments/posts, approvals, rejections, flags, etc.)
+        ///
+        /// The goal is a clean relational model that lets the frontend query:
+        /// - What exists (vault catalog)
+        /// - What a user has done (progress + earned unlocks)
+        /// - What needs review (pending submissions)
+        /// </remarks>
+        /// <param name="modelBuilder">The model builder used by Entity Framework Core.</param>
         private void ConfigureVault(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<VaultMission>(entity =>

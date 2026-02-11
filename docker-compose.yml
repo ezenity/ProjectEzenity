@@ -16,6 +16,7 @@ services:
       - ./.env
     environment:
       ASPNETCORE_ENVIRONMENT: "Production"
+      EZENITY_FILE_ROOT: "/data/files"
 
       # IMPORTANT: must match your code's expected key:
       # connectionStringSettings.WebApiDatabase
@@ -35,6 +36,7 @@ services:
       AppSettings__EmailFrom: "${EZENITY_EMAIL_FROM}"
       AppSettings__EmailMessageIdDomain: "${EZENITY_EMAIL_MESSAGE_ID_DOMAIN}"
       AppSettings__EmailTemplateBasePath: "${EZENITY_EMAIL_TEMPLATE_BASE_PATH}"
+      FileStorage__RootPath: "/data/files"
 
       # Your Startup.cs production CORS reads this env var directly:
       # Configuration["EZENITY_ALLOWED_ORIGINS"]
@@ -51,6 +53,7 @@ services:
     # Program.cs writes to /var/log/ezenity_api_out.log
     volumes:
       - /srv/ezenity/logs/ezenity_api:/var/log
+      - /src/ezenity/Storage/files:/data/files
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -96,9 +99,11 @@ services:
       - ./.env
     environment:
       ASPNETCORE_ENVIRONMENT: "Production"
-      #ConnectionStrings__WebApiDatabase: "${EZENITY_DB_CONN}"
+      EZENITY_FILE_ROOT: "/data/files"
+
       ConnectionStrings__WebApiDatabase: "Server=host.docker.internal;Port=3306;Database=${EZENITY_DATABASE_NAME};User=${EZENITY_DATABASE_USER};Password=${EZENITY_DATABASE_PASSWORD};"
       AppSettings__Secret: "${EZENITY_SECRET_KEY}"
+      FileStorage__RootPath: "/data/files"
     networks:
       - ezenity_net
     # Don't start by default. Only when explicitly invoked.
