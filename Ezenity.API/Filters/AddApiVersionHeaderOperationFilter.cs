@@ -4,7 +4,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Ezenity.API.Configurations
+namespace Ezenity.API.Filters
 {
     /// <summary>
     /// Ensures x-api-version is sent as a HEADER, not as a Content-Type parameter.
