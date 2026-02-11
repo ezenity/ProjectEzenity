@@ -1,11 +1,13 @@
 ﻿using Asp.Versioning;
-using Ezenity.DTOs.Models;
-using Ezenity.DTOs.Models.Files;
+using Ezenity.DTOs;
+using Ezenity.DTOs.Files;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Ezenity.API.Controllers
 {
