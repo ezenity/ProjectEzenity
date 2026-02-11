@@ -82,20 +82,23 @@ namespace Ezenity.API.Controllers
 
         // GET /api/v1/files/{fileId}
         [HttpGet("{fileId}")]
-        public IActionResult GetFileAsync(string fileId)
+        public async Task<IActionResult> GetFileAsync(string fileId)
         {
-            // ID format we generate: Guid "N" => 32 hex chars
-            if (string.IsNullOrWhiteSpace(fileId) || fileId.Length != 32)
+            if (!Guid.TryParseExact(fileId, "N", out var id))
                 return NotFound();
 
-            var filePath = FindStoredFilePath(fileId);
-            if (filePath == null) return NotFound();
+            var asset = await _dataContext.FileAssets.FirstOrDefaultAsync(x => x.Id == id);
+            if (asset == null)
+                return NotFound();
 
-            if (!_contentTypes.TryGetContentType(filePath, out var contentType))
-                contentType = "application/octet-stream";
+            var fullPath = Path.Combine(_root, asset.StoredName);
+            if (!System.IO.File.Exists(fullPath))
+                return NotFound();
 
-            // enableRangeProcessing is important for video seeking
-            return PhysicalFile(filePath, contentType, enableRangeProcessing: true);
+            var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            // enableRangeProcessing is important for video playback
+            return File(stream, asset.ContentType, fileDownloadName: asset.OriginalName, enableRangeProcessing: true);
         }
 
         // POST /api/v1/files/upload (multipart/form-data)
@@ -110,15 +113,17 @@ namespace Ezenity.API.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest(new ApiResponse<object> { StatusCode = 400, IsSuccess = false, Message = "No file uploaded." });
 
-            var ext = Path.GetExtension(file.FileName);
+            var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(ext) || !AllowedExtensions.Contains(ext))
                 return BadRequest(new ApiResponse<object> { StatusCode = 400, IsSuccess = false, Message = $"File type '{ext}' not allowed." });
 
-            var id = Guid.NewGuid().ToString("N");
-            var storedName = $"{id}{ext}";
+            Directory.CreateDirectory(_root);
+
+            var id = Guid.NewGuid();
+            var storedName = $"{id:N}{ext}";
             var storedPath = Path.Combine(_root, storedName);
 
-            await using (var stream = new FileStream(storedPath, FileMode.CreateNew, FileAccess.Write))
+            await using (var stream = new FileStream(storedPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             {
                 await file.CopyToAsync(stream);
             }
@@ -126,20 +131,34 @@ namespace Ezenity.API.Controllers
             if (!_contentTypes.TryGetContentType(storedPath, out var contentType))
                 contentType = file.ContentType ?? "application/octet-stream";
 
-            var item = new FileItemResponse
+            // TODO: resolve current user from JWT if you want ownership
+            int? createdByAccountId = null;
+
+            var asset = new FileAsset
             {
                 Id = id,
                 OriginalName = Path.GetFileName(file.FileName),
+                StoredName = storedName,
                 ContentType = contentType,
                 Size = file.Length,
+                Scope = string.IsNullOrWhiteSpace(scope) ? null : scope.Trim(),
                 CreatedUtc = DateTime.UtcNow,
-                Scope = string.IsNullOrWhiteSpace(scope) ? null : scope,
-                Url = Url.Action(nameof(GetFileAsync), new { version = "1.0", fileId = id })!
+                CreatedByAccountId = createdByAccountId
             };
 
-            // store metadata sidecar
-            var metaPath = Path.Combine(_root, $"{id}.meta.json");
-            await System.IO.File.WriteAllTextAsync(metaPath, JsonSerializer.Serialize(item));
+            _dataContext.FileAssets.Add(asset);
+            await _dataContext.SaveChangesAsync();
+
+            var item = new FileItemResponse
+            {
+                Id = asset.Id.ToString("N"),
+                OriginalName = asset.OriginalName,
+                ContentType = asset.ContentType,
+                Size = asset.Size,
+                CreatedUtc = asset.CreatedUtc,
+                Scope = asset.Scope,
+                Url = Url.Action(nameof(GetFileAsync), new { version = "1.0", fileId = asset.Id.ToString("N") })!
+            };
 
             return Ok(new ApiResponse<UploadFileResponse>
             {
