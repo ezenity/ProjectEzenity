@@ -11,6 +11,7 @@ services:
       target: runtime
     image: ezenity/project-ezenity-api:${TAG:-latest}
     restart: unless-stopped
+    container_name: ezenity-api
     env_file:
       - ./.env
     environment:

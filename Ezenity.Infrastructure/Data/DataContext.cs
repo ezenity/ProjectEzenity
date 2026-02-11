@@ -43,6 +43,21 @@ namespace Ezenity.Infrastructure.Data
         public DbSet<Section> Sections { get; set; }
 
         /// <summary>
+        /// Files
+        /// </summary>
+        public DbSet<FileAsset> FileAssets { get; set; }
+
+        /// <summary>
+        /// Vault
+        /// </summary>
+        public DbSet<VaultMission> VaultMissions { get; set; }
+        public DbSet<VaultEmblem> VaultEmblems { get; set; }
+        public DbSet<VaultMissionReward> VaultMissionRewards { get; set; }
+        public DbSet<VaultMissionSubmission> VaultMissionSubmissions { get; set; }
+        public DbSet<VaultMissionCompletion> VaultMissionCompletions { get; set; }
+        public DbSet<VaultMissionComment> VaultMissionComments { get; set; }
+
+        /// <summary>
         /// Overrides the OnModelCreating method to configure the entity relationships and table schema in the database.
         /// </summary>
         /// <param name="modelBuilder">The model builder used by Entity Framework Core to configure the entity relationships and schema.</param>
