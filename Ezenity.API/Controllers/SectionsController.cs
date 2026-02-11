@@ -9,7 +9,7 @@ using Ezenity.DTOs.Models.Sections;
 using Ezenity.DTOs.Models;
 using Ezenity.DTOs;
 using Ezenity.Core.Services.Common;
-using Ezenity.Core.Exceptions;
+using Ezenity.Core.Helpers.Exceptions;
 using Ezenity.Infrastructure.Attributes;
 using Asp.Versioning;
 
