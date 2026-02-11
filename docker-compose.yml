@@ -16,7 +16,8 @@ services:
       - ./.env
     environment:
       ASPNETCORE_ENVIRONMENT: "Production"
-      EZENITY_FILE_ROOT: "/data/files"
+
+      # EZENITY_FILE_ROOT: "/data/files"
 
       # IMPORTANT: must match your code's expected key:
       # connectionStringSettings.WebApiDatabase
@@ -36,12 +37,18 @@ services:
       AppSettings__EmailFrom: "${EZENITY_EMAIL_FROM}"
       AppSettings__EmailMessageIdDomain: "${EZENITY_EMAIL_MESSAGE_ID_DOMAIN}"
       AppSettings__EmailTemplateBasePath: "${EZENITY_EMAIL_TEMPLATE_BASE_PATH}"
-      FileStorage__RootPath: "/data/files"
-      FileStorage__MaxUploadBytes: "50000000"
 
       # Your Startup.cs production CORS reads this env var directly:
       # Configuration["EZENITY_ALLOWED_ORIGINS"]
       EZENITY_ALLOWED_ORIGINS: "${EZENITY_ALLOWED_ORIGINS}"
+
+      # File storage (env driven)
+      FileStorage__RootPath: "/data/files"
+      FileStorage__MaxUploadBytes: "50000000"
+      # If we want to override allowed extensions via env, we can do indexed keys:
+      # FileStorage__AllowedExtensions__0: ".jpg"
+      # FileStorage__AllowedExtensions__1: ".jpeg"
+      # etc.
 
       # Debugging
       Logging__LogLevel__Microsoft.Hosting.Lifetime: "Information"
@@ -54,6 +61,7 @@ services:
     # Program.cs writes to /var/log/ezenity_api_out.log
     volumes:
       - /srv/ezenity/logs/ezenity_api:/var/log
+      # Persist uploaded files outside the container
       - /src/ezenity/Storage/ezenity_files:/data/files
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -100,11 +108,10 @@ services:
       - ./.env
     environment:
       ASPNETCORE_ENVIRONMENT: "Production"
-      EZENITY_FILE_ROOT: "/data/files"
-
+      # EZENITY_FILE_ROOT: "/data/files"
       ConnectionStrings__WebApiDatabase: "Server=host.docker.internal;Port=3306;Database=${EZENITY_DATABASE_NAME};User=${EZENITY_DATABASE_USER};Password=${EZENITY_DATABASE_PASSWORD};"
       AppSettings__Secret: "${EZENITY_SECRET_KEY}"
-      FileStorage__RootPath: "/data/files"
+      # FileStorage__RootPath: "/data/files"
     networks:
       - ezenity_net
     # Don't start by default. Only when explicitly invoked.
