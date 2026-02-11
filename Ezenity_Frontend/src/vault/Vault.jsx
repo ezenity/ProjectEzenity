@@ -17,7 +17,7 @@ function Vault() {
 
                 <Switch>
                     <Route exact path={path} component={MissionsList} />
-                    <Route path={`${path}/:missionId`} component={MissionDetail} />
+                    <Route path={`${path}/missions/:id`} component={MissionDetail} />
                 </Switch>
             </div>
         </div>
