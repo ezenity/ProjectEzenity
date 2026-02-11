@@ -3,6 +3,7 @@ import { Route, Switch, Redirect, NavLink } from "react-router-dom";
 
 import { Overview } from "./Overview";
 import { Gallery } from "./Gallery";
+import { MediaLibrary } from "../files/MediaLibrary";
 
 function About({ match }) {
     const { path, url } = match;
@@ -57,7 +58,7 @@ function About({ match }) {
                             <div className="card-body">
                                 <Switch>
                                     <Route exact path={path} component={Overview} />
-                                    <Route path={`${path}/gallery`} component={Gallery} />
+                                    <Route path={`${path}/gallery`} component={MediaLibrary} />
 
                                     {/* Fallback */}
                                     <Redirect to={url} />
