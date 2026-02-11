@@ -2,30 +2,37 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Ezenity.DTOs.Models.Files;
 using Ezenity.API.Options;
+using Ezenity.Core.Entities.Files;
 using Ezenity.Core.Services.Files;
+using Ezenity.DTOs.Models.Files;
+using Ezenity.Infrastructure.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Ezenity.Infrastructure.Services.Files
 {
     /// <summary>
-    /// Local filesystem storage with JSON sidecar metadata:
-    /// - File bytes stored as: {id}{ext}
-    /// - Metadata stored as:  {id}.meta.json
+    /// Local filesystem storage for file bytes + MySQL metadata via FileAssets table.
+    ///
+    /// - File bytes stored as: {id}{ext} under RootPath
+    /// - Metadata stored in DB: FileAsset
+    ///
+    /// Controller is responsible for setting Url on FileItemResponse.
     /// </summary>
     public sealed class LocalFileStorageService : IFileStorageService
     {
         private static readonly Regex IdRegex = new("^[a-f0-9]{32}$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        private readonly DataContext _db;
         private readonly FileStorageOptions _options;
         private readonly string _rootFullPath;
         private readonly HashSet<string> _allowedExtensions;
@@ -33,24 +40,37 @@ namespace Ezenity.Infrastructure.Services.Files
         private readonly ILogger<LocalFileStorageService> _logger;
 
         public LocalFileStorageService(
+            DataContext db,
             IOptions<FileStorageOptions> options,
             IWebHostEnvironment env,
             FileExtensionContentTypeProvider contentTypes,
+            IConfiguration config,
             ILogger<LocalFileStorageService> logger)
         {
-            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            _db = db ?? throw new ArgumentNullException(nameof(db));
             _contentTypes = contentTypes ?? throw new ArgumentNullException(nameof(contentTypes));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
-            _allowedExtensions = new HashSet<string>(
-                (_options.AllowedExtensions ?? new List<string>())
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Select(x => x.Trim().StartsWith(".") ? x.Trim() : "." + x.Trim()),
-                StringComparer.OrdinalIgnoreCase);
+            // Optional env override in your "EZENITY_*" style.
+            // This means you can keep appsettings clean and drive it purely from docker-compose env vars.
+            var envRoot = config["EZENITY_FILES_ROOT"];
+            if (!string.IsNullOrWhiteSpace(envRoot))
+                _options.RootPath = envRoot.Trim();
+
+            var allowed = (_options.AllowedExtensions ?? new List<string>())
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x =>
+                {
+                    var trimmed = x.Trim();
+                    return trimmed.StartsWith(".") ? trimmed : "." + trimmed;
+                })
+                .ToList();
+
+            _allowedExtensions = new HashSet<string>(allowed, StringComparer.OrdinalIgnoreCase);
 
             var root = string.IsNullOrWhiteSpace(_options.RootPath) ? "./files" : _options.RootPath.Trim();
 
-            // Resolve relative root against content root
             _rootFullPath = Path.IsPathRooted(root)
                 ? Path.GetFullPath(root)
                 : Path.GetFullPath(Path.Combine(env.ContentRootPath, root));
@@ -75,43 +95,92 @@ namespace Ezenity.Infrastructure.Services.Files
             if (!_allowedExtensions.Contains(ext))
                 throw new InvalidOperationException($"File type '{ext}' not allowed.");
 
-            var id = Guid.NewGuid().ToString("N");
-            var storedName = $"{id}{ext}";
+            var id = Guid.NewGuid();
+            var fileId = id.ToString("N");
+            var storedName = $"{fileId}{ext}";
             var storedPath = CombineUnderRoot(storedName);
 
-            await using (var stream = new FileStream(storedPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 64 * 1024, useAsync: true))
+            // 1) Write bytes to disk
+            try
             {
-                await file.CopyToAsync(stream, ct);
+                await using (var stream = new FileStream(
+                    storedPath,
+                    FileMode.CreateNew,
+                    FileAccess.Write,
+                    FileShare.None,
+                    bufferSize: 64 * 1024,
+                    useAsync: true))
+                {
+                    await file.CopyToAsync(stream, ct);
+                }
+            }
+            catch
+            {
+                // If disk write fails, make sure we don't leave a partial file
+                SafeDeleteFile(storedPath);
+                throw;
             }
 
+            // 2) Compute content type
             if (!_contentTypes.TryGetContentType(storedPath, out var contentType))
                 contentType = file.ContentType ?? "application/octet-stream";
 
-            var meta = new FileItemResponse
+            // 3) Save metadata to DB
+            // NOTE: CreatedByAccountId can be set later once you wire JWT -> AccountId.
+            var asset = new FileAsset
             {
                 Id = id,
                 OriginalName = Path.GetFileName(file.FileName),
+                StoredName = storedName,
                 ContentType = contentType,
                 Size = file.Length,
-                CreatedUtc = DateTime.UtcNow,
                 Scope = string.IsNullOrWhiteSpace(scope) ? null : scope.Trim(),
-                Url = null // controller fills
+                CreatedUtc = DateTime.UtcNow,
+                CreatedByAccountId = null
             };
 
-            var metaPath = CombineUnderRoot($"{id}.meta.json");
-            var json = JsonSerializer.Serialize(meta, new JsonSerializerOptions { WriteIndented = true });
-            await File.WriteAllTextAsync(metaPath, json, ct);
+            try
+            {
+                _db.FileAssets.Add(asset);
+                await _db.SaveChangesAsync(ct);
+            }
+            catch
+            {
+                // DB write failed - delete the stored bytes so we don't orphan disk files
+                SafeDeleteFile(storedPath);
+                throw;
+            }
 
-            return meta;
+            // 4) Return DTO (Url is filled by controller)
+            return new FileItemResponse
+            {
+                Id = asset.Id.ToString("N"),
+                OriginalName = asset.OriginalName,
+                ContentType = asset.ContentType,
+                Size = asset.Size,
+                CreatedUtc = asset.CreatedUtc,
+                Scope = asset.Scope,
+                Url = null
+            };
         }
 
         public async Task<(Stream Stream, FileItemResponse Meta)> OpenReadAsync(string fileId, CancellationToken ct)
         {
-            var meta = await GetMetaRequiredAsync(fileId, ct);
-            var storedPath = ResolveStoredPath(meta.Id);
+            var asset = await GetAssetRequiredAsync(fileId, ct);
 
-            // For videos, enableRangeProcessing happens in controller via File(stream, contentType, enableRangeProcessing:true)
-            var stream = new FileStream(storedPath, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024, useAsync: true);
+            var fullPath = CombineUnderRoot(asset.StoredName);
+            if (!File.Exists(fullPath))
+                throw new FileNotFoundException("Stored file not found.");
+
+            var stream = new FileStream(
+                fullPath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                bufferSize: 64 * 1024,
+                useAsync: true);
+
+            var meta = Map(asset);
             return (stream, meta);
         }
 
@@ -119,29 +188,34 @@ namespace Ezenity.Infrastructure.Services.Files
         {
             if (!IsValidId(fileId)) return null;
 
-            var metaPath = CombineUnderRoot($"{fileId}.meta.json");
-            if (!File.Exists(metaPath)) return null;
+            var id = Guid.ParseExact(fileId, "N");
 
-            var json = await File.ReadAllTextAsync(metaPath, ct);
-            var meta = JsonSerializer.Deserialize<FileItemResponse>(json);
+            var asset = await _db.FileAssets
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
 
-            return meta;
+            return asset == null ? null : Map(asset);
         }
 
         public async Task<bool> DeleteAsync(string fileId, CancellationToken ct)
         {
             if (!IsValidId(fileId)) return false;
 
-            var meta = await GetMetaAsync(fileId, ct);
-            if (meta == null) return false;
+            var id = Guid.ParseExact(fileId, "N");
 
-            var metaPath = CombineUnderRoot($"{fileId}.meta.json");
-            var storedPath = ResolveStoredPath(fileId);
+            var asset = await _db.FileAssets.FirstOrDefaultAsync(x => x.Id == id, ct);
+            if (asset == null) return false;
+
+            var fullPath = CombineUnderRoot(asset.StoredName);
 
             try
             {
-                if (File.Exists(storedPath)) File.Delete(storedPath);
-                if (File.Exists(metaPath)) File.Delete(metaPath);
+                if (File.Exists(fullPath))
+                    File.Delete(fullPath);
+
+                _db.FileAssets.Remove(asset);
+                await _db.SaveChangesAsync(ct);
+
                 return true;
             }
             catch (Exception ex)
@@ -155,65 +229,49 @@ namespace Ezenity.Infrastructure.Services.Files
         {
             var normalizedScope = string.IsNullOrWhiteSpace(scope) ? null : scope.Trim();
 
-            var metas = Directory.EnumerateFiles(_rootFullPath, "*.meta.json", SearchOption.TopDirectoryOnly);
+            var query = _db.FileAssets.AsNoTracking().AsQueryable();
 
-            var results = new List<FileItemResponse>();
+            if (normalizedScope != null)
+                query = query.Where(x => x.Scope != null && x.Scope == normalizedScope);
 
-            foreach (var metaPath in metas)
-            {
-                ct.ThrowIfCancellationRequested();
-
-                try
-                {
-                    var json = await File.ReadAllTextAsync(metaPath, ct);
-                    var meta = JsonSerializer.Deserialize<FileItemResponse>(json);
-                    if (meta == null) continue;
-
-                    if (normalizedScope != null && !string.Equals(meta.Scope, normalizedScope, StringComparison.OrdinalIgnoreCase))
-                        continue;
-
-                    results.Add(meta);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Skipping invalid meta file: {MetaPath}", metaPath);
-                }
-            }
-
-            return results
+            var assets = await query
                 .OrderByDescending(x => x.CreatedUtc)
-                .ToList();
+                .ToListAsync(ct);
+
+            return assets.Select(Map).ToList();
         }
 
-        private async Task<FileItemResponse> GetMetaRequiredAsync(string fileId, CancellationToken ct)
+        private async Task<FileAsset> GetAssetRequiredAsync(string fileId, CancellationToken ct)
         {
-            var meta = await GetMetaAsync(fileId, ct);
-            if (meta == null)
-                throw new FileNotFoundException("File metadata not found.");
+            if (!IsValidId(fileId))
+                throw new FileNotFoundException("File not found.");
 
-            return meta;
+            var id = Guid.ParseExact(fileId, "N");
+
+            var asset = await _db.FileAssets.FirstOrDefaultAsync(x => x.Id == id, ct);
+            if (asset == null)
+                throw new FileNotFoundException("File not found.");
+
+            return asset;
         }
 
-        private bool IsValidId(string fileId) =>
-            !string.IsNullOrWhiteSpace(fileId) && IdRegex.IsMatch(fileId);
-
-        private string ResolveStoredPath(string fileId)
-        {
-            // Find stored file by known allowed extensions based on the id.
-            // This avoids trusting user input for a filename.
-            foreach (var ext in _allowedExtensions)
+        private static FileItemResponse Map(FileAsset asset) =>
+            new FileItemResponse
             {
-                var candidate = CombineUnderRoot($"{fileId}{ext}");
-                if (File.Exists(candidate))
-                    return candidate;
-            }
+                Id = asset.Id.ToString("N"),
+                OriginalName = asset.OriginalName,
+                ContentType = asset.ContentType,
+                Size = asset.Size,
+                CreatedUtc = asset.CreatedUtc,
+                Scope = asset.Scope,
+                Url = null
+            };
 
-            throw new FileNotFoundException("Stored file not found.");
-        }
+        private static bool IsValidId(string fileId) =>
+            !string.IsNullOrWhiteSpace(fileId) && IdRegex.IsMatch(fileId);
 
         private string CombineUnderRoot(string fileName)
         {
-            // Prevent path traversal: only allow a file name (no directories)
             var safeName = Path.GetFileName(fileName);
             var combined = Path.GetFullPath(Path.Combine(_rootFullPath, safeName));
 
@@ -221,6 +279,19 @@ namespace Ezenity.Infrastructure.Services.Files
                 throw new InvalidOperationException("Invalid path resolution.");
 
             return combined;
+        }
+
+        private void SafeDeleteFile(string fullPath)
+        {
+            try
+            {
+                if (File.Exists(fullPath))
+                    File.Delete(fullPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed cleanup delete: {Path}", fullPath);
+            }
         }
     }
 }

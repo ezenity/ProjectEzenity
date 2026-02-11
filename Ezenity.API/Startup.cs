@@ -16,6 +16,7 @@ using Ezenity.Infrastructure.Services.Accounts;
 using Ezenity.Infrastructure.Services.Emails;
 using Ezenity.Infrastructure.Services.EmailTemplates;
 using Ezenity.Infrastructure.Services.Sections;
+using Ezenity.Infrastructure.Services.Files;
 using Ezenity.RazorViews;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -199,14 +200,41 @@ namespace Ezenity.API
             services.AddScoped<RoleResolver>();
 
             // Singleton services
-            services.AddSingleton<FileExtensionContentTypeProvider>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<IEmailTemplateResolver, EmailTemplateResolver>();
             //services.AddSingleton<IConfigurationUpdater, ConfigurationUpdater>();
             services.AddSingleton<IRazorViewRenderer, RazorViewRenderer>();
-            services.AddSingleton<FileExtensionContentTypeProvider>();
-            services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
+            // Content type provider is stateless and safe as singleton
+            services.AddSingleton<FileExtensionContentTypeProvider>();
+
+            // Optional: Allow env override in your EZENITY_* naming style
+            services.PostConfigure<FileStorageOptions>(opts =>
+            {
+                var envRoot = Configuration["EZENITY_FILES_ROOT"];
+                if (!string.IsNullOrWhiteSpace(envRoot))
+                    opts.RootPath = envRoot.Trim();
+
+                var envMax = Configuration["EZENITY_FILES_MAX_UPLOAD_BYTES"];
+                if (!string.IsNullOrWhiteSpace(envMax) && long.TryParse(envMax, out var maxBytes) && maxBytes > 0)
+                    opts.MaxUploadBytes = maxBytes;
+
+                var envAllowed = Configuration["EZENITY_FILES_ALLOWED_EXTENSIONS"];
+                if (!string.IsNullOrWhiteSpace(envAllowed))
+                {
+                    var parts = envAllowed
+                        .Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .ToList();
+
+                    if (parts.Count > 0)
+                        opts.AllowedExtensions = parts;
+                }
+            });
+
+            // IMPORTANT: File storage service must be SCOPED (it uses DataContext)
+            services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
             // AutoMapper
             //services.AddAutoMapper(typeof(AutoMapperProfile).Assembly); // .NET 5.0 -

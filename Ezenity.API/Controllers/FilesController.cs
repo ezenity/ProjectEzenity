@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ezenity.API.Controllers
@@ -42,7 +43,7 @@ namespace Ezenity.API.Controllers
 
         // GET /api/v1/files/list?scope=vault
         [HttpGet("list")]
-        public async Task<ActionResult<ApiResponse<IEnumerable<FileItemResponse>>>> ListFilesAsync([FromQuery] string? scope = null)
+        public async Task<ActionResult<ApiResponse<IEnumerable<FileItemResponse>>>> ListFilesAsync([FromQuery] string? scope = null, CancellationToken ct = default)
         {
             var query = _dataContext.FileAssets.AsNoTracking();
 
