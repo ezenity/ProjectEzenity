@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Ezenity.DTO.Models.Files;
+using Ezenity.DTOs.Models.Files;
 
 namespace Ezenity.Core.Services.Files
 {
