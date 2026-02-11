@@ -37,6 +37,7 @@ services:
       AppSettings__EmailMessageIdDomain: "${EZENITY_EMAIL_MESSAGE_ID_DOMAIN}"
       AppSettings__EmailTemplateBasePath: "${EZENITY_EMAIL_TEMPLATE_BASE_PATH}"
       FileStorage__RootPath: "/data/files"
+      FileStorage__MaxUploadBytes: "50000000"
 
       # Your Startup.cs production CORS reads this env var directly:
       # Configuration["EZENITY_ALLOWED_ORIGINS"]
@@ -53,7 +54,7 @@ services:
     # Program.cs writes to /var/log/ezenity_api_out.log
     volumes:
       - /srv/ezenity/logs/ezenity_api:/var/log
-      - /src/ezenity/Storage/files:/data/files
+      - /src/ezenity/Storage/ezenity_files:/data/files
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
