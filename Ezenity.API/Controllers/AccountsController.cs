@@ -4,6 +4,7 @@ using Ezenity.API.Filters;
 using Ezenity.Core.Entities.Accounts;
 using Ezenity.Core.Helpers.Exceptions;
 using Ezenity.Core.Services.Common;
+using Ezenity.DTOs;
 using Ezenity.DTOs.Models;
 using Ezenity.DTOs.Models.Accounts;
 using Ezenity.Infrastructure.Attributes;

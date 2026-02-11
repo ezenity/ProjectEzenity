@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using Ezenity.DTOs;
-using Ezenity.DTOs.Files;
+using Ezenity.DTOs.Models;
+using Ezenity.DTOs.Models.Files;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;

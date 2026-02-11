@@ -8,6 +8,7 @@ using Ezenity.Core.Entities.EmailTemplates;
 using Ezenity.Core.Services.Emails;
 using Ezenity.DTOs.Models.EmailTemplates;
 using Ezenity.DTOs.Models;
+using Ezenity.DTOs;
 using Ezenity.Core.Services.Common;
 using Ezenity.Infrastructure.Attributes;
 using Ezenity.Core.Helpers.Exceptions;
