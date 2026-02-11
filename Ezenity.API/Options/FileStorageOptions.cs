@@ -21,7 +21,8 @@ namespace Ezenity.API.Options
         public string RootPath { get; set; } = "./files";
 
         /// <summary>
-        /// Maximum allowed upload size in bytes.
+        /// Maximum allowed upload size in bytes (per request).
+        /// Controller-level limits can also be applied via [RequestSizeLimit].
         /// Default: 50 MB.
         /// </summary>
         public long MaxUploadBytes { get; set; } = 50_000_000;
