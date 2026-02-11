@@ -208,6 +208,9 @@ namespace Ezenity.API
             // Content type provider is stateless and safe as singleton
             services.AddSingleton<FileExtensionContentTypeProvider>();
 
+            // File storage options + JSON options
+            services.Configure<FileStorageOptions>(Configuration.GetSection("FileStorage"));
+
             // Optional: Allow env override in your EZENITY_* naming style
             services.PostConfigure<FileStorageOptions>(opts =>
             {
@@ -233,6 +236,16 @@ namespace Ezenity.API
                 }
             });
 
+            services.Configure<JsonOptions>(options =>
+            {
+                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.WriteIndented = true;
+                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+
+                // Keep it consistent with the formatter requirement in .NET 8
+                options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
+            });
+
             // IMPORTANT: File storage service must be SCOPED (it uses DataContext)
             services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
@@ -251,18 +264,6 @@ namespace Ezenity.API
             mapperConfig.AssertConfigurationIsValid();
 #endif
             services.AddSingleton(mapperConfig.CreateMapper());
-
-            // File storage config
-            services.Configure<FileStorageOptions>(Configuration.GetSection("FileStorage"));
-            services.Configure<JsonOptions>(options =>
-            {
-                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                options.JsonSerializerOptions.WriteIndented = true;
-                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-
-                // Keep it consistent with the formatter requirement in .NET 8
-                options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
-            });
 
             // Configure SwaggerGen
             //if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
@@ -288,7 +289,7 @@ namespace Ezenity.API
 
                 services.AddSwaggerGen();
 
-                // Required if you're using Newtonsoft package
+                // Required if we're using Newtonsoft package
                 // services.AddSwaggerGenNewtonsoftSupport();
 
                 services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
