@@ -52,7 +52,8 @@ namespace Ezenity.Infrastructure.Data
         /// </summary>
         public DbSet<VaultMission> VaultMissions { get; set; }
         public DbSet<VaultEmblem> VaultEmblems { get; set; }
-        public DbSet<VaultMissionReward> VaultMissionRewards { get; set; }
+        public DbSet<AccountEmblem> AccountEmblems { get; set; }
+        public DbSet<VaultMissionEmblemReward> VaultMissionEmblemRewards { get; set; }
         public DbSet<VaultMissionSubmission> VaultMissionSubmissions { get; set; }
         public DbSet<VaultMissionCompletion> VaultMissionCompletions { get; set; }
         public DbSet<VaultMissionComment> VaultMissionComments { get; set; }
@@ -84,6 +85,7 @@ namespace Ezenity.Infrastructure.Data
 
             // Vault tables
             ConfigureVault(modelBuilder);
+            ConfigureVaultEmblems(modelBuilder);
 
             // Add any relationships between entities if necessary
             // For example, if Section has a one-to-many relationship with another entity called OtherEntity
@@ -433,6 +435,80 @@ namespace Ezenity.Infrastructure.Data
                       .HasForeignKey(x => x.AccountId);
 
                 entity.HasIndex(x => new { x.MissionId, x.CreatedUtc });
+            });
+        }
+
+        private void ConfigureVaultEmblems(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<VaultEmblem>(entity =>
+            {
+                entity.ToTable("VaultEmblems");
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Slug).IsRequired().HasMaxLength(64);
+                entity.HasIndex(x => x.Slug).IsUnique();
+
+                entity.Property(x => x.Name).IsRequired().HasMaxLength(120);
+                entity.Property(x => x.Description).HasMaxLength(1000);
+
+                entity.Property(x => x.SeasonTag).HasMaxLength(50);
+
+                entity.Property(x => x.Rarity).IsRequired();
+                entity.Property(x => x.IsActive).IsRequired();
+                entity.Property(x => x.SortOrder).IsRequired();
+                entity.Property(x => x.CreatedUtc).IsRequired();
+
+                entity.HasOne(x => x.IconFileAsset)
+                      .WithMany()
+                      .HasForeignKey(x => x.IconFileAssetId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<VaultMissionEmblemReward>(entity =>
+            {
+                entity.ToTable("VaultMissionEmblemRewards");
+
+                entity.HasKey(x => new { x.VaultMissionId, x.VaultEmblemId });
+
+                entity.Property(x => x.Quantity).IsRequired();
+                entity.Property(x => x.IsPrimary).IsRequired();
+
+                entity.HasOne(x => x.Mission)
+                      .WithMany(x => x.EmblemRewards)
+                      .HasForeignKey(x => x.VaultMissionId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.Emblem)
+                      .WithMany(x => x.MissionRewards)
+                      .HasForeignKey(x => x.VaultEmblemId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<AccountEmblem>(entity =>
+            {
+                entity.ToTable("AccountEmblems");
+
+                entity.HasKey(x => new { x.AccountId, x.VaultEmblemId });
+
+                entity.Property(x => x.ObtainedUtc).IsRequired();
+                entity.Property(x => x.Note).HasMaxLength(1000);
+
+                entity.HasOne(x => x.Account)
+                      .WithMany(x => x.Emblems)
+                      .HasForeignKey(x => x.AccountId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.Emblem)
+                      .WithMany(x => x.EarnedBy)
+                      .HasForeignKey(x => x.VaultEmblemId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.ObtainedFromVaultMission)
+                      .WithMany()
+                      .HasForeignKey(x => x.ObtainedFromVaultMissionId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(x => x.ObtainedUtc);
             });
         }
 

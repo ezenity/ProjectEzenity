@@ -23,8 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ezenity.Core\Ezenity.Core.csproj" />
-    <ProjectReference Include="..\Ezenity.DTOs\Ezenity.DTOs.csproj" />
+    <ProjectReference Include="..\Ezenity.Core\Ezenity.Domain.csproj" />
+    <ProjectReference Include="..\Ezenity.DTOs\Ezenity.Contracts.csproj" />
     <ProjectReference Include="..\Ezenity.Infrastructure\Ezenity.Infrastructure.csproj" />
     <ProjectReference Include="..\Ezenity.API\Ezenity.API.csproj" />
   </ItemGroup>

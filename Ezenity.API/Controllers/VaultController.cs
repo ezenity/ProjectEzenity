@@ -86,7 +86,7 @@ public class VaultController : ControllerBase
 
         foreach (var fileId in req.FileIds.Distinct())
         {
-            submission.Media.Add(new VaultSubmissionMedia
+            submission.Media.Add(new VaultMissionSubmissionMedia
             {
                 FileId = fileId,
                 MediaType = VaultMediaType.Image // you can infer from content-type later

@@ -1,4 +1,6 @@
-﻿namespace Ezenity.Core.Entities.Accounts;
+﻿using Ezenity.Core.Entities.Vault;
+
+namespace Ezenity.Core.Entities.Accounts;
 
 /// <summary>
 /// Represents an account in the system.
@@ -9,6 +11,8 @@ public class Account
     /// Gets or sets the account ID.
     /// </summary>
     public int Id { get; set; }
+
+    public List<AccountEmblem> Emblems { get; set; } = new();
 
     /// <summary>
     /// Gets the account title. Cannot be null after the object is constructed.

@@ -20,4 +20,8 @@ public class VaultMissionCompletion
 
     public DateTime? ApprovedUtc { get; set; }
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+
+    // Optional: link to the approved submission used as proof
+    public int? VaultSubmissionId { get; set; }
+    public VaultMissionSubmission? Submission { get; set; }
 }
