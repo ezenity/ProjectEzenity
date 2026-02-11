@@ -5,6 +5,7 @@ using AutoMapper.Internal;
 using Ezenity.API.Options;
 using Ezenity.API.Filters;
 using Ezenity.API.Middleware;
+using Ezenity.Core.Options;
 using Ezenity.Core.Interfaces;
 using Ezenity.Core.Services.Common;
 using Ezenity.Core.Services.Emails;
@@ -236,16 +237,6 @@ namespace Ezenity.API
                 }
             });
 
-            services.Configure<JsonOptions>(options =>
-            {
-                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                options.JsonSerializerOptions.WriteIndented = true;
-                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-
-                // Keep it consistent with the formatter requirement in .NET 8
-                options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
-            });
-
             // IMPORTANT: File storage service must be SCOPED (it uses DataContext)
             services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
@@ -265,11 +256,21 @@ namespace Ezenity.API
 #endif
             services.AddSingleton(mapperConfig.CreateMapper());
 
+            services.Configure<JsonOptions>(options =>
+            {
+                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.WriteIndented = true;
+                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+
+                // Keep it consistent with the formatter requirement in .NET 8
+                options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
+            });
+
             // Configure SwaggerGen
             //if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
             //{
-                // Configure API versioning
-                services.AddApiVersioning(options =>
+            // Configure API versioning
+            services.AddApiVersioning(options =>
                 {
                     options.AssumeDefaultVersionWhenUnspecified = true;
                     options.DefaultApiVersion = new ApiVersion(1, 0);

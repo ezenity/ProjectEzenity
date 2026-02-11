@@ -54,6 +54,7 @@ services:
       Logging__LogLevel__Microsoft.Hosting.Lifetime: "Information"
       Logging__LogLevel__Microsoft: "Information"
       EZENITY_LOG_DIR: /var/log
+
     ports:
       - "127.0.0.1:5001:8080"
     networks:
