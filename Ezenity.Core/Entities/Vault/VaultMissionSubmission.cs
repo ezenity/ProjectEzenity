@@ -12,7 +12,7 @@ public class VaultSubmission
     public VaultMission Mission { get; set; } = null!;
 
     public int? SubmittedByAccountId { get; set; } // The Account PK
-    public Account Account? SubmittedByAccount {  get; set; }
+    public Account Account? SubmittedByAccount { get; set; }
 
     public string? Platform { get; set; } // youtube, instagram, tiktok, etc.
     public string? ExternalUrl { get; set; }
