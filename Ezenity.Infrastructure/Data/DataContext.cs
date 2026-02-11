@@ -79,6 +79,9 @@ namespace Ezenity.Infrastructure.Data
             ConfigureEmailTemplates(modelBuilder);
             ConfigureSections(modelBuilder);
 
+            ConfigureFiles(modelBuilder);
+            ConfigureVault(modelBuilder);
+
             // Add any relationships between entities if necessary
             // For example, if Section has a one-to-many relationship with another entity called OtherEntity
             // modelBuilder.Entity<Section>()
