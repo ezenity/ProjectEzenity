@@ -5,7 +5,7 @@
     string Get(string key, string fallback = "")
         => Model != null && Model.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : fallback;
 
-    var appName = Get("appName", "Ezenity");
+    var appName = Get("appName", "After Hours Crew");
     var firstName = Get("firstName", "there");
     var year = Get("currentYear", DateTime.UtcNow.Year.ToString());
 
