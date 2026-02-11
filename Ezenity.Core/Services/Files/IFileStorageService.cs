@@ -9,6 +9,9 @@ namespace Ezenity.Core.Services.Files
 {
     /// <summary>
     /// Handles storing and retrieving files (and metadata) independent of controllers.
+    /// 
+    /// Abstraction for storing and retrieving binary file content.
+    /// The database stores metadata; this service stores the actual bytes on disk.
     /// </summary>
     public interface IFileStorageService
     {

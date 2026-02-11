@@ -31,7 +31,7 @@ namespace Ezenity.API.Options
         /// List of allowed file extensions, including the leading dot.
         /// Example: ".jpg", ".mp4"
         /// </summary>
-        public List<string> AllowedExtensions { get; set; } = new()
+        public List<string> AllowedExtensions { get; set; } = new List<string>
         {
             ".jpg", ".jpeg", ".png", ".webp", ".gif",
             ".mp4", ".webm", ".mov"

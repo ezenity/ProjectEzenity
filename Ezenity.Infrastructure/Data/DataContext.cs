@@ -79,7 +79,10 @@ namespace Ezenity.Infrastructure.Data
             ConfigureEmailTemplates(modelBuilder);
             ConfigureSections(modelBuilder);
 
+            // Files metadata table (FileAssets)
             ConfigureFiles(modelBuilder);
+
+            // Vault tables
             ConfigureVault(modelBuilder);
 
             // Add any relationships between entities if necessary
@@ -240,7 +243,6 @@ namespace Ezenity.Infrastructure.Data
         /// </remarks>
         private void ConfigureSections(ModelBuilder modelBuilder)
         {
-
             modelBuilder.Entity<Section>(entity =>
             {
                 entity.ToTable("Sections");
@@ -268,16 +270,38 @@ namespace Ezenity.Infrastructure.Data
                 entity.ToTable("FileAssets");
                 entity.HasKey(x => x.Id);
 
-                entity.Property(x => x.OriginalName).HasMaxLength(255).IsRequired();
-                entity.Property(x => x.StoredName).HasMaxLength(255).IsRequired();
-                entity.Property(x => x.ContentType).HasMaxLength(100).IsRequired();
-                entity.Property(x => x.Scope).HasMaxLength(50).IsRequired(false);
+                entity.Property(x => x.OriginalName)
+                      .IsRequired()
+                      .HasMaxLength(255);
 
-                entity.Property(x => x.Size).IsRequired();
-                entity.Property(x => x.CreatedUtc).IsRequired();
+                entity.Property(x => x.StoredName)
+                      .IsRequired()
+                      .HasMaxLength(255);
 
-                entity.HasIndex(x => x.CreatedUtc);
-                entity.HasIndex(x => x.Scope);
+                entity.HasIndex(x => x.StoredName).IsUnique();
+
+                entity.Property(x => x.ContentType)
+                      .IsRequired()
+                      .HasMaxLength(127);
+
+                entity.Property(x => x.Size)
+                      .IsRequired();
+
+                entity.Property(x => x.Scope)
+                      .IsRequired(false)
+                      .HasMaxLength(64);
+
+                entity.Property(x => x.CreatedUtc)
+                      .IsRequired();
+
+                // Ownership link (if the entity has CreatedByAccountId)
+                entity.HasOne<Account>()
+                      .WithMany()
+                      .HasForeignKey("CreatedByAccountId")
+                      .IsRequired(false)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(x => new { x.Scope, x.CreatedUtc });
             });
         }
 
