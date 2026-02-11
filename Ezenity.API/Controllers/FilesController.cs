@@ -1,16 +1,18 @@
 ﻿using Asp.Versioning;
-using Ezenity.DTOs;
+using Ezenity.API.Options;
+using Ezenity.Core.Services.Files;
 using Ezenity.DTOs.Models;
 using Ezenity.DTOs.Models.Files;
+using Ezenity.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Ezenity.API.Controllers
@@ -22,61 +24,55 @@ namespace Ezenity.API.Controllers
     public class FilesController : ControllerBase
     {
         private readonly FileExtensionContentTypeProvider _contentTypes;
-        private readonly string _root;
-
-        private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ".jpg", ".jpeg", ".png", ".webp", ".gif",
-            ".mp4", ".webm", ".mov"
-        };
+        private readonly DataContext _dataContext;
+        private readonly IFileStorageService _storage;
+        private readonly FileStorageOptions _options;
 
         public FilesController(
             FileExtensionContentTypeProvider contentTypes,
-            IConfiguration config)
+            DataContext dataContext,
+            IFileStorageService storage,
+            IOptions<FileStorageOptions> options)
         {
             _contentTypes = contentTypes ?? throw new ArgumentNullException(nameof(contentTypes));
-
-            _root = config["FileStorage:RootPath"] ?? "./files";
-            Directory.CreateDirectory(_root);
+            _dataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
+            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
         // GET /api/v1/files/list?scope=vault
         [HttpGet("list")]
         public async Task<ActionResult<ApiResponse<IEnumerable<FileItemResponse>>>> ListFilesAsync([FromQuery] string? scope = null)
         {
-            var metas = Directory.EnumerateFiles(_root, "*.meta.json", SearchOption.TopDirectoryOnly);
+            var query = _dataContext.FileAssets.AsNoTracking();
 
-            var items = new List<FileItemResponse>();
-
-            foreach (var metaPath in metas)
+            if (!string.IsNullOrWhiteSpace(scope))
             {
-                try
-                {
-                    var json = await System.IO.File.ReadAllTextAsync(metaPath);
-                    var item = JsonSerializer.Deserialize<FileItemResponse>(json);
-
-                    if (item == null) continue;
-
-                    if (!string.IsNullOrWhiteSpace(scope) &&
-                        !string.Equals(item.Scope, scope, StringComparison.OrdinalIgnoreCase))
-                        continue;
-
-                    // Ensure URL is always correct for this host
-                    item.Url = Url.Action(nameof(GetFileAsync), new { version = "1.0", fileId = item.Id })!;
-                    items.Add(item);
-                }
-                catch
-                {
-                    // ignore broken meta files
-                }
+                var trimmed = scope.Trim();
+                query = query.Where(x => x.Scope != null && x.Scope == trimmed);
             }
+
+            var assets = await query
+                .OrderByDescending(x => x.CreatedUtc)
+                .ToListAsync();
+
+            var items = assets.Select(asset => new FileItemResponse
+            {
+                Id = asset.Id.ToString("N"),
+                OriginalName = asset.OriginalName,
+                ContentType = asset.ContentType,
+                Size = asset.Size,
+                CreatedUtc = asset.CreatedUtc,
+                Scope = asset.Scope,
+                Url = Url.Action(nameof(GetFileAsync), new { version = "1.0", fileId = asset.Id.ToString("N") })!
+            }).ToList();
 
             return Ok(new ApiResponse<IEnumerable<FileItemResponse>>
             {
                 StatusCode = 200,
                 IsSuccess = true,
                 Message = "Files fetched successfully.",
-                Data = items.OrderByDescending(x => x.CreatedUtc).ToList()
+                Data = items
             });
         }
 
@@ -85,25 +81,31 @@ namespace Ezenity.API.Controllers
         public async Task<IActionResult> GetFileAsync(string fileId)
         {
             if (!Guid.TryParseExact(fileId, "N", out var id))
-                return NotFound();
+                return NotFound(new ApiResponse<object> { StatusCode = 404, IsSuccess = false, Message = "File not found." });
 
-            var asset = await _dataContext.FileAssets.FirstOrDefaultAsync(x => x.Id == id);
+            var asset = await _dataContext.FileAssets.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
             if (asset == null)
-                return NotFound();
+                return NotFound(new ApiResponse<object> { StatusCode = 404, IsSuccess = false, Message = "File not found." });
 
-            var fullPath = Path.Combine(_root, asset.StoredName);
-            if (!System.IO.File.Exists(fullPath))
-                return NotFound();
+            var exists = await _storage.ExistsAsync(asset.StoredName);
+            if (!exists)
+                return NotFound(new ApiResponse<object> { StatusCode = 404, IsSuccess = false, Message = "File bytes missing on disk." });
 
-            var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var stream = await _storage.OpenReadAsync(asset.StoredName);
 
-            // enableRangeProcessing is important for video playback
-            return File(stream, asset.ContentType, fileDownloadName: asset.OriginalName, enableRangeProcessing: true);
+            var contentType = asset.ContentType;
+            if (string.IsNullOrWhiteSpace(contentType))
+            {
+                if (!_contentTypes.TryGetContentType(asset.StoredName, out contentType))
+                    contentType = "application/octet-stream";
+            }
+
+            return File(stream, contentType, fileDownloadName: asset.OriginalName, enableRangeProcessing: true);
         }
 
         // POST /api/v1/files/upload (multipart/form-data)
         [HttpPost("upload", Name = "UploadFile")]
-        [RequestSizeLimit(50_000_000)] // 50MB (adjust)
+        [RequestSizeLimit(50_000_000)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<ApiResponse<UploadFileResponse>>> UploadAsync(
@@ -113,28 +115,32 @@ namespace Ezenity.API.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest(new ApiResponse<object> { StatusCode = 400, IsSuccess = false, Message = "No file uploaded." });
 
-            var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(ext) || !AllowedExtensions.Contains(ext))
+            if (_options.MaxUploadBytes > 0 && file.Length > _options.MaxUploadBytes)
+                return BadRequest(new ApiResponse<object> { StatusCode = 400, IsSuccess = false, Message = $"File too large. Max allowed is {_options.MaxUploadBytes} bytes." });
+
+            var ext = Path.GetExtension(file.FileName)?.Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(ext) || _options.AllowedExtensions == null || !_options.AllowedExtensions.Any(x => string.Equals(x, ext, StringComparison.OrdinalIgnoreCase)))
                 return BadRequest(new ApiResponse<object> { StatusCode = 400, IsSuccess = false, Message = $"File type '{ext}' not allowed." });
 
-            Directory.CreateDirectory(_root);
-
             var id = Guid.NewGuid();
-            var storedName = $"{id:N}{ext}";
-            var storedPath = Path.Combine(_root, storedName);
 
-            await using (var stream = new FileStream(storedPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            string storedName;
+            await using (var input = file.OpenReadStream())
             {
-                await file.CopyToAsync(stream);
+                storedName = await _storage.SaveAsync(id, ext, input);
             }
 
-            if (!_contentTypes.TryGetContentType(storedPath, out var contentType))
-                contentType = file.ContentType ?? "application/octet-stream";
+            var contentType = file.ContentType;
+            if (string.IsNullOrWhiteSpace(contentType))
+            {
+                if (!_contentTypes.TryGetContentType(storedName, out contentType))
+                    contentType = "application/octet-stream";
+            }
 
-            // TODO: resolve current user from JWT if you want ownership
+            // TODO: if you want ownership, resolve from JWT and set CreatedByAccountId
             int? createdByAccountId = null;
 
-            var asset = new FileAsset
+            var asset = new Ezenity.Core.Entities.Files.FileAsset
             {
                 Id = id,
                 OriginalName = Path.GetFileName(file.FileName),
@@ -171,27 +177,27 @@ namespace Ezenity.API.Controllers
 
         // DELETE /api/v1/files/{fileId}
         [HttpDelete("{fileId}")]
-        public IActionResult DeleteFileAsync(string fileId)
+        public async Task<ActionResult<ApiResponse<object>>> DeleteFileAsync(string fileId)
         {
-            var filePath = FindStoredFilePath(fileId);
-            if (filePath == null) return NotFound(new { message = "File not found." });
+            if (!Guid.TryParseExact(fileId, "N", out var id))
+                return NotFound(new ApiResponse<object> { StatusCode = 404, IsSuccess = false, Message = "File not found." });
 
-            var metaPath = Path.Combine(_root, $"{fileId}.meta.json");
+            var asset = await _dataContext.FileAssets.FirstOrDefaultAsync(x => x.Id == id);
+            if (asset == null)
+                return NotFound(new ApiResponse<object> { StatusCode = 404, IsSuccess = false, Message = "File not found." });
 
-            System.IO.File.Delete(filePath);
-            if (System.IO.File.Exists(metaPath)) System.IO.File.Delete(metaPath);
+            await _storage.DeleteAsync(asset.StoredName);
 
-            return Ok(new { message = "File deleted successfully." });
-        }
+            _dataContext.FileAssets.Remove(asset);
+            await _dataContext.SaveChangesAsync();
 
-        private string? FindStoredFilePath(string fileId)
-        {
-            // file stored as {id}.{ext}
-            var matches = Directory.GetFiles(_root, $"{fileId}.*", SearchOption.TopDirectoryOnly)
-                                   .Where(p => !p.EndsWith(".meta.json", StringComparison.OrdinalIgnoreCase))
-                                   .ToList();
-
-            return matches.FirstOrDefault();
+            return Ok(new ApiResponse<object>
+            {
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "File deleted successfully.",
+                Data = null
+            });
         }
     }
 }
