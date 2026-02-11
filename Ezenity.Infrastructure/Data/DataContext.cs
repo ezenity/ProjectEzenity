@@ -1,6 +1,8 @@
 ﻿using Ezenity.Core.Entities.Accounts;
 using Ezenity.Core.Entities.EmailTemplates;
 using Ezenity.Core.Entities.Sections;
+using Ezenity.Core.Entities.Vault;
+using Ezenity.Core.Entities.Files;
 using Ezenity.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
