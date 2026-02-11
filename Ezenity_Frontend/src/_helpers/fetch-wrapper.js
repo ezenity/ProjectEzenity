@@ -19,16 +19,22 @@ function post(url, body) {
 }
 
 function put(url, body) {
+    // Allow FormData or plain objects
+    const isForm = body instanceof FormData;
+
     return request(url, {
         method: "PUT",
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        body: isForm ? body : body !== undefined ? JSON.stringify(body) : undefined,
     });
 }
 
 function patch(url, body) {
+    // Allow FormData or plain objects
+    const isForm = body instanceof FormData;
+
     return request(url, {
         method: "PATCH",
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        body: isForm ? body : body !== undefined ? JSON.stringify(body) : undefined,
     });
 }
 
@@ -38,11 +44,12 @@ function _delete(url) {
 
 function request(url, options) {
     const isApi = isApiUrl(url);
+    const isFormData = options.body instanceof FormData;
 
     const headers = {
         Accept: "application/json",
         // Only set Content-Type for JSON (browser will set boundary for FormData)
-        ...(options.body && !options.isFormData ? { "Content-Type": "application/json" } : {}),
+        ...(options.body && !isFormData ? { "Content-Type": "application/json" } : {}),
         ...(isApi ? authHeader() : {}),
         ...(options.headers || {}),
     };

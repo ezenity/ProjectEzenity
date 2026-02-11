@@ -77,6 +77,7 @@ function App() {
 
                 {/* Auth-required routes */}
                 <PrivateRoute path="/profile" component={Profile} />
+                <PrivateRoute path="/vault" component={Vault} />
                 <PrivateRoute path="/admin" roles={[Role.Admin]} component={Admin} />
 
                 <Redirect from="*" to="/" />
