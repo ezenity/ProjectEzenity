@@ -8,6 +8,7 @@ using Ezenity.API.Middleware;
 using Ezenity.Core.Interfaces;
 using Ezenity.Core.Services.Common;
 using Ezenity.Core.Services.Emails;
+using Ezenity.Core.Services.Files;
 using Ezenity.Infrastructure.Data;
 using Ezenity.Infrastructure.Factories;
 using Ezenity.Infrastructure.Helpers;
@@ -203,6 +204,9 @@ namespace Ezenity.API
             services.AddSingleton<IEmailTemplateResolver, EmailTemplateResolver>();
             //services.AddSingleton<IConfigurationUpdater, ConfigurationUpdater>();
             services.AddSingleton<IRazorViewRenderer, RazorViewRenderer>();
+            services.AddSingleton<FileExtensionContentTypeProvider>();
+            services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+
 
             // AutoMapper
             //services.AddAutoMapper(typeof(AutoMapperProfile).Assembly); // .NET 5.0 -
@@ -220,6 +224,8 @@ namespace Ezenity.API
 #endif
             services.AddSingleton(mapperConfig.CreateMapper());
 
+            // File storage config
+            services.Configure<FileStorageOptions>(Configuration.GetSection("FileStorage"));
             services.Configure<JsonOptions>(options =>
             {
                 options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
