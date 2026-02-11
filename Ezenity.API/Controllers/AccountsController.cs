@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Ezenity.API.API.Controllers
+namespace Ezenity.API.Controllers
 {
     /// <summary>
     /// Handles HTTP requests and responses related to Account entities.

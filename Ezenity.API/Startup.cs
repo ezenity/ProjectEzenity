@@ -2,7 +2,7 @@
 using Asp.Versioning.ApiExplorer;
 using AutoMapper;
 using AutoMapper.Internal;
-using Ezenity.API.Configurations;
+using Ezenity.API.Options;
 using Ezenity.API.Filters;
 using Ezenity.API.Middleware;
 using Ezenity.Core.Interfaces;

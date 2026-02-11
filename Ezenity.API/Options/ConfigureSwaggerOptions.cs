@@ -13,7 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Ezenity.API.Configurations
+namespace Ezenity.API.Options
 {
     /// <summary>
     /// Configures Swagger to accurately represent API versioning and strict JSON:API behavior.
