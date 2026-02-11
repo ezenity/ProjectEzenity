@@ -14,6 +14,7 @@ import { Legal } from "@/legal";
 import { Footer } from "@/footer";
 import { About } from "@/about";
 import { GatePage } from "@/gate";
+import { Vault } from "@/vault";
 
 function App() {
     const { pathname } = useLocation();
