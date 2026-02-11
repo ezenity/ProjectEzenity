@@ -1,7 +1,10 @@
 import config from "config";
 import { accountService } from "@/_services";
 
-export const fetchWrapper = { get, post, put, patch, delete: _delete };
+export const fetchWrapper = { get, post, put, patch, delete: _delete, postForm };
+function postForm(url, formData) {
+    return request(url, { method: "POST", body: formData });
+}
 
 function get(url) {
     return request(url, { method: "GET" });
@@ -62,7 +65,7 @@ function request(url, options) {
     };
 
     // cleanup flag so fetch doesn't receive it as an unknown option
-    delete requestOptions.isFormData;
+    //delete requestOptions.isFormData;
 
     return fetch(url, requestOptions).then(handleResponse);
 }
