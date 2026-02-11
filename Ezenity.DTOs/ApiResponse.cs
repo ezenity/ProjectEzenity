@@ -16,7 +16,7 @@ namespace Ezenity.DTOs.Models
         /// <summary>
         /// Gets or sets a human-readable message describing the outcome of the operation. Useful for debugging and logging purposes.
         /// </summary>
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the operation was successful. True for success, False for failure.
@@ -26,7 +26,7 @@ namespace Ezenity.DTOs.Models
         /// <summary>
         /// Gets or sets the actual data payload returned by the API operation. This property can be null if the operation was unsuccessful.
         /// </summary>
-        public T Data { get; set; }
+        public T? Data { get; set; }
 
         public PaginationMetadata Pagination { get; set; }
 
