@@ -15,7 +15,7 @@ namespace Ezenity.Core.Services.Files
     /// </summary>
     public interface IFileStorageService
     {
-        Task<FileItemResponse> SaveAsync(IFormFile file, string? scope, CancellationToken ct);
+        Task<FileItemResponse> SaveAsync(IFormFile file, string? scope, int? createdByAccountId, CancellationToken ct);
         Task<(Stream Stream, FileItemResponse Meta)> OpenReadAsync(string fileId, CancellationToken ct);
         Task<FileItemResponse?> GetMetaAsync(string fileId, CancellationToken ct);
         Task<bool> DeleteAsync(string fileId, CancellationToken ct);

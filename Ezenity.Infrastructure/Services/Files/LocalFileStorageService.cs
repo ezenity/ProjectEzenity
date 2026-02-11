@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Ezenity.API.Options;
+using Ezenity.Core.Options;
 using Ezenity.Core.Entities.Files;
 using Ezenity.Core.Services.Files;
 using Ezenity.DTOs.Models.Files;

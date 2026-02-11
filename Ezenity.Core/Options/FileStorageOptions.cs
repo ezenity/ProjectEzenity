@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Ezenity.API.Options
+namespace Ezenity.Core.Options
 {
     /// <summary>
     /// Configuration settings for file storage (local filesystem).
@@ -31,7 +31,7 @@ namespace Ezenity.API.Options
         /// List of allowed file extensions, including the leading dot.
         /// Example: ".jpg", ".mp4"
         /// </summary>
-        public List<string> AllowedExtensions { get; set; } = new List<string>
+        public List<string> AllowedExtensions { get; set; } = new()
         {
             ".jpg", ".jpeg", ".png", ".webp", ".gif",
             ".mp4", ".webm", ".mov"
