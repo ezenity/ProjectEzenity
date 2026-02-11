@@ -34,20 +34,20 @@ function About({ match }) {
                             </NavLink>
 
                             <NavLink
-                                to={`${url}/gallery`}
+                                to={`${url}/media`}
                                 className="list-group-item list-group-item-action"
                                 activeClassName="active"
                             >
-                                Gallery
+                                Media Library
                             </NavLink>
                         </div>
 
                         <div className="mt-3 small text-muted">
                             <div className="mb-2">
-                                <strong>Note:</strong> This section is being rebuilt from the old personal-site content.
+                                <strong>Note:</strong> This section is being rebuilt from older content.
                             </div>
                             <div>
-                                Gallery is currently a placeholder — later it will connect to profile uploads (images + videos).
+                                Media Library is a placeholder — later it will connect to profile + Vault uploads.
                             </div>
                         </div>
                     </div>
@@ -58,7 +58,7 @@ function About({ match }) {
                             <div className="card-body">
                                 <Switch>
                                     <Route exact path={path} component={Overview} />
-                                    <Route path={`${path}/gallery`} component={MediaLibrary} />
+                                    <Route path={`${path}/media`} component={MediaLibrary} />
 
                                     {/* Fallback */}
                                     <Redirect to={url} />
