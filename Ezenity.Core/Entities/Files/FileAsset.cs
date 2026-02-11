@@ -4,15 +4,15 @@ namespace Ezenity.Core.Entities.Files;
 
 public class FileAsset
 {
-    // Keeping it string so URLs look clean: "9f3a...c2"
-    public string Id { get; set; } = null!;
-    public string OriginalName { get; set; } = null!;
-    public string StoredName { get; set; } = null!;
-    public string ContentType { get; set; } = null!;
-    public long SizeBytes { get; set; }
+    public Guid Id { get; set; }
+    public string OriginalName { get; set; } = default!;
+    public string StoredName { get; set; } = default!;
+    public string ContentType { get; set; } = default!;
+    public long Size { get; set; }
+    public string? Scope { get; set; } // "vault", "profile", "emblems", etc.
 
-    public string Category { get; set; } = "misc"; // vault, profile, emblem, etc
-    public int? OwnerAccountId { get; set; }
+    public int? CreatedByAccountId { get; set; }
+    public Account? CreatedByAccount { get; set; }
 
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 }

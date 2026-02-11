@@ -248,6 +248,140 @@ namespace Ezenity.Infrastructure.Data
             });
         }
 
+        private void ConfigureFiles(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<FileAsset>(entity =>
+            {
+                entity.ToTable("FileAssets");
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.OriginalName).HasMaxLength(255).IsRequired();
+                entity.Property(x => x.StoredName).HasMaxLength(255).IsRequired();
+                entity.Property(x => x.ContentType).HasMaxLength(100).IsRequired();
+                entity.Property(x => x.Scope).HasMaxLength(50).IsRequired(false);
+
+                entity.Property(x => x.Size).IsRequired();
+                entity.Property(x => x.CreatedUtc).IsRequired();
+
+                entity.HasIndex(x => x.CreatedUtc);
+                entity.HasIndex(x => x.Scope);
+            });
+        }
+
+        private void ConfigureVault(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<VaultMission>(entity =>
+            {
+                entity.ToTable("VaultMissions");
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Title).HasMaxLength(160).IsRequired();
+                entity.Property(x => x.Description).HasMaxLength(4000).IsRequired(false);
+                entity.Property(x => x.IsActive).IsRequired();
+                entity.Property(x => x.CreatedUtc).IsRequired();
+
+                entity.HasIndex(x => x.IsActive);
+                entity.HasIndex(x => x.CreatedUtc);
+            });
+
+            modelBuilder.Entity<VaultEmblem>(entity =>
+            {
+                entity.ToTable("VaultEmblems");
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Name).HasMaxLength(120).IsRequired();
+                entity.Property(x => x.Description).HasMaxLength(1000).IsRequired(false);
+
+                // optional: emblem image stored in FileAssets
+                entity.HasOne(x => x.ImageFile)
+                      .WithMany()
+                      .HasForeignKey(x => x.ImageFileId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<VaultMissionReward>(entity =>
+            {
+                entity.ToTable("VaultMissionRewards");
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Rep).IsRequired();
+                entity.Property(x => x.Coins).IsRequired();
+
+                entity.HasOne(x => x.Mission)
+                      .WithMany(m => m.Rewards)
+                      .HasForeignKey(x => x.MissionId);
+
+                entity.HasOne(x => x.Emblem)
+                      .WithMany()
+                      .HasForeignKey(x => x.EmblemId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<VaultMissionSubmission>(entity =>
+            {
+                entity.ToTable("VaultMissionSubmissions");
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Platform).HasMaxLength(30).IsRequired(); // YouTube/Instagram/TikTok/Facebook/Upload
+                entity.Property(x => x.Url).HasMaxLength(2000).IsRequired(false);
+                entity.Property(x => x.Notes).HasMaxLength(2000).IsRequired(false);
+                entity.Property(x => x.CreatedUtc).IsRequired();
+
+                entity.HasOne(x => x.Mission)
+                      .WithMany()
+                      .HasForeignKey(x => x.MissionId);
+
+                entity.HasOne(x => x.Account)
+                      .WithMany()
+                      .HasForeignKey(x => x.AccountId);
+
+                entity.HasOne(x => x.File)
+                      .WithMany()
+                      .HasForeignKey(x => x.FileAssetId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(x => new { x.MissionId, x.AccountId, x.CreatedUtc });
+            });
+
+            modelBuilder.Entity<VaultMissionCompletion>(entity =>
+            {
+                entity.ToTable("VaultMissionCompletions");
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Status).HasMaxLength(20).IsRequired(); // Submitted/Approved/Rejected
+                entity.Property(x => x.CreatedUtc).IsRequired();
+
+                entity.HasOne(x => x.Mission)
+                      .WithMany()
+                      .HasForeignKey(x => x.MissionId);
+
+                entity.HasOne(x => x.Account)
+                      .WithMany()
+                      .HasForeignKey(x => x.AccountId);
+
+                entity.HasIndex(x => new { x.MissionId, x.AccountId }).IsUnique(); // one completion record per user per mission
+            });
+
+            modelBuilder.Entity<VaultMissionComment>(entity =>
+            {
+                entity.ToTable("VaultMissionComments");
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Body).HasMaxLength(4000).IsRequired();
+                entity.Property(x => x.CreatedUtc).IsRequired();
+
+                entity.HasOne(x => x.Mission)
+                      .WithMany()
+                      .HasForeignKey(x => x.MissionId);
+
+                entity.HasOne(x => x.Account)
+                      .WithMany()
+                      .HasForeignKey(x => x.AccountId);
+
+                entity.HasIndex(x => new { x.MissionId, x.CreatedUtc });
+            });
+        }
+
         /// <summary>
         /// Begins a new transaction synchronously.
         /// </summary>
