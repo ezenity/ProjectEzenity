@@ -1,101 +1,172 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Asp.Versioning;
+using Ezenity.DTOs.Models;
+using Ezenity.DTOs.Models.Files;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
-using Asp.Versioning;
-using System;
-using System.IO;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 
 namespace Ezenity.API.Controllers
 {
     [ApiController]
     [Route("api/v{version:apiVersion}/files")]
     [ApiVersion("1.0")]
-    [Produces("application/vnd.api+json", "application/json", "application/xml")]
+    [Produces("application/vnd.api+json", "application/json")]
     public class FilesController : ControllerBase
     {
-        private readonly FileExtensionContentTypeProvider _fileExtensionContentTypeProvider;
+        private readonly FileExtensionContentTypeProvider _contentTypes;
+        private readonly string _root;
 
-        public FilesController(FileExtensionContentTypeProvider fileExtensionContentTypeProvider)
+        private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
         {
-            _fileExtensionContentTypeProvider = fileExtensionContentTypeProvider ?? throw new ArgumentNullException(nameof(fileExtensionContentTypeProvider));
+            ".jpg", ".jpeg", ".png", ".webp", ".gif",
+            ".mp4", ".webm", ".mov"
+        };
+
+        public FilesController(
+            FileExtensionContentTypeProvider contentTypes,
+            IConfiguration config)
+        {
+            _contentTypes = contentTypes ?? throw new ArgumentNullException(nameof(contentTypes));
+
+            _root = config["FileStorage:RootPath"] ?? "./files";
+            Directory.CreateDirectory(_root);
         }
 
+        // GET /api/v1/files/list?scope=vault
+        [HttpGet("list")]
+        public async Task<ActionResult<ApiResponse<IEnumerable<FileItemResponse>>>> ListFilesAsync([FromQuery] string? scope = null)
+        {
+            var metas = Directory.EnumerateFiles(_root, "*.meta.json", SearchOption.TopDirectoryOnly);
+
+            var items = new List<FileItemResponse>();
+
+            foreach (var metaPath in metas)
+            {
+                try
+                {
+                    var json = await System.IO.File.ReadAllTextAsync(metaPath);
+                    var item = JsonSerializer.Deserialize<FileItemResponse>(json);
+
+                    if (item == null) continue;
+
+                    if (!string.IsNullOrWhiteSpace(scope) &&
+                        !string.Equals(item.Scope, scope, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    // Ensure URL is always correct for this host
+                    item.Url = Url.Action(nameof(GetFileAsync), new { version = "1.0", fileId = item.Id })!;
+                    items.Add(item);
+                }
+                catch
+                {
+                    // ignore broken meta files
+                }
+            }
+
+            return Ok(new ApiResponse<IEnumerable<FileItemResponse>>
+            {
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Files fetched successfully.",
+                Data = items.OrderByDescending(x => x.CreatedUtc).ToList()
+            });
+        }
+
+        // GET /api/v1/files/{fileId}
         [HttpGet("{fileId}")]
-        public async Task<ActionResult> GetFileAsync(string fileId)
+        public IActionResult GetFileAsync(string fileId)
         {
-            var pathToFile = "";
-
-            if(!System.IO.File.Exists(pathToFile))
+            // ID format we generate: Guid "N" => 32 hex chars
+            if (string.IsNullOrWhiteSpace(fileId) || fileId.Length != 32)
                 return NotFound();
 
-            if (!_fileExtensionContentTypeProvider.TryGetContentType(pathToFile, out var contentType))
-                contentType = "application/octet-stream"; // Catch-all scenerio for files we do not know the file type
+            var filePath = FindStoredFilePath(fileId);
+            if (filePath == null) return NotFound();
 
-            var bytes = await System.IO.File.ReadAllBytesAsync(pathToFile);
+            if (!_contentTypes.TryGetContentType(filePath, out var contentType))
+                contentType = "application/octet-stream";
 
-            return File(bytes, contentType, Path.GetFileName(pathToFile));
+            // enableRangeProcessing is important for video seeking
+            return PhysicalFile(filePath, contentType, enableRangeProcessing: true);
         }
 
-        [HttpGet("{fileId}/stream")]
-        public async Task<IActionResult> GetFileStreamAsync(string fileId)
-        {
-            var filePath = Path.Combine("path/to/your/files/folder", fileId);
-
-            if (!System.IO.File.Exists(filePath))
-                return NotFound();
-
-            Stream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            return File(fileStream, "application/octet-stream", true);  // FileStream supports async operations internally
-        }
-
-
+        // POST /api/v1/files/upload (multipart/form-data)
         [HttpPost("upload", Name = "UploadFile")]
+        [RequestSizeLimit(50_000_000)] // 50MB (adjust)
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        [ProducesDefaultResponseType]
-        public async Task<IActionResult> UploadAsync(IFormFile file)
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ApiResponse<UploadFileResponse>>> UploadAsync(
+            [FromForm] IFormFile file,
+            [FromForm] string? scope = null)
         {
             if (file == null || file.Length == 0)
-                return BadRequest("No File Uploaded");
+                return BadRequest(new ApiResponse<object> { StatusCode = 400, IsSuccess = false, Message = "No file uploaded." });
 
-            var filePath = Path.Combine("./files", file.FileName);
+            var ext = Path.GetExtension(file.FileName);
+            if (string.IsNullOrWhiteSpace(ext) || !AllowedExtensions.Contains(ext))
+                return BadRequest(new ApiResponse<object> { StatusCode = 400, IsSuccess = false, Message = $"File type '{ext}' not allowed." });
 
-            using(var stream = new FileStream(filePath, FileMode.Create))
+            var id = Guid.NewGuid().ToString("N");
+            var storedName = $"{id}{ext}";
+            var storedPath = Path.Combine(_root, storedName);
+
+            await using (var stream = new FileStream(storedPath, FileMode.CreateNew, FileAccess.Write))
             {
                 await file.CopyToAsync(stream);
             }
 
-            return Ok(new { message = "File uploaded successfully." });
+            if (!_contentTypes.TryGetContentType(storedPath, out var contentType))
+                contentType = file.ContentType ?? "application/octet-stream";
+
+            var item = new FileItemResponse
+            {
+                Id = id,
+                OriginalName = Path.GetFileName(file.FileName),
+                ContentType = contentType,
+                Size = file.Length,
+                CreatedUtc = DateTime.UtcNow,
+                Scope = string.IsNullOrWhiteSpace(scope) ? null : scope,
+                Url = Url.Action(nameof(GetFileAsync), new { version = "1.0", fileId = id })!
+            };
+
+            // store metadata sidecar
+            var metaPath = Path.Combine(_root, $"{id}.meta.json");
+            await System.IO.File.WriteAllTextAsync(metaPath, JsonSerializer.Serialize(item));
+
+            return Ok(new ApiResponse<UploadFileResponse>
+            {
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "File uploaded successfully.",
+                Data = new UploadFileResponse { File = item }
+            });
         }
 
+        // DELETE /api/v1/files/{fileId}
         [HttpDelete("{fileId}")]
-        public async Task<IActionResult> DeleteFileAsync(string fileId)
+        public IActionResult DeleteFileAsync(string fileId)
         {
-            return await Task.Run<IActionResult>(() =>
-            {
-                var filePath = Path.Combine("path/to/your/files/folder", fileId);
+            var filePath = FindStoredFilePath(fileId);
+            if (filePath == null) return NotFound(new { message = "File not found." });
 
-                if (!System.IO.File.Exists(filePath))
-                    return NotFound("File not found.");
+            var metaPath = Path.Combine(_root, $"{fileId}.meta.json");
 
-                System.IO.File.Delete(filePath);
+            System.IO.File.Delete(filePath);
+            if (System.IO.File.Exists(metaPath)) System.IO.File.Delete(metaPath);
 
-                return Ok(new { message = "File deleted successfully." });
-            });
+            return Ok(new { message = "File deleted successfully." });
         }
 
-
-        [HttpGet("list")]
-        public async Task<IActionResult> ListFilesAsync()
+        private string? FindStoredFilePath(string fileId)
         {
-            return await Task.Run(() =>
-            {
-                var files = Directory.GetFiles("./files");
-                return Ok(files);
-            });
+            // file stored as {id}.{ext}
+            var matches = Directory.GetFiles(_root, $"{fileId}.*", SearchOption.TopDirectoryOnly)
+                                   .Where(p => !p.EndsWith(".meta.json", StringComparison.OrdinalIgnoreCase))
+                                   .ToList();
+
+            return matches.FirstOrDefault();
         }
-
-
     }
 }

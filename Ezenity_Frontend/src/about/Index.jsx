@@ -14,7 +14,7 @@ function About({ match }) {
                     <div>
                         <h2 className="m-0">About</h2>
                         <small className="text-muted">
-                            Project Ezenity • Invite-only rider network
+                            After Hours Crew • Invite-only rider network
                         </small>
                     </div>
                 </div>

@@ -8,9 +8,13 @@ function get(url) {
 }
 
 function post(url, body) {
+    // Allow FormData or plain objects
+    const isForm = body instanceof FormData;
+
     return request(url, {
         method: "POST",
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        body: isForm ? body : body !== undefined ? JSON.stringify(body) : undefined,
+        ...(isForm ? { isFormData: true } : {}),
     });
 }
 
@@ -37,7 +41,8 @@ function request(url, options) {
 
     const headers = {
         Accept: "application/json",
-        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        // Only set Content-Type for JSON (browser will set boundary for FormData)
+        ...(options.body && !options.isFormData ? { "Content-Type": "application/json" } : {}),
         ...(isApi ? authHeader() : {}),
         ...(options.headers || {}),
     };
@@ -48,6 +53,9 @@ function request(url, options) {
         // If your API sets/uses cookies (refresh token), you need this on ALL calls
         ...(isApi ? { credentials: "include" } : {}),
     };
+
+    // cleanup flag so fetch doesn't receive it as an unknown option
+    delete requestOptions.isFormData;
 
     return fetch(url, requestOptions).then(handleResponse);
 }
