@@ -1,4 +1,4 @@
-﻿using Ezenity.Core.Entities.Vault;
+﻿using Ezenity.Domain.Entities.Accounts;
 
 namespace Ezenity.Core.Entities.Accounts;
 

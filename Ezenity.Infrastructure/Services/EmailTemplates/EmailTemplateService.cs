@@ -41,7 +41,7 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
         /// <summary>
         /// Provides token generation and validation services.
         /// </summary>
-        private readonly ITokenHelper _tokenHelper;
+        private readonly ITokenService _tokenHelper;
 
         /// <summary>
         /// Provides user authentication services.
@@ -70,7 +70,7 @@ namespace Ezenity.Infrastructure.Services.EmailTemplates
         /// <param name="authService">Provides user authentication services.</param>
         /// <param name="razorRenderer">Provides rendering for Razor views.</param>
         /// <param name="emailTemplateResolver">Provides the resolved template paths.</param>
-        public EmailTemplateService(IDataContext context, IMapper mapper, IAppSettings appSettings, ILogger<EmailTemplateService> logger, ITokenHelper tokenHelper, IAuthService authService, IRazorViewRenderer razorRenderer, IEmailTemplateResolver emailTemplateResolver)
+        public EmailTemplateService(IDataContext context, IMapper mapper, IAppSettings appSettings, ILogger<EmailTemplateService> logger, ITokenService tokenHelper, IAuthService authService, IRazorViewRenderer razorRenderer, IEmailTemplateResolver emailTemplateResolver)
         {
             _context = context ?? throw new ArgumentException(nameof(context));
             _mapper = mapper ?? throw new ArgumentException(nameof(mapper));

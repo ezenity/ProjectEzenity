@@ -1,7 +1,8 @@
 ﻿using System;
 using Ezenity.Core.Entities.Accounts;
+using Ezenity.Core.Entities.Vault;
 
-namespace Ezenity.Core.Entities.Vault;
+namespace Ezenity.Domain.Entities.Accounts;
 
 /// <summary>
 /// Join entity: which accounts have earned which emblems.

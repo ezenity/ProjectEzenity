@@ -11,4 +11,10 @@
 	    <ProjectReference Include="..\Ezenity.Contracts\Ezenity.Contracts.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Common\Results\" />
+      <Folder Include="Features\Vault\" />
+      <Folder Include="Mapping\" />
+    </ItemGroup>
+
 </Project>

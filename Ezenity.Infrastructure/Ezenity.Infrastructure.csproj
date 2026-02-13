@@ -23,4 +23,14 @@
 	  <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Ezenity.Application\Ezenity.Application.csproj" />
+    <ProjectReference Include="..\Ezenity.Core\Ezenity.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\Accounts\" />
+    <Folder Include="Services\Sections\" />
+  </ItemGroup>
+
 </Project>

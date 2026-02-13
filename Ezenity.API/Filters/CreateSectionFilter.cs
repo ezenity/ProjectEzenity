@@ -1,5 +1,5 @@
-﻿using Ezenity.DTOs.Models.Sections;
-using Microsoft.OpenApi.Models;
+﻿using Ezenity.Contracts.Models.Sections;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Ezenity.API.Filters

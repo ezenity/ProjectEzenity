@@ -23,7 +23,7 @@ namespace Ezenity.Infrastructure.Helpers
     /// the single request lifecycle but will not keep the state longer
     /// than that.
     /// </summary>
-    public class TokenHelper : ITokenHelper
+    public class TokenHelper : ITokenService
     {
         /// <summary>
         /// Data context for database interaction.

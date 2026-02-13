@@ -34,7 +34,7 @@ namespace Ezenity.Tests.AccountTests
         private Mock<IAppSettings> mockAppSettings;
         private Mock<IEmailService> mockEmailService;
         private Mock<ILogger<AccountService>> mockLogger;
-        private Mock<ITokenHelper> mockTokenHelper;
+        private Mock<ITokenService> mockTokenHelper;
         private Mock<IAuthService> mockAuthService;
         private Mock<IPasswordService> mockPasswordService;
         private AccountService accountService;
@@ -48,7 +48,7 @@ namespace Ezenity.Tests.AccountTests
             mockAppSettings = new Mock<IAppSettings>();
             mockEmailService = new Mock<IEmailService>();
             mockLogger = new Mock<ILogger<AccountService>>();
-            mockTokenHelper = new Mock<ITokenHelper>();
+            mockTokenHelper = new Mock<ITokenService>();
             mockAuthService = new Mock<IAuthService>();
             mockPasswordService = new Mock<IPasswordService>();
 
