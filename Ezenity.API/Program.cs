@@ -5,16 +5,20 @@ using AutoMapper.Internal;
 using Ezenity.API.Filters;
 using Ezenity.API.Middleware;
 using Ezenity.API.Options;
-using Ezenity.Domain.Options;
+using Ezenity.API.Security;
+using Ezenity.Application.Abstractions.Files;
+using Ezenity.Application.Abstractions.Persistence;
+using Ezenity.Application.Abstractions.Security;
 using Ezenity.Domain.Entities.Accounts;
 using Ezenity.Domain.Entities.Emails;
 using Ezenity.Domain.Entities.Files;
+using Ezenity.Domain.Options;
 using Ezenity.Infrastructure;
 using Ezenity.Infrastructure.Data;
-using Ezenity.Infrastructure.Helpers;
-using Ezenity.Infrastructure.Security;
 using Ezenity.Infrastructure.Factories;
+using Ezenity.Infrastructure.Helpers;
 using Ezenity.Infrastructure.Persistence;
+using Ezenity.Infrastructure.Security;
 using Ezenity.Infrastructure.Services;
 using Ezenity.Infrastructure.Services.Emails;
 using Ezenity.Infrastructure.Services.EmailTemplates;
@@ -28,6 +32,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -41,9 +46,6 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using Ezenity.Application.Abstractions.Security;
-using Ezenity.API.Security;
-using Ezenity.Application.Abstractions.Persistence;
 
 namespace Ezenity.API;
 
@@ -126,14 +128,9 @@ public static class Program
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         // --- Settings wrappers ---
-        var appSettings = AppSettingsFactory.Create(configuration);
-        services.AddSingleton<IAppSettings>(new AppSettingsWrapper(appSettings));
-
-        var connectionStringSettings = ConnectionStringSettingsFactory.Create(configuration);
-        services.AddSingleton<IConnectionStringSettings>(new ConnectionStringSettingsWrapper(connectionStringSettings));
-
-        var sensitivePropsConfig = SensitivePropertiesSettingsFactory.Create(configuration);
-        services.AddSingleton<ISensitivePropertiesSettings>(new SensitivePropertiesSettingsWrapper(sensitivePropsConfig));
+        services.AddSingleton<IAppSettings>(AppSettingsFactory.Create(configuration));
+        services.AddSingleton<IConnectionStringSettings>(ConnectionStringSettingsFactory.Create(configuration));
+        services.AddSingleton<ISensitivePropertiesSettings>(SensitivePropertiesSettingsFactory.Create(configuration));
 
         // --- DbContext ---
         var connectionString = connectionStringSettings.WebApiDatabase;
@@ -208,7 +205,7 @@ public static class Program
         services.AddScoped<IRoleRepository, EfRoleRepository>();
         services.AddScoped<ISectionRepository, EfSectionRepository>();
         services.AddScoped<IEmailTemplateRepository, EfEmailTemplateRepository>();
-
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IPasswordService, PasswordService>();
 
         // Filters
@@ -250,10 +247,6 @@ public static class Program
                     opts.AllowedExtensions = parts;
             }
         });
-
-        // NOTE: Keeping your exact lifetime (Singleton) to avoid behavior change during migration.
-        // After this compiles, we should switch it to AddScoped because it likely uses scoped dependencies.
-        services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
         // AutoMapper
         var mapperConfig = new MapperConfiguration(mc =>
