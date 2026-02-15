@@ -368,7 +368,7 @@ public class DataContext : DbContext
     /// <param name="modelBuilder">The model builder used by Entity Framework Core.</param>
     private void ConfigureVault(ModelBuilder modelBuilder)
     {
-        /* Vault Emblems */
+        /* Vault Emblems & Vault Emblem Rarity */
         modelBuilder.Entity<VaultEmblem>(entity =>
         {
             entity.ToTable("VaultEmblems");
@@ -393,9 +393,9 @@ public class DataContext : DbContext
                   .HasMaxLength(80);
 
             // Enum handling:
-            // Default EF behavior is int in DB. This is fine.
-            // If you want it stored as string, see note below.
+            // Long-term stable: store enum as int
             entity.Property(x => x.Rarity)
+                  .HasConversion<int>()
                   .IsRequired();
 
             entity.Property(x => x.IsActive)
@@ -416,8 +416,6 @@ public class DataContext : DbContext
             entity.HasIndex(x => x.IsActive);
             entity.HasIndex(x => new { x.SeasonTag, x.SortOrder });
         });
-
-        /* Vault Emblem Rarity */
 
         /* Vault Mission */
         modelBuilder.Entity<VaultMission>(entity =>
