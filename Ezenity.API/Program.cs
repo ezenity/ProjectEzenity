@@ -1,11 +1,12 @@
 ﻿using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using AutoMapper;
-using AutoMapper.Internal;
+
 using Ezenity.API.Filters;
 using Ezenity.API.Middleware;
 using Ezenity.API.Options;
 using Ezenity.API.Security;
+
 using Ezenity.Application.Abstractions.Configuration;
 using Ezenity.Application.Abstractions.Emails;
 using Ezenity.Application.Abstractions.Files;
@@ -14,10 +15,12 @@ using Ezenity.Application.Abstractions.Security;
 using Ezenity.Application.Features.Accounts;
 using Ezenity.Application.Features.Auth;
 using Ezenity.Application.Features.Sections;
+
 using Ezenity.Domain.Entities.Accounts;
 using Ezenity.Domain.Entities.Emails;
 using Ezenity.Domain.Entities.Files;
 using Ezenity.Domain.Options;
+
 using Ezenity.Infrastructure;
 using Ezenity.Infrastructure.Data;
 using Ezenity.Infrastructure.Factories;
@@ -29,8 +32,9 @@ using Ezenity.Infrastructure.Services.Accounts;
 using Ezenity.Infrastructure.Services.Emails;
 using Ezenity.Infrastructure.Services.EmailTemplates;
 using Ezenity.Infrastructure.Services.Files;
+
 using Ezenity.RazorViews;
-using Google.Apis.Gmail.v1.Data;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -44,10 +48,11 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
+
 using System;
-using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -77,7 +82,7 @@ public static class Program
         // Log directory (consistent with /srv standard)
         var logDir = Environment.GetEnvironmentVariable("EZENITY_LOG_DIR");
         if (string.IsNullOrWhiteSpace(logDir))
-            logDir = "/srv/ezenity/logs/project-ezenity";
+            logDir = "/var/logs";
 
         Directory.CreateDirectory(logDir);
         var logFile = Path.Combine(logDir, "api-.log");
