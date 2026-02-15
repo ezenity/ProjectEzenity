@@ -12,7 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Ezenity.RazorViews;
+namespace Ezenity.EmailTemplates;
 
 /// <summary>
 /// Renders a Razor view to a string (used for HTML emails).
