@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Ezenity.DTOs.Models.Vault;
+namespace Ezenity.Contracts.Models.Vault;
 
 public class CreateVaultSubmissionRequest
 {

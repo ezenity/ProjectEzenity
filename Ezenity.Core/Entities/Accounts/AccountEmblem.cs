@@ -1,6 +1,4 @@
-﻿using System;
-using Ezenity.Domain.Entities.Accounts;
-using Ezenity.Domain.Entities.Vault;
+﻿using Ezenity.Domain.Entities.Vault;
 
 namespace Ezenity.Domain.Entities.Accounts;
 

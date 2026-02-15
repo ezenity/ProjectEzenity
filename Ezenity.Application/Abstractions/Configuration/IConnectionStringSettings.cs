@@ -4,16 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Ezenity.Core.Interfaces
+namespace Ezenity.Application.Abstractions.Configuration;
+
+/// <summary>
+/// Contains settings for the applications connection strings
+/// </summary>
+public interface IConnectionStringSettings
 {
     /// <summary>
-    /// Contains settings for the applications connection strings
+    /// Gets the SQL Connection details.
     /// </summary>
-    public interface IConnectionStringSettings
-    {
-        /// <summary>
-        /// Gets the SQL Connection details.
-        /// </summary>
-        string WebApiDatabase { get; }
-    }
+    string WebApiDatabase { get; }
 }

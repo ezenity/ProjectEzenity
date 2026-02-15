@@ -1,23 +1,22 @@
-﻿namespace Ezenity.Core.Services.Common
+﻿namespace Ezenity.Application.Features.Auth;
+
+/// <summary>
+/// Provides utility functions for authorization within the application.
+/// </summary>
+public interface IAuthService
 {
     /// <summary>
-    /// Provides utility functions for authorization within the application.
+    /// Gets the current user's ID.
     /// </summary>
-    public interface IAuthService
-    {
-        /// <summary>
-        /// Gets the current user's ID.
-        /// </summary>
-        int GetCurrentUserId();
+    int GetCurrentUserId();
 
-        /// <summary>
-        /// Checks if the current user is an admin.
-        /// </summary>
-        bool IsCurrentUserAdmin();
+    /// <summary>
+    /// Checks if the current user is an admin.
+    /// </summary>
+    bool IsCurrentUserAdmin();
 
-        /// <summary>
-        /// Gets the email of the current user.
-        /// </summary>
-        string GetCurrentUserEmail();
-    }
+    /// <summary>
+    /// Gets the email of the current user.
+    /// </summary>
+    string GetCurrentUserEmail();
 }

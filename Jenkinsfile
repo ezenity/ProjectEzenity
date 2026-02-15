@@ -145,8 +145,20 @@ pipeline {
           echo "Validating required .env keys exist (not empty)..."
           # Minimal required set - add more if you want the pipeline to enforce them
           REQUIRED_KEYS=(
-            EZENITY_DB_CONN
+            EZENITY_DATABASE_CONN
+            EZENITY_DATABASE_NAME
+            EZENITY_DATABASE_USER
+            EZENITY_DATABASE_PASSWORD
+
             EZENITY_SECRET_KEY
+            EZENITY_BASE_URL
+            EZENITY_REFRESH_TOKEN_TTL
+
+            EZENITY_SMTP_HOST
+            EZENITY_SMTP_PORT
+            EZENITY_SMTP_USER
+            EZENITY_SMTP_PASSWORD
+            EZENITY_SMTP_ENABLE_SSL
           )
 
           for key in "${REQUIRED_KEYS[@]}"; do

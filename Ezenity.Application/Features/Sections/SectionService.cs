@@ -10,200 +10,199 @@ using Ezenity.DTOs.Models.Sections;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace Ezenity.Infrastructure.Services.Sections
+namespace Ezenity.Application.Features.Sections;
+
+/// <summary>
+/// Service to handle CRUD operations for sections.
+/// </summary>
+public class SectionService : ISectionService
 {
     /// <summary>
-    /// Service to handle CRUD operations for sections.
+    /// Provides data access to the application's data store.
     /// </summary>
-    public class SectionService : ISectionService
+    private readonly IDataContext _context;
+
+    /// <summary>
+    /// Provides object-object mapping functionality.
+    /// </summary>
+    private readonly IMapper _mapper;
+
+    /// <summary>
+    /// Provides access to application settings.
+    /// </summary>
+    private readonly IAppSettings _appSettings;
+
+    /// <summary>
+    /// Provides logging capabilities.
+    /// </summary>
+    private readonly ILogger<ISectionService> _logger;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SectionService"/> class.
+    /// </summary>
+    /// <param name="context">Data context for database interaction.</param>
+    /// <param name="mapper">Object mapper for model transformation.</param>
+    /// <param name="appSettings">Application settings.</param>
+    /// <param name="logger">Logger instance.</param>
+    public SectionService(IDataContext context, IMapper mapper, IAppSettings appSettings, ILogger<ISectionService> logger)
     {
-        /// <summary>
-        /// Provides data access to the application's data store.
-        /// </summary>
-        private readonly IDataContext _context;
+        _context = context ?? throw new ArgumentException(nameof(context));
+        _mapper = mapper ?? throw new ArgumentException(nameof(mapper));
+        _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
+        _logger = logger ?? throw new ArgumentException(nameof(logger));
+    }
 
-        /// <summary>
-        /// Provides object-object mapping functionality.
-        /// </summary>
-        private readonly IMapper _mapper;
+    /// <summary>
+    /// Retrieves a section by its identifier.
+    /// </summary>
+    /// <param name="id">Section identifier.</param>
+    /// <returns>The section details.</returns>
+    public async Task<SectionResponse> GetByIdAsync(int id)
+    {
+        var section = await GetSection(id);
+        return _mapper.Map<SectionResponse>(section);
+    }
 
-        /// <summary>
-        /// Provides access to application settings.
-        /// </summary>
-        private readonly IAppSettings _appSettings;
+    /// <summary>
+    /// Creates a new section.
+    /// </summary>
+    /// <param name="model">Data for creating the section.</param>
+    /// <returns>The newly created section.</returns>
+    public async Task<SectionResponse> CreateAsync(CreateSectionRequest model)
+    {
+        // Validate
+        if (await _context.Sections.AnyAsync(x => x.Title == model.Title))
+            throw new AppException($"The Section Title, '{model.Title}', already exist. Please try a different title.");
 
-        /// <summary>
-        /// Provides logging capabilities.
-        /// </summary>
-        private readonly ILogger<ISectionService> _logger;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SectionService"/> class.
-        /// </summary>
-        /// <param name="context">Data context for database interaction.</param>
-        /// <param name="mapper">Object mapper for model transformation.</param>
-        /// <param name="appSettings">Application settings.</param>
-        /// <param name="logger">Logger instance.</param>
-        public SectionService(IDataContext context, IMapper mapper, IAppSettings appSettings, ILogger<ISectionService> logger)
+        /*var section = new Section
         {
-            _context = context ?? throw new ArgumentException(nameof(context));
-            _mapper = mapper ?? throw new ArgumentException(nameof(mapper));
-            _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
-            _logger = logger ?? throw new ArgumentException(nameof(logger));
-        }
+            Title = model.Title,
+            Layout = model.Layout,
+            ContentType = model.ContentType,
+            ContentViewPath = sectionContent
+        };*/
 
-        /// <summary>
-        /// Retrieves a section by its identifier.
-        /// </summary>
-        /// <param name="id">Section identifier.</param>
-        /// <returns>The section details.</returns>
-        public async Task<SectionResponse> GetByIdAsync(int id)
+        // Map Model to new section object
+        var section = _mapper.Map<Section>(model);
+
+        section.Created = DateTime.UtcNow;
+        //     skill.Verified = DateTime.UtcNow; // Might not be needed
+
+        // Save the section to the database
+        _context.Sections.Add(section);
+        await _context.SaveChangesAsync();
+
+        return _mapper.Map<SectionResponse>(section);
+    }
+
+    /// <summary>
+    /// Asynchronously creates a new section with additional information.
+    /// </summary>
+    /// <param name="model">The request model containing the details for the new section.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the created section details.</returns>
+    /// <exception cref="AppException">Thrown when the section title already exists.</exception>
+    public async Task<CreateSectionWithAdditonalRequest> CreateWithAdditionalAsync(CreateSectionWithAdditonalRequest model)
+    {
+        // Validate
+        if (await _context.Sections.AnyAsync(x => x.Title == model.Title))
+            throw new AppException($"The Section Title, '{model.Title}', already exist. Please try a different title.");
+
+        /*var section = new Section
         {
-            var section = await GetSection(id);
-            return _mapper.Map<SectionResponse>(section);
-        }
+            Title = model.Title,
+            Layout = model.Layout,
+            ContentType = model.ContentType,
+            ContentViewPath = sectionContent
+        };*/
 
-        /// <summary>
-        /// Creates a new section.
-        /// </summary>
-        /// <param name="model">Data for creating the section.</param>
-        /// <returns>The newly created section.</returns>
-        public async Task<SectionResponse> CreateAsync(CreateSectionRequest model)
-        {
-            // Validate
-            if (await _context.Sections.AnyAsync(x => x.Title == model.Title))
-                throw new AppException($"The Section Title, '{model.Title}', already exist. Please try a different title.");
+        // Map Model to new section object
+        var section = _mapper.Map<Section>(model);
 
-            /*var section = new Section
-            {
-                Title = model.Title,
-                Layout = model.Layout,
-                ContentType = model.ContentType,
-                ContentViewPath = sectionContent
-            };*/
+        section.Created = DateTime.UtcNow;
+        //     skill.Verified = DateTime.UtcNow; // Might not be needed
 
-            // Map Model to new section object
-            var section = _mapper.Map<Section>(model);
+        // Save the section to the database
+        _context.Sections.Add(section);
+        await _context.SaveChangesAsync();
 
-            section.Created = DateTime.UtcNow;
-            //     skill.Verified = DateTime.UtcNow; // Might not be needed
+        return _mapper.Map<CreateSectionWithAdditonalRequest>(section);
+    }
 
-            // Save the section to the database
-            _context.Sections.Add(section);
-            await _context.SaveChangesAsync();
+    /// <summary>
+    /// Deletes a section by its identifier.
+    /// </summary>
+    /// <param name="id">Section identifier.</param>
+    /// <returns>Response after deletion.</returns>
+    public async Task<DeleteResponse> DeleteAsync(int id)
+    {
+        var section = await GetSection(id);
 
-            return _mapper.Map<SectionResponse>(section);
-        }
+        // TODO: Implement deleted details information
+        /*deleteResponse.Message = "Section deleted succesfully";
+        deleteResponse.StatusCode = 200;
+        deleteResponse.DeletedBy = account;
+        deleteResponse.DeletedAt = DateTime.UtcNow;
+        deleteResponse.ResourceId = DeleteSectionId.ToString();
+        deleteResponse.IsSuccess = true;*/
 
-        /// <summary>
-        /// Asynchronously creates a new section with additional information.
-        /// </summary>
-        /// <param name="model">The request model containing the details for the new section.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the created section details.</returns>
-        /// <exception cref="AppException">Thrown when the section title already exists.</exception>
-        public async Task<CreateSectionWithAdditonalRequest> CreateWithAdditionalAsync(CreateSectionWithAdditonalRequest model)
-        {
-            // Validate
-            if (await _context.Sections.AnyAsync(x => x.Title == model.Title))
-                throw new AppException($"The Section Title, '{model.Title}', already exist. Please try a different title.");
+        _context.Sections.Remove(section);
+        await _context.SaveChangesAsync();
 
-            /*var section = new Section
-            {
-                Title = model.Title,
-                Layout = model.Layout,
-                ContentType = model.ContentType,
-                ContentViewPath = sectionContent
-            };*/
+        return _mapper.Map<DeleteResponse>(section);
+    }
 
-            // Map Model to new section object
-            var section = _mapper.Map<Section>(model);
-
-            section.Created = DateTime.UtcNow;
-            //     skill.Verified = DateTime.UtcNow; // Might not be needed
-
-            // Save the section to the database
-            _context.Sections.Add(section);
-            await _context.SaveChangesAsync();
-
-            return _mapper.Map<CreateSectionWithAdditonalRequest>(section);
-        }
-
-        /// <summary>
-        /// Deletes a section by its identifier.
-        /// </summary>
-        /// <param name="id">Section identifier.</param>
-        /// <returns>Response after deletion.</returns>
-        public async Task<DeleteResponse> DeleteAsync(int id)
-        {
-            var section = await GetSection(id);
-
-            // TODO: Implement deleted details information
-            /*deleteResponse.Message = "Section deleted succesfully";
-            deleteResponse.StatusCode = 200;
-            deleteResponse.DeletedBy = account;
-            deleteResponse.DeletedAt = DateTime.UtcNow;
-            deleteResponse.ResourceId = DeleteSectionId.ToString();
-            deleteResponse.IsSuccess = true;*/
-
-            _context.Sections.Remove(section);
-            await _context.SaveChangesAsync();
-
-            return _mapper.Map<DeleteResponse>(section);
-        }
-
-        /// <summary>
-        /// Retrieves all available sections.
-        /// </summary>
-        /// <returns>List of all sections.</returns>
-        public async Task<IEnumerable<SectionResponse>> GetAllAsync()
-        {
-            var sections = await _context.Sections.ToListAsync();
-            return _mapper.Map<IList<SectionResponse>>(sections);
-        }
+    /// <summary>
+    /// Retrieves all available sections.
+    /// </summary>
+    /// <returns>List of all sections.</returns>
+    public async Task<IEnumerable<SectionResponse>> GetAllAsync()
+    {
+        var sections = await _context.Sections.ToListAsync();
+        return _mapper.Map<IList<SectionResponse>>(sections);
+    }
 
 
-        public async Task<PagedResult<SectionResponse>> GetAllAsync(string? name, string? searchQuery, int pageNumber, int pageSize)
-        {
-            throw new NotImplementedException();
-        }
+    public async Task<PagedResult<SectionResponse>> GetAllAsync(string? name, string? searchQuery, int pageNumber, int pageSize)
+    {
+        throw new NotImplementedException();
+    }
 
-        /// <summary>
-        /// Updates an existing section.
-        /// </summary>
-        /// <param name="id">Section identifier.</param>
-        /// <param name="model">Data for updating the section.</param>
-        /// <returns>The updated section.</returns>
-        public async Task<SectionResponse> UpdateAsync(int id, UpdateSectionRequest model)
-        {
-            var section = await GetSection(id);
+    /// <summary>
+    /// Updates an existing section.
+    /// </summary>
+    /// <param name="id">Section identifier.</param>
+    /// <param name="model">Data for updating the section.</param>
+    /// <returns>The updated section.</returns>
+    public async Task<SectionResponse> UpdateAsync(int id, UpdateSectionRequest model)
+    {
+        var section = await GetSection(id);
 
-            // Validate
-            if (section.Title != model.Title && _context.Sections.Any(x => x.Title == model.Title))
-                throw new AppException($"The Section Title, '{model.Title}', already exist, please try a different title.");
+        // Validate
+        if (section.Title != model.Title && _context.Sections.Any(x => x.Title == model.Title))
+            throw new AppException($"The Section Title, '{model.Title}', already exist, please try a different title.");
 
-            // Update the common properties
-            _mapper.Map(model, section);
+        // Update the common properties
+        _mapper.Map(model, section);
 
-            section.Updated = DateTime.UtcNow;
+        section.Updated = DateTime.UtcNow;
 
-            _context.Sections.Update(section);
-            await _context.SaveChangesAsync();
+        _context.Sections.Update(section);
+        await _context.SaveChangesAsync();
 
-            return _mapper.Map<SectionResponse>(section);
-        }
+        return _mapper.Map<SectionResponse>(section);
+    }
 
-        /// <summary>
-        /// Helper method to fetch a section by its identifier.
-        /// </summary>
-        /// <param name="id">Section identifier.</param>
-        /// <returns>The section entity.</returns>
-        private async Task<Section> GetSection(int id)
-        {
-            /*var section = _context.Sections.Include(s => s.ContentViewPath).SingleOrDefault(s => s.Id == id);*/
-            var section = await _context.Sections.FindAsync(id);
-            if (section == null)
-                throw new KeyNotFoundException("Section not found");
-            return section;
-        }
+    /// <summary>
+    /// Helper method to fetch a section by its identifier.
+    /// </summary>
+    /// <param name="id">Section identifier.</param>
+    /// <returns>The section entity.</returns>
+    private async Task<Section> GetSection(int id)
+    {
+        /*var section = _context.Sections.Include(s => s.ContentViewPath).SingleOrDefault(s => s.Id == id);*/
+        var section = await _context.Sections.FindAsync(id);
+        if (section == null)
+            throw new KeyNotFoundException("Section not found");
+        return section;
     }
 }

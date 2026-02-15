@@ -15,4 +15,8 @@
     <EmbeddedResource Include="Views\**\*.cshtml" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Ezenity.Application\Ezenity.Application.csproj" />
+  </ItemGroup>
+
 </Project>

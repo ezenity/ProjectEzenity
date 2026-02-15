@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Ezenity.Core.Interfaces
+namespace Ezenity.Application.Abstractions.Emails;
+
+public interface IRazorViewRenderer
 {
-  public interface IRazorViewRenderer
-  {
-    Task<string> RenderViewToStringAsync<TModel>(string viewName, TModel model);
-  }
+Task<string> RenderViewToStringAsync<TModel>(string viewName, TModel model);
 }

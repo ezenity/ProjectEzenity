@@ -1,13 +1,12 @@
-﻿namespace Ezenity.DTOs.Models.Accounts
+﻿namespace Ezenity.Contracts.Models.Accounts;
+
+/// <summary>
+/// Represents the request payload for revoking an authentication token.
+/// </summary>
+public class RevokeTokenRequest
 {
     /// <summary>
-    /// Represents the request payload for revoking an authentication token.
+    /// Gets or sets the token that is to be revoked.
     /// </summary>
-    public class RevokeTokenRequest
-    {
-        /// <summary>
-        /// Gets or sets the token that is to be revoked.
-        /// </summary>
-        public string Token { get; set; }
-    }
+    public string Token { get; set; }
 }

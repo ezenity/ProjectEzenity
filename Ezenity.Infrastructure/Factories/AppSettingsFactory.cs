@@ -53,7 +53,7 @@ namespace Ezenity.Infrastructure.Factories
                            : configuration["AppSettings:SmtpPass"];
 
             var smtpEnabledSsl = bool.Parse(isProduction
-                                            ? Environment.GetEnvironmentVariable("EZENITY_SMTP_ENABLE_SSL") ?? configuration["AppSettings:SmtpEnabledSsl"]
+                                            ? Environment.GetEnvironmentVariable("EZENITY_SMTP_ENABLED_SSL") ?? configuration["AppSettings:SmtpEnabledSsl"]
                                             : configuration["AppSettings:SmtpEnabledSsl"]);
 
             var accessToken = isProduction

@@ -1,7 +1,6 @@
-﻿namespace Ezenity.Core.Interfaces
+﻿namespace Ezenity.Application.Abstractions.Emails;
+
+public interface IRazorViewToStringRenderer
 {
-    public interface IRazorViewToStringRenderer
-    {
-        Task<string> RenderViewtoStringAsync<TModel>(string viewName, TModel model);
-    }
+    Task<string> RenderViewtoStringAsync<TModel>(string viewName, TModel model);
 }

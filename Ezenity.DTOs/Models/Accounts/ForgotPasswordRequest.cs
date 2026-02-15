@@ -1,18 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Ezenity.DTOs.Models.Accounts
+namespace Ezenity.Contracts.Models.Accounts;
+
+/// <summary>
+/// Represents the request payload for initiating a password reset operation.
+/// </summary>
+public class ForgotPasswordRequest
 {
     /// <summary>
-    /// Represents the request payload for initiating a password reset operation.
+    /// Gets or sets the email of the account for which the password is forgotten.
     /// </summary>
-    public class ForgotPasswordRequest
-    {
-        /// <summary>
-        /// Gets or sets the email of the account for which the password is forgotten.
-        /// </summary>
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; }
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; }
 
-    }
 }

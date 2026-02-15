@@ -1,11 +1,7 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+using Ezenity.Contracts.Models.Files;
 using Microsoft.AspNetCore.Http;
-using Ezenity.DTOs.Models.Files;
 
-namespace Ezenity.Core.Services.Files;
+namespace Ezenity.Application.Abstractions.Files;
 
 /// <summary>
 /// Handles storing and retrieving files (and metadata) independent of controllers.

@@ -15,45 +15,53 @@ services:
     env_file:
       - ./.env
     environment:
-      ASPNETCORE_ENVIRONMENT: "Production"
+      # ASP.NET Core Settings
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
+      DOTNET_PRINT_TELEMETRY_MESSAGE: "${DOTNET_PRINT_TELEMETRY_MESSAGE}"
 
-      # EZENITY_FILE_ROOT: "/data/files"
+      # Database Settings
+      ConnectionStrings__WebApiDatabase: "${EZENITY_DATABASE_CONN}"
+      EZENITY_DATABASE_CONN: "${EZENITY_DATABASE_CONN}"
+      EZENITY_DATABASE_USER: "${EZENITY_DATABASE_USER}"
+      EZENITY_DATABASE_NAME: "${EZENITY_DATABASE_NAME}"
+      EZENITY_DATABASE_PASSWORD: "${EZENITY_DATABASE_PASSWORD}"
+      EZENITY_DATABASE_HOST: "${EZENITY_DATABASE_HOST}"
+      EZENITY_DATABASE_PORT: "${EZENITY_DATABASE_PORT}"
 
-      # IMPORTANT: must match your code's expected key:
-      # connectionStringSettings.WebApiDatabase
-      #- ConnectionStrings__WebApiDatabase=${EZENITY_DB_CONN}
-      ConnectionStrings__WebApiDatabase: "Server=host.docker.internal;Port=3306;Database=${EZENITY_DATABASE_NAME};User=${EZENITY_DATABASE_USER};Password=${EZENITY_DATABASE_PASSWORD};"
+      # File Settings
+      FileStorage__RootPath: "${EZENITY_FILES_ROOT}"
+      FileStorage__MaxUploadBytes: "${EZENITY_FILES_MAX_BYTES}"
+      EZENITY_FILES_ROOT: "${EZENITY_FILES_ROOT}"
+      EZENITY_FILES_MAX_UPLOAD_BYTES: "${EZENITY_FILES_MAX_BYTES}"
+      EZENITY_FILES_ALLOWED_EXTENSIONS: "${EZENITY_FILES_ALLOWED_EXTENSIONS}"
 
-      # IMPORTANT: your code binds AppSettings (AppSettingsFactory.Create)
-      AppSettings__Secret: "${EZENITY_SECRET_KEY}"
-      AppSettings__BaseUrl: "${EZENITY_BASE_URL}"
-      AppSettings__RefreshTokenTTL: "${EZENITY_REFRESH_TOKEN_TTL}"
-
-      AppSettings__SmtpUser: "${EZENITY_SMTP_USER}"
-      AppSettings__SmtpPass: "${EZENITY_SMTP_PASSWORD}"
-      AppSettings__SmtpHost: "${EZENITY_SMTP_HOST}"
-      AppSettings__SmtpPort: "${EZENITY_SMTP_PORT}"
-      AppSettings__SmtpEnabledSsl: "${EZENITY_SMTP_ENABLED_SSL}"
-      AppSettings__EmailFrom: "${EZENITY_EMAIL_FROM}"
-      AppSettings__EmailMessageIdDomain: "${EZENITY_EMAIL_MESSAGE_ID_DOMAIN}"
-      AppSettings__EmailTemplateBasePath: "${EZENITY_EMAIL_TEMPLATE_BASE_PATH}"
-
+      # API Settings
       # Your Startup.cs production CORS reads this env var directly:
       # Configuration["EZENITY_ALLOWED_ORIGINS"]
+      EZENITY_BASE_URL: "${EZENITY_BASE_URL}"
       EZENITY_ALLOWED_ORIGINS: "${EZENITY_ALLOWED_ORIGINS}"
+      EZENITY_REFRESH_TOKEN_TTL: "${EZENITY_REFRESH_TOKEN_TTL}"
 
-      # File storage (env driven)
-      FileStorage__RootPath: "/data/files"
-      FileStorage__MaxUploadBytes: "50000000"
-      # If we want to override allowed extensions via env, we can do indexed keys:
-      # FileStorage__AllowedExtensions__0: ".jpg"
-      # FileStorage__AllowedExtensions__1: ".jpeg"
-      # etc.
+      # Email Settings
+      EZENITY_SMTP_USER: "${EZENITY_SMTP_USER}"
+      EZENITY_SMTP_PASSWORD: "${EZENITY_SMTP_PASSWORD}"
+      EZENITY_SMTP_HOST: "${EZENITY_SMTP_HOST}"
+      EZENITY_SMTP_PORT: "${EZENITY_SMTP_PORT}"
+      EZENITY_SMTP_ENABLED_SSL: "${EZENITY_SMTP_ENABLED_SSL}"
+      EZENITY_EMAIL_FROM: "${EZENITY_EMAIL_FROM}"
+      EZENITY_EMAIL_MESSAGE_ID_DOMAIN: "${EZENITY_EMAIL_MESSAGE_ID_DOMAIN}"
+      EZENITY_EMAIL_TEMPLATE_BASE_PATH: "${EZENITY_EMAIL_TEMPLATE_BASE_PATH}"
 
-      # Debugging
+      # Security Settings
+      EZENITY_SECRET_KEY: "${EZENITY_SECRET_KEY}"
+      EZENITY_ACCESS_TOKEN: "${EZENITY_ACCESS_TOKEN}"
+
+      # Logging Settings
+      EZENITY_LOGS_API_DIR: "${EZENITY_LOGS_API_DIR}"
+
+      # Debugging Settings
       Logging__LogLevel__Microsoft.Hosting.Lifetime: "Information"
       Logging__LogLevel__Microsoft: "Information"
-      EZENITY_LOG_DIR: /var/log
 
     ports:
       - "127.0.0.1:5001:8080"
@@ -63,7 +71,7 @@ services:
     volumes:
       - /srv/ezenity/logs/ezenity_api:/var/log
       # Persist uploaded files outside the container
-      - /src/ezenity/Storage/ezenity_files:/data/files
+      - /src/ezenity/storage/ezenity_files:/data/files
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -108,11 +116,26 @@ services:
     env_file:
       - ./.env
     environment:
-      ASPNETCORE_ENVIRONMENT: "Production"
-      # EZENITY_FILE_ROOT: "/data/files"
-      ConnectionStrings__WebApiDatabase: "Server=host.docker.internal;Port=3306;Database=${EZENITY_DATABASE_NAME};User=${EZENITY_DATABASE_USER};Password=${EZENITY_DATABASE_PASSWORD};"
-      AppSettings__Secret: "${EZENITY_SECRET_KEY}"
-      # FileStorage__RootPath: "/data/files"
+      # ASP.NET Core Settings
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
+
+      # Database Settings
+      ConnectionStrings__WebApiDatabase: "${EZENITY_DATABASE_CONN}"
+      EZENITY_DATABASE_CONN: "${EZENITY_DATABASE_CONN}"
+
+      # API Settings
+      # Your Startup.cs production CORS reads this env var directly:
+      # Configuration["EZENITY_ALLOWED_ORIGINS"]
+      EZENITY_BASE_URL: "${EZENITY_BASE_URL}"
+      EZENITY_ALLOWED_ORIGINS: "${EZENITY_ALLOWED_ORIGINS}"
+      EZENITY_REFRESH_TOKEN_TTL: "${EZENITY_REFRESH_TOKEN_TTL}"
+
+      # Security Settings
+      EZENITY_SECRET_KEY: "${EZENITY_SECRET_KEY}"
+
+      # Logging Settings
+      EZENITY_LOGS_MIGRATOR_DIR: "${EZENITY_LOGS_MIGRATOR_DIR}"
+
     networks:
       - ezenity_net
     # Don't start by default. Only when explicitly invoked.

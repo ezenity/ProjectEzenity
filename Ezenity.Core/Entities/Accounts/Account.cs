@@ -1,6 +1,4 @@
-﻿using Ezenity.Domain.Entities.Accounts;
-
-namespace Ezenity.Domain.Entities.Accounts;
+﻿namespace Ezenity.Domain.Entities.Accounts;
 
 /// <summary>
 /// Represents an account in the system.

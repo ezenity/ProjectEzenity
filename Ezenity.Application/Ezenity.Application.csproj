@@ -7,8 +7,10 @@
 	</PropertyGroup>
 
     <ItemGroup>
+	    <ProjectReference Include="..\Ezenity.Core\Ezenity.Domain.csproj" />
 	    <ProjectReference Include="..\Ezenity.Domain\Ezenity.Domain.csproj" />
 	    <ProjectReference Include="..\Ezenity.Contracts\Ezenity.Contracts.csproj" />
+	    <ProjectReference Include="..\Ezenity.DTOs\Ezenity.Contracts.csproj" />
     </ItemGroup>
 
     <ItemGroup>

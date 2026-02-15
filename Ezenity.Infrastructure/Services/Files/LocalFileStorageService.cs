@@ -1,15 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using Ezenity.Core.Options;
-using Ezenity.Core.Entities.Files;
-using Ezenity.Core.Services.Files;
-using Ezenity.DTOs.Models.Files;
+using Ezenity.Domain.Options;
+using Ezenity.Domain.Entities.Files;
 using Ezenity.Infrastructure.Data;
+using Ezenity.Application.Abstractions.Files;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
@@ -98,7 +91,7 @@ public sealed class LocalFileStorageService : IFileStorageService
         var id = Guid.NewGuid();
         var fileId = id.ToString("N");
         var storedName = $"{fileId}{ext}";
-        var storedPath = CombineUnderRoot(storedName);
+        var storedPath = CombineUnderRoot(scope, storedName);
 
         // 1) Write bytes to disk
         try
@@ -136,7 +129,7 @@ public sealed class LocalFileStorageService : IFileStorageService
             Size = file.Length,
             Scope = string.IsNullOrWhiteSpace(scope) ? null : scope.Trim(),
             CreatedUtc = DateTime.UtcNow,
-            CreatedByAccountId = null
+            CreatedByAccountId = createdByAccountId
         };
 
         try
@@ -168,7 +161,7 @@ public sealed class LocalFileStorageService : IFileStorageService
     {
         var asset = await GetAssetRequiredAsync(fileId, ct);
 
-        var fullPath = CombineUnderRoot(asset.StoredName);
+        var fullPath = CombineUnderRoot(asset.Scope, asset.StoredName);
         if (!File.Exists(fullPath))
             throw new FileNotFoundException("Stored file not found.");
 
@@ -206,7 +199,7 @@ public sealed class LocalFileStorageService : IFileStorageService
         var asset = await _db.FileAssets.FirstOrDefaultAsync(x => x.Id == id, ct);
         if (asset == null) return false;
 
-        var fullPath = CombineUnderRoot(asset.StoredName);
+        var fullPath = CombineUnderRoot(asset.Scope, asset.StoredName);
 
         try
         {
@@ -270,11 +263,23 @@ public sealed class LocalFileStorageService : IFileStorageService
     private static bool IsValidId(string fileId) =>
         !string.IsNullOrWhiteSpace(fileId) && IdRegex.IsMatch(fileId);
 
-    private string CombineUnderRoot(string fileName)
+    private string CombineUnderRoot(string? scope, string fileName)
     {
         var safeName = Path.GetFileName(fileName);
-        var combined = Path.GetFullPath(Path.Combine(_rootFullPath, safeName));
+        var safeScope = string.IsNullOrWhiteSpace(scope)
+            ? null
+            : Regex.Replace(scope.Trim(), "[^a-zA-Z0-9_-]", "").ToLowerInvariant();
 
+        var baseDir = _rootFullPath;
+        if (!string.IsNullOrWhiteSpace(safeScope))
+        {
+            baseDir = Path.Combine(baseDir, safeScope);
+            Directory.CreateDirectory(baseDir);
+        }
+
+        var combined = Path.GetFullPath(Path.Combine(baseDir, safeName));
+
+        // IMPORTANT: Ensure it stays inside root
         if (!combined.StartsWith(_rootFullPath, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Invalid path resolution.");
 

@@ -21,9 +21,9 @@ namespace Ezenity.Infrastructure.Factories
         {
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 
-            Console.WriteLine($"Factory Class | Environment: {environment}");
-            Console.WriteLine($"Factory Class | DB Name: {Environment.GetEnvironmentVariable("EZENITY_DATABASE_NAME")}");
-            Console.WriteLine($"Factory Class | DB User: {Environment.GetEnvironmentVariable("EZENITY_DATABASE_USER")}");
+            //Console.WriteLine($"Factory Class | Environment: {environment}");
+            //Console.WriteLine($"Factory Class | DB Name: {Environment.GetEnvironmentVariable("EZENITY_DATABASE_NAME")}");
+            //Console.WriteLine($"Factory Class | DB User: {Environment.GetEnvironmentVariable("EZENITY_DATABASE_USER")}");
 
             // 1) Prefer standard .NET connection strings (supports env: ConnectionStrings__WebApiDatabase)
             var direct =
@@ -41,7 +41,7 @@ namespace Ezenity.Infrastructure.Factories
             var dbUser = Environment.GetEnvironmentVariable("EZENITY_DATABASE_USER");
             var dbPassword = Environment.GetEnvironmentVariable("EZENITY_DATABASE_PASSWORD");
 
-            Console.WriteLine($"Factory Class | DB Password: {(string.IsNullOrEmpty(dbPassword) ? "(empty)" : "(set)")}");
+            //Console.WriteLine($"Factory Class | DB Password: {(string.IsNullOrEmpty(dbPassword) ? "(empty)" : "(set)")}");
 
             // We MUST NOT use localhost in containers unless DB runs in same container.
             // If your DB runs on the host machine, use host.docker.internal (with extra_hosts mapping).
@@ -57,7 +57,7 @@ namespace Ezenity.Infrastructure.Factories
                     "or set EZENITY_DATABASE_NAME / EZENITY_DATABASE_USER / EZENITY_DATABASE_PASSWORD (fallback).");
             }
 
-            Console.WriteLine($"Factory Class | Using built DB config (Host={dbHost}, Port={dbPort}, Db={dbName}, User={dbUser})");
+            //Console.WriteLine($"Factory Class | Using built DB config (Host={dbHost}, Port={dbPort}, Db={dbName}, User={dbUser})");
 
             var built = $"Server={dbHost};Port={dbPort};Database={dbName};User={dbUser};Password={dbPassword};";
             return new ConnectionStringSettingsWrapper(new ConnectionStringSettings(built));

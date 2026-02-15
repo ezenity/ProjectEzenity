@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Ezenity.Core.Options
+namespace Ezenity.Domain.Options
 {
     /// <summary>
     /// Configuration settings for file storage (local filesystem).
@@ -18,7 +18,7 @@ namespace Ezenity.Core.Options
         /// Absolute or relative path where files are stored.
         /// If relative, it is resolved against the application content root.
         /// </summary>
-        public string RootPath { get; set; } = "./files";
+        public string RootPath { get; set; } = "/data/files";
 
         /// <summary>
         /// Maximum allowed upload size in bytes (per request).

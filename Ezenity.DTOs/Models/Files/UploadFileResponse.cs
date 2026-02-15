@@ -1,10 +1,9 @@
-namespace Ezenity.DTOs.Models.Files
+namespace Ezenity.Contracts.Models.Files;
+
+/// <summary>
+/// Response wrapper for upload endpoint.
+/// </summary>
+public class UploadFileResponse
 {
-    /// <summary>
-    /// Response wrapper for upload endpoint.
-    /// </summary>
-    public class UploadFileResponse
-    {
-        public FileItemResponse File { get; set; } = default!;
-    }
+    public FileItemResponse File { get; set; } = default!;
 }

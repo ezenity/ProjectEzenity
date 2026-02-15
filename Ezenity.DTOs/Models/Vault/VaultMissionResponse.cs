@@ -1,4 +1,4 @@
-namespace Ezenity.DTOs.Models.Vault;
+namespace Ezenity.Contracts.Models.Vault;
 
 public class VaultMissionResponse
 {

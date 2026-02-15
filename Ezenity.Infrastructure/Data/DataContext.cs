@@ -3,7 +3,6 @@ using Ezenity.Domain.Entities.EmailTemplates;
 using Ezenity.Domain.Entities.Files;
 using Ezenity.Domain.Entities.Sections;
 using Ezenity.Domain.Entities.Vault;
-using Ezenity.Domain.Entities.Accounts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -396,6 +395,7 @@ public class DataContext : DbContext
             // Long-term stable: store enum as int
             entity.Property(x => x.Rarity)
                   .HasConversion<int>()
+                  //.HasDefaultValue(VaultEmblemRarity.Common)
                   .IsRequired();
 
             entity.Property(x => x.IsActive)
