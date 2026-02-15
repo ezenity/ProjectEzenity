@@ -156,22 +156,22 @@ export default function GatePage() {
 
             {/* HUD ELEMENTS */}
             <div className="hud hudLeft" aria-hidden="true">
-                <div className="hudTitle">AFTER HOURS CREW</div>
+                <div className="hudTitle">THE BLACKLIST</div>
                 <div className="hudLine" />
-                <div className="hudText">Earn Rep • Stack Emblems • Earn Coins</div>
+                <div className="hudText">Earn Heat • Stack Trophies • Build Bounty</div>
             </div>
 
             <div className="hud hudRight" aria-hidden="true">
                 <div className="hudTitle">THE VAULT</div>
                 <div className="hudLine" />
-                <div className="hudText">Verified Riders Only</div>
+                <div className="hudText">Verified Targets Only</div>
             </div>
 
             {/* CONTENT */}
             <div className="content2">
                 <div className="brand2">
-                    <div className="brandName2">Ezenity</div>
-                    <div className="brandTag2">Underground ♦ Invite-only ♦ Ride smart</div>
+                    <div className="brandName2">Darkside Collective</div>
+                    <div className="brandTag2">High-Stakes ♦ Members-Only ♦ Ride smart</div>
                 </div>
 
                 <div className="sigil2" aria-label="Gate sigil">
