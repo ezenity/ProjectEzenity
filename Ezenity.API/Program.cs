@@ -33,7 +33,7 @@ using Ezenity.Infrastructure.Services.Emails;
 using Ezenity.Infrastructure.Services.EmailTemplates;
 using Ezenity.Infrastructure.Services.Files;
 
-using Ezenity.RazorViews;
+using Ezenity.EmailTemplates;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -140,14 +140,17 @@ public static class Program
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        // --- Settings wrappers ---
-        services.AddSingleton<IAppSettings>(AppSettingsFactory.Create(configuration));
-        services.AddSingleton<IConnectionStringSettings>(ConnectionStringSettingsFactory.Create(configuration));
-        services.AddSingleton<ISensitivePropertiesSettings>(SensitivePropertiesSettingsFactory.Create(configuration));
+        // --- Settings ( these factories already return the interface type ) ---
+        var appSettings = AppSettingsFactory.Create(configuration);
+        var connectionStringSettings = ConnectionStringSettingsFactory.Create(configuration);
+        var sensitiveProps = SensitivePropertiesSettingsFactory.Create(configuration);
+
+        services.AddSingleton(appSettings);
+        services.AddSingleton(connectionStringSettings);
+        services.AddSingleton(sensitiveProps);
 
         // --- DbContext ---
         var connectionString = connectionStringSettings.WebApiDatabase;
-
         //Console.WriteLine($"Database Connection String: {connectionString}");
 
         services.AddDbContext<DataContext>(options =>
@@ -198,7 +201,7 @@ public static class Program
         services.AddRazorPages().AddRazorRuntimeCompilation(options =>
         {
             var assembly = typeof(RazorViewRenderer).GetTypeInfo().Assembly;
-            var fileProvider = new EmbeddedFileProvider(assembly, "Ezenity.RazorViews");
+            var fileProvider = new EmbeddedFileProvider(assembly, "Ezenity.EmailTemplates");
             options.FileProviders.Add(fileProvider);
         });
 
