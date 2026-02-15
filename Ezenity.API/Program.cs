@@ -192,7 +192,7 @@ public static class Program
 
         // --- Dependency injection (your current registrations) ---
         services.AddScoped<IPasswordService, PasswordService>();
-        services.AddScoped<IDataContext, DataContext>();
+        //services.AddScoped<IDataContext, DataContext>();
         services.AddScoped<ITokenService, TokenHelper>();
 
         services.AddScoped<IAccountService, AccountService>();
