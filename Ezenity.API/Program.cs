@@ -6,6 +6,7 @@ using Ezenity.API.Filters;
 using Ezenity.API.Middleware;
 using Ezenity.API.Options;
 using Ezenity.API.Security;
+using Ezenity.Application.Abstractions.Configuration;
 using Ezenity.Application.Abstractions.Files;
 using Ezenity.Application.Abstractions.Persistence;
 using Ezenity.Application.Abstractions.Security;
@@ -42,6 +43,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.ComponentModel.Design;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -134,7 +136,9 @@ public static class Program
 
         // --- DbContext ---
         var connectionString = connectionStringSettings.WebApiDatabase;
+
         Console.WriteLine($"Database Connection String: {connectionString}");
+
         services.AddDbContext<DataContext>(options =>
             options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
@@ -226,21 +230,40 @@ public static class Program
         services.Configure<FileStorageOptions>(configuration.GetSection("FileStorage"));
         services.PostConfigure<FileStorageOptions>(opts =>
         {
-            var envRoot = configuration["EZENITY_FILES_ROOT"];
+            // Root
+            var envRoot =
+                configuration["EZENITY_FILES_ROOT"]
+                ?? configuration["FileStorage:RootPath"];
+
             if (!string.IsNullOrWhiteSpace(envRoot))
                 opts.RootPath = envRoot.Trim();
 
-            var envMax = configuration["EZENITY_FILES_MAX_UPLOAD_BYTES"];
+            // Max bytes (support both names)
+            var envMax =
+                configuration["EZENITY_FILES_MAX_UPLOAD_BYTES"]
+                ?? configuration["EZENITY_FILES_MAX_BYTES"]
+                ?? configuration["FileStorage:MaxUploadBytes"];
+
             if (!string.IsNullOrWhiteSpace(envMax) && long.TryParse(envMax, out var maxBytes) && maxBytes > 0)
                 opts.MaxUploadBytes = maxBytes;
 
-            var envAllowed = configuration["EZENITY_FILES_ALLOWED_EXTENSIONS"];
+            // Allowed extensions (comma/space/semicolon)
+            var envAllowed =
+                configuration["EZENITY_FILES_ALLOWED_EXTENSIONS"]
+                ?? configuration["FileStorage:AllowedExtensions"];
+
             if (!string.IsNullOrWhiteSpace(envAllowed))
             {
                 var parts = envAllowed
                     .Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(x => x.Trim())
                     .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x =>
+                    {
+                        var v = x.StartsWith(".") ? x : "." + x;
+                        return v.ToLowerInvariant();
+                    })
+                    .Distinct()
                     .ToList();
 
                 if (parts.Count > 0)
