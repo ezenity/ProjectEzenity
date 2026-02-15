@@ -7,9 +7,13 @@ using Ezenity.API.Middleware;
 using Ezenity.API.Options;
 using Ezenity.API.Security;
 using Ezenity.Application.Abstractions.Configuration;
+using Ezenity.Application.Abstractions.Emails;
 using Ezenity.Application.Abstractions.Files;
 using Ezenity.Application.Abstractions.Persistence;
 using Ezenity.Application.Abstractions.Security;
+using Ezenity.Application.Features.Accounts;
+using Ezenity.Application.Features.Auth;
+using Ezenity.Application.Features.Sections;
 using Ezenity.Domain.Entities.Accounts;
 using Ezenity.Domain.Entities.Emails;
 using Ezenity.Domain.Entities.Files;
@@ -21,9 +25,11 @@ using Ezenity.Infrastructure.Helpers;
 using Ezenity.Infrastructure.Persistence;
 using Ezenity.Infrastructure.Security;
 using Ezenity.Infrastructure.Services;
+using Ezenity.Infrastructure.Services.Accounts;
 using Ezenity.Infrastructure.Services.Emails;
 using Ezenity.Infrastructure.Services.EmailTemplates;
 using Ezenity.Infrastructure.Services.Files;
+using Ezenity.RazorViews;
 using Google.Apis.Gmail.v1.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -211,6 +217,7 @@ public static class Program
         services.AddScoped<IEmailTemplateRepository, EfEmailTemplateRepository>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IPasswordService, PasswordService>();
+
 
         // Filters
         services.AddScoped<LoadAccountFilter>();
