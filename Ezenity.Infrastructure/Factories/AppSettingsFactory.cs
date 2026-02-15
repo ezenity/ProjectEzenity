@@ -1,4 +1,5 @@
-﻿using Ezenity.Core.Interfaces;
+﻿using Ezenity.Application.Abstractions.Configuration;
+
 using Ezenity.Infrastructure.Helpers;
 using Microsoft.Extensions.Configuration;
 using System;

@@ -143,7 +143,7 @@ public static class Program
         // --- DbContext ---
         var connectionString = connectionStringSettings.WebApiDatabase;
 
-        Console.WriteLine($"Database Connection String: {connectionString}");
+        //Console.WriteLine($"Database Connection String: {connectionString}");
 
         services.AddDbContext<DataContext>(options =>
             options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
