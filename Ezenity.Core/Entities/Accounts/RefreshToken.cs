@@ -1,4 +1,4 @@
-﻿namespace Ezenity.Core.Entities.Accounts
+﻿namespace Ezenity.Domain.Entities.Accounts
 {
     /// <summary>
     /// Represents a refresh token for an account.

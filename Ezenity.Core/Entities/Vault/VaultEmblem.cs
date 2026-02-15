@@ -1,8 +1,8 @@
-using Ezenity.Core.Entities.Files;
+using Ezenity.Domain.Entities.Files;
 using Ezenity.Domain.Entities.Accounts;
 using System;
 
-namespace Ezenity.Core.Entities.Vault;
+namespace Ezenity.Domain.Entities.Vault;
 
 public class VaultEmblem
 {

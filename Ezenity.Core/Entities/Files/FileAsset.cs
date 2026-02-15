@@ -1,7 +1,7 @@
 using System;
-using Ezenity.Core.Entities.Accounts;
+using Ezenity.Domain.Entities.Accounts;
 
-namespace Ezenity.Core.Entities.Files;
+namespace Ezenity.Domain.Entities.Files;
 
 /// <summary>
 /// File metadata stored in the database.

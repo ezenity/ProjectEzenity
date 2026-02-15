@@ -1,4 +1,4 @@
-﻿namespace Ezenity.Core.Entities.Sections
+﻿namespace Ezenity.Domain.Entities.Sections
 {
     /// <summary>
     /// Represents a section in the system, typically a part of a page or component.

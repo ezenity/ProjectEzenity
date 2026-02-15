@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ezenity.Core.Entities.Vault;
+﻿namespace Ezenity.Domain.Entities.Vault;
 
 public enum VaultMissionSubmissionStatus
 {

@@ -1,24 +1,13 @@
-using System;
-using System.Collections.Generic;
-
-namespace Ezenity.Core.Entities.Vault;
+namespace Ezenity.Domain.Entities.Vault;
 
 public class VaultMission
 {
     public int Id { get; set; }
-
     public string Slug { get; set; } = null!;
     public string Title { get; set; } = null!;
     public string Description { get; set; } = null!; // markdown or plain text
-
-    /// <summary>
-    /// Store objectives as JSON for now (keeps it flexible while you iterate).
-    /// </summary>
-    public string? ObjectivesJson { get; set; }
-
     public bool IsActive { get; set; } = true;
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
-
     // one-to-one numeric rewards
     public VaultMissionReward Reward { get; set; } = new VaultMissionReward();
 

@@ -1,4 +1,4 @@
-﻿namespace Ezenity.Core.Entities.Accounts
+﻿namespace Ezenity.Domain.Entities.Accounts
 {
     /// <summary>
     /// Represents a role in the system.

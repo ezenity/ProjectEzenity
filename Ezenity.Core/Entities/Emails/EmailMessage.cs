@@ -1,4 +1,4 @@
-﻿namespace Ezenity.Core.Entities.Emails
+﻿namespace Ezenity.Domain.Entities.Emails
 {
     /// <summary>
     /// Represents an email message to be sent.

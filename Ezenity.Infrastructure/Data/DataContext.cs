@@ -1,9 +1,8 @@
-﻿using Ezenity.Core.Entities.Accounts;
-using Ezenity.Core.Entities.EmailTemplates;
-using Ezenity.Core.Entities.Files;
-using Ezenity.Core.Entities.Sections;
-using Ezenity.Core.Entities.Vault;
-using Ezenity.Core.Interfaces;
+﻿using Ezenity.Domain.Entities.Accounts;
+using Ezenity.Domain.Entities.EmailTemplates;
+using Ezenity.Domain.Entities.Files;
+using Ezenity.Domain.Entities.Sections;
+using Ezenity.Domain.Entities.Vault;
 using Ezenity.Domain.Entities.Accounts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -94,7 +93,6 @@ public class DataContext : DbContext
 
         // Vault tables
         ConfigureVault(modelBuilder);
-        ConfigureVaultEmblems(modelBuilder);
 
         // Add any relationships between entities if necessary
         // For example, if Section has a one-to-many relationship with another entity called OtherEntity
@@ -376,30 +374,59 @@ public class DataContext : DbContext
             entity.ToTable("VaultEmblems");
             entity.HasKey(x => x.Id);
 
-            entity.Property(x => x.Slug).IsRequired().HasMaxLength(64);
-            entity.HasIndex(x => x.Slug).IsUnique();
+            entity.Property(x => x.Slug)
+                  .IsRequired()
+                  .HasMaxLength(64);
 
-            entity.Property(x => x.Name).IsRequired().HasMaxLength(120);
-            entity.Property(x => x.Description).IsRequired(false).HasMaxLength(1000);
+            entity.HasIndex(x => x.Slug)
+                  .IsUnique();
 
-            entity.Property(x => x.SeasonTag).HasMaxLength(80);
+            entity.Property(x => x.Name)
+                  .IsRequired()
+                  .HasMaxLength(120);
 
-            entity.Property(x => x.Rarity).IsRequired();
-            entity.Property(x => x.IsActive).IsRequired();
-            entity.Property(x => x.SortOrder).IsRequired();
-            entity.Property(x => x.CreatedUtc).IsRequired();
+            entity.Property(x => x.Description)
+                  .IsRequired(false)
+                  .HasMaxLength(1000);
+
+            entity.Property(x => x.SeasonTag)
+                  .HasMaxLength(80);
+
+            // Enum handling:
+            // Default EF behavior is int in DB. This is fine.
+            // If you want it stored as string, see note below.
+            entity.Property(x => x.Rarity)
+                  .IsRequired();
+
+            entity.Property(x => x.IsActive)
+                  .IsRequired();
+
+            entity.Property(x => x.SortOrder)
+                  .IsRequired();
+
+            entity.Property(x => x.CreatedUtc)
+                  .IsRequired();
 
             entity.HasOne(x => x.IconFileAsset)
                   .WithMany()
                   .HasForeignKey(x => x.IconFileAssetId)
                   .OnDelete(DeleteBehavior.SetNull);
+
+            // Optional but recommended indexes for common queries:
+            entity.HasIndex(x => x.IsActive);
+            entity.HasIndex(x => new { x.SeasonTag, x.SortOrder });
         });
+
+        /* Vault Emblem Rarity */
 
         /* Vault Mission */
         modelBuilder.Entity<VaultMission>(entity =>
         {
             entity.ToTable("VaultMissions");
             entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.Slug).IsRequired().HasMaxLength(64);
+            entity.HasIndex(x => x.Slug).IsUnique();
 
             entity.Property(x => x.Title).HasMaxLength(160).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(4000).IsRequired(false);
@@ -410,32 +437,91 @@ public class DataContext : DbContext
             entity.HasIndex(x => x.CreatedUtc);
         });
 
+        /* Vault Mission Comment */
+        modelBuilder.Entity<VaultMissionComment>(entity =>
+        {
+            entity.ToTable("VaultMissionComments");
+            entity.HasKey(x => x.Id);
 
+            entity.Property(x => x.Body).HasMaxLength(4000).IsRequired();
+            entity.Property(x => x.CreatedUtc).IsRequired();
 
+            entity.HasOne(x => x.Mission)
+                  .WithMany()
+                  .HasForeignKey(x => x.MissionId);
 
+            entity.HasOne(x => x.Account)
+                  .WithMany()
+                  .HasForeignKey(x => x.AccountId);
 
+            entity.HasIndex(x => new { x.MissionId, x.CreatedUtc });
+        });
 
+        /* Vault Mission Completion */
+        modelBuilder.Entity<VaultMissionCompletion>(entity =>
+        {
+            entity.ToTable("VaultMissionCompletions");
+            entity.HasKey(x => x.Id);
 
+            entity.Property(x => x.Status).HasMaxLength(20).IsRequired(); // Submitted/Approved/Rejected
+            entity.Property(x => x.CreatedUtc).IsRequired();
 
+            entity.HasOne(x => x.Mission)
+                  .WithMany()
+                  .HasForeignKey(x => x.MissionId);
 
+            entity.HasOne(x => x.Account)
+                  .WithMany()
+                  .HasForeignKey(x => x.AccountId);
 
+            entity.HasIndex(x => new { x.MissionId, x.AccountId }).IsUnique(); // one completion record per user per mission
+        });
 
+        /* Vault Mission Emblem Reward */
+        modelBuilder.Entity<VaultMissionEmblemReward>(entity =>
+        {
+            entity.ToTable("VaultMissionEmblemRewards");
+            entity.HasKey(x => new { x.VaultMissionId, x.VaultEmblemId });
 
+            entity.Property(x => x.Quantity).IsRequired();
+            entity.Property(x => x.IsPrimary).IsRequired();
 
+            entity.HasOne(x => x.Mission)
+                  .WithMany(x => x.EmblemRewards)
+                  .HasForeignKey(x => x.VaultMissionId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
+            entity.HasOne(x => x.Emblem)
+                  .WithMany(x => x.MissionRewards)
+                  .HasForeignKey(x => x.VaultEmblemId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
 
+        /* Vault Mission Reward */
+        modelBuilder.Entity<VaultMissionReward>(entity =>
+        {
+            entity.ToTable("VaultMissionRewards");
+            entity.HasKey(x => x.Id);
 
+            entity.Property(x => x.Coins).IsRequired();
+            entity.Property(x => x.Rep).IsRequired();
 
+            entity.HasOne(x => x.Mission)
+                  .WithMany(m => m.Rewards)
+                  .HasForeignKey(x => x.VaultMissionId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
+            // Typical helpful index for joins
+            entity.HasIndex(x => x.VaultMissionId);
+        });
 
-
-
+        /* Vault Mission Submission */
         modelBuilder.Entity<VaultMissionSubmission>(entity =>
         {
             entity.ToTable("VaultMissionSubmissions");
             entity.HasKey(x => x.Id);
 
-            entity.Property(x => x.Platform).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.Platform).HasMaxLength(30).IsRequired() // YouTube/Instagram/TikTok/Facebook/Upload
             entity.Property(x => x.Url).HasMaxLength(2000);
             entity.Property(x => x.Notes).HasMaxLength(2000);
             entity.Property(x => x.CreatedUtc).IsRequired();
@@ -456,223 +542,10 @@ public class DataContext : DbContext
             entity.HasIndex(x => new { x.MissionId, x.AccountId, x.CreatedUtc });
         });
 
-        modelBuilder.Entity<VaultMissionCompletion>(entity =>
-        {
-            entity.ToTable("VaultMissionCompletions");
-            entity.HasKey(x => x.Id);
+        /* Vault Mission Submission Media */
 
-            entity.Property(x => x.Status).HasMaxLength(20).IsRequired();
-            entity.Property(x => x.CreatedUtc).IsRequired();
+        /* Vault Mission Submission Status */
 
-            entity.HasOne(x => x.Mission)
-                  .WithMany()
-                  .HasForeignKey(x => x.MissionId);
-
-            entity.HasOne(x => x.Account)
-                  .WithMany()
-                  .HasForeignKey(x => x.AccountId);
-
-            entity.HasIndex(x => new { x.MissionId, x.AccountId }).IsUnique();
-        });
-
-        modelBuilder.Entity<VaultMissionComment>(entity =>
-        {
-            entity.ToTable("VaultMissionComments");
-            entity.HasKey(x => x.Id);
-
-            entity.Property(x => x.Body).HasMaxLength(4000).IsRequired();
-            entity.Property(x => x.CreatedUtc).IsRequired();
-
-            entity.HasOne(x => x.Mission)
-                  .WithMany()
-                  .HasForeignKey(x => x.MissionId);
-
-            entity.HasOne(x => x.Account)
-                  .WithMany()
-                  .HasForeignKey(x => x.AccountId);
-
-            entity.HasIndex(x => new { x.MissionId, x.CreatedUtc });
-        });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        modelBuilder.Entity<VaultEmblem>(entity =>
-        {
-            entity.ToTable("VaultEmblems");
-            entity.HasKey(x => x.Id);
-
-            entity.Property(x => x.Name).HasMaxLength(120).IsRequired();
-            entity.Property(x => x.Description).HasMaxLength(1000).IsRequired(false);
-
-            // optional: emblem image stored in FileAssets
-            entity.HasOne(x => x.ImageFile)
-                  .WithMany()
-                  .HasForeignKey(x => x.ImageFileId)
-                  .OnDelete(DeleteBehavior.SetNull);
-        });
-
-        modelBuilder.Entity<VaultMissionReward>(entity =>
-        {
-            entity.ToTable("VaultMissionRewards");
-            entity.HasKey(x => x.Id);
-
-            entity.Property(x => x.Coins).IsRequired();
-            entity.Property(x => x.Rep).IsRequired();
-
-            entity.HasOne(x => x.Mission)
-                  .WithMany(m => m.Rewards)
-                  .HasForeignKey(x => x.VaultMissionId)
-                  .OnDelete(DeleteBehavior.Cascade);
-
-            // Typical helpful index for joins
-            entity.HasIndex(x => x.VaultMissionId);
-        });
-
-        modelBuilder.Entity<VaultMissionSubmission>(entity =>
-        {
-            entity.ToTable("VaultMissionSubmissions");
-            entity.HasKey(x => x.Id);
-
-            entity.Property(x => x.Platform).HasMaxLength(30).IsRequired(); // YouTube/Instagram/TikTok/Facebook/Upload
-            entity.Property(x => x.Url).HasMaxLength(2000).IsRequired(false);
-            entity.Property(x => x.Notes).HasMaxLength(2000).IsRequired(false);
-            entity.Property(x => x.CreatedUtc).IsRequired();
-
-            entity.HasOne(x => x.Mission)
-                  .WithMany()
-                  .HasForeignKey(x => x.MissionId);
-
-            entity.HasOne(x => x.Account)
-                  .WithMany()
-                  .HasForeignKey(x => x.AccountId);
-
-            entity.HasOne(x => x.File)
-                  .WithMany()
-                  .HasForeignKey(x => x.FileAssetId)
-                  .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasIndex(x => new { x.MissionId, x.AccountId, x.CreatedUtc });
-        });
-
-        modelBuilder.Entity<VaultMissionCompletion>(entity =>
-        {
-            entity.ToTable("VaultMissionCompletions");
-            entity.HasKey(x => x.Id);
-
-            entity.Property(x => x.Status).HasMaxLength(20).IsRequired(); // Submitted/Approved/Rejected
-            entity.Property(x => x.CreatedUtc).IsRequired();
-
-            entity.HasOne(x => x.Mission)
-                  .WithMany()
-                  .HasForeignKey(x => x.MissionId);
-
-            entity.HasOne(x => x.Account)
-                  .WithMany()
-                  .HasForeignKey(x => x.AccountId);
-
-            entity.HasIndex(x => new { x.MissionId, x.AccountId }).IsUnique(); // one completion record per user per mission
-        });
-
-        modelBuilder.Entity<VaultMissionComment>(entity =>
-        {
-            entity.ToTable("VaultMissionComments");
-            entity.HasKey(x => x.Id);
-
-            entity.Property(x => x.Body).HasMaxLength(4000).IsRequired();
-            entity.Property(x => x.CreatedUtc).IsRequired();
-
-            entity.HasOne(x => x.Mission)
-                  .WithMany()
-                  .HasForeignKey(x => x.MissionId);
-
-            entity.HasOne(x => x.Account)
-                  .WithMany()
-                  .HasForeignKey(x => x.AccountId);
-
-            entity.HasIndex(x => new { x.MissionId, x.CreatedUtc });
-        });
     }
 
-    private void ConfigureVaultEmblems(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<VaultEmblem>(entity =>
-        {
-            entity.ToTable("VaultEmblems");
-            entity.HasKey(x => x.Id);
-
-            entity.Property(x => x.Slug).IsRequired().HasMaxLength(64);
-            entity.HasIndex(x => x.Slug).IsUnique();
-
-            entity.Property(x => x.Name).IsRequired().HasMaxLength(120);
-            entity.Property(x => x.Description).HasMaxLength(1000);
-
-            entity.Property(x => x.SeasonTag).HasMaxLength(50);
-
-            entity.Property(x => x.Rarity).IsRequired();
-            entity.Property(x => x.IsActive).IsRequired();
-            entity.Property(x => x.SortOrder).IsRequired();
-            entity.Property(x => x.CreatedUtc).IsRequired();
-
-            entity.HasOne(x => x.IconFileAsset)
-                  .WithMany()
-                  .HasForeignKey(x => x.IconFileAssetId)
-                  .OnDelete(DeleteBehavior.SetNull);
-        });
-
-        modelBuilder.Entity<VaultMissionEmblemReward>(entity =>
-        {
-            entity.ToTable("VaultMissionEmblemRewards");
-            entity.HasKey(x => new { x.VaultMissionId, x.VaultEmblemId });
-
-            entity.Property(x => x.Quantity).IsRequired();
-            entity.Property(x => x.IsPrimary).IsRequired();
-
-            entity.HasOne(x => x.Mission)
-                  .WithMany(x => x.EmblemRewards)
-                  .HasForeignKey(x => x.VaultMissionId)
-                  .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(x => x.Emblem)
-                  .WithMany(x => x.MissionRewards)
-                  .HasForeignKey(x => x.VaultEmblemId)
-                  .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        modelBuilder.Entity<AccountEmblem>(entity =>
-        {
-            entity.ToTable("AccountEmblems");
-            entity.HasKey(x => new { x.AccountId, x.VaultEmblemId });
-
-            entity.Property(x => x.ObtainedUtc).IsRequired();
-            entity.Property(x => x.Note).HasMaxLength(1000);
-
-            entity.HasOne(x => x.Account)
-                  .WithMany(x => x.Emblems)
-                  .HasForeignKey(x => x.AccountId)
-                  .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(x => x.Emblem)
-                  .WithMany(x => x.EarnedBy)
-                  .HasForeignKey(x => x.VaultEmblemId)
-                  .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(x => x.ObtainedFromVaultMission)
-                  .WithMany()
-                  .HasForeignKey(x => x.ObtainedFromVaultMissionId)
-                  .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasIndex(x => x.ObtainedUtc);
-        });
-    }
 }

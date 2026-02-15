@@ -1,4 +1,4 @@
-﻿namespace Ezenity.Core.Entities.Vault;
+﻿namespace Ezenity.Domain.Entities.Vault;
 
 public enum VaultEmblemRarity
 {

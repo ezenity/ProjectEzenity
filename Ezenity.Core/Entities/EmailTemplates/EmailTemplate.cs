@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Ezenity.Core.Entities.EmailTemplates
+namespace Ezenity.Domain.Entities.EmailTemplates
 {
     /// <summary>
     /// Represents an email template in the system.
