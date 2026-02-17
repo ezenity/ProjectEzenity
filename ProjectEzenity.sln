@@ -7,18 +7,18 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ezenity.API", "Ezenity.API\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ezenity.Tests", "Ezenity.Tests\Ezenity.Tests.csproj", "{7BD839B7-F3E2-499A-8DD1-807C4F5ECAD4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ezenity.Domain", "Ezenity.Core\Ezenity.Domain.csproj", "{62855BD1-5A85-4BDF-B0E0-07EE1ECBEB63}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ezenity.Domain", "Ezenity.Domain\Ezenity.Domain.csproj", "{62855BD1-5A85-4BDF-B0E0-07EE1ECBEB63}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ezenity.Infrastructure", "Ezenity.Infrastructure\Ezenity.Infrastructure.csproj", "{A63B54BF-F792-4613-81A2-F62B37D83565}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ezenity.Contracts", "Ezenity.DTOs\Ezenity.Contracts.csproj", "{62784B6E-D8C4-4C89-9771-7E17CCFB83D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ezenity.Contracts", "Ezenity.Contracts\Ezenity.Contracts.csproj", "{62784B6E-D8C4-4C89-9771-7E17CCFB83D6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0823A814-FBC0-498B-847F-01C0029908E0}"
 	ProjectSection(SolutionItems) = preProject
 		Jenkinsfile = Jenkinsfile
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ezenity.EmailTemplates", "Ezenity.RazorViews\Ezenity.EmailTemplates.csproj", "{1E9246D6-9664-4382-86E3-DDBA834F79A6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ezenity.EmailTemplates", "Ezenity.EmailTemplates\Ezenity.EmailTemplates.csproj", "{1E9246D6-9664-4382-86E3-DDBA834F79A6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ezenity.Application", "Ezenity.Application\Ezenity.Application.csproj", "{5D72CC75-FCB3-48B3-8313-02FB3930048E}"
 EndProject
