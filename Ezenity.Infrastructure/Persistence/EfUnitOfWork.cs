@@ -1,6 +1,5 @@
 ﻿using Ezenity.Application.Abstractions.Persistence;
 using Ezenity.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Ezenity.Infrastructure.Persistence;
 

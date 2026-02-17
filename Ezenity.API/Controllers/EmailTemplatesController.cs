@@ -4,16 +4,16 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Ezenity.Core.Entities.EmailTemplates;
-using Ezenity.Core.Services.Emails;
-using Ezenity.DTOs.Models.EmailTemplates;
-using Ezenity.DTOs.Models;
-using Ezenity.DTOs;
-using Ezenity.Core.Services.Common;
+using Ezenity.Domain.Entities.EmailTemplates;
+using Ezenity.Contracts.Models.EmailTemplates;
+using Ezenity.Contracts.Models;
+using Ezenity.Contracts;
 using Ezenity.Infrastructure.Attributes;
-using Ezenity.Core.Helpers.Exceptions;
 using System.Text.Json;
 using Asp.Versioning;
+using Ezenity.Application.Abstractions.Emails;
+using Ezenity.Application.Features.Auth;
+using Ezenity.Application.Features.Accounts;
 
 namespace Ezenity.API.Controllers
 {

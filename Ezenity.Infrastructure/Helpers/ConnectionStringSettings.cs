@@ -1,4 +1,4 @@
-﻿using Ezenity.Core.Interfaces;
+﻿using Ezenity.Application.Abstractions.Configuration;
 
 namespace Ezenity.Infrastructure.Helpers
 {

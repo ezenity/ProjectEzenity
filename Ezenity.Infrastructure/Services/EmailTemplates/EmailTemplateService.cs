@@ -1,13 +1,14 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Ezenity.Core.Entities.EmailTemplates;
-using Ezenity.Core.Helpers.Exceptions;
-using Ezenity.Core.Interfaces;
-using Ezenity.Core.Services.Common;
-using Ezenity.Core.Services.Emails;
-using Ezenity.DTOs.Models;
-using Ezenity.DTOs.Models.EmailTemplates;
-using Ezenity.DTOs.Models.Pages;
+using Ezenity.Application.Abstractions.Configuration;
+using Ezenity.Application.Abstractions.Emails;
+using Ezenity.Application.Abstractions.Security;
+using Ezenity.Application.Common.Exceptions;
+using Ezenity.Application.Features.Auth;
+using Ezenity.Contracts;
+using Ezenity.Contracts.Models.EmailTemplates;
+using Ezenity.Contracts.Models.Pages;
+using Ezenity.Domain.Entities.EmailTemplates;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Ezenity.Domain.Entities.Sections; // adjust namespace to your Section entity
+﻿using Ezenity.Domain.Entities.Sections;
 
 namespace Ezenity.Application.Abstractions.Persistence;
 

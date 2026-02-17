@@ -1,5 +1,5 @@
-﻿using Ezenity.Core.Entities.Accounts;
-using Ezenity.Core.Interfaces;
+﻿using Ezenity.Application.Abstractions.Configuration;
+using Ezenity.Domain.Entities.Accounts;
 using Ezenity.Infrastructure.Helpers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;

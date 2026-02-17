@@ -1,12 +1,7 @@
 ﻿using Ezenity.Application.Abstractions.Persistence;
-using Ezenity.Core.Entities.EmailTemplates;
-using Ezenity.Domain.Entities.EmailTemplates; // adjust
+using Ezenity.Domain.Entities.EmailTemplates;
 using Ezenity.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Ezenity.Infrastructure.Persistence;
 

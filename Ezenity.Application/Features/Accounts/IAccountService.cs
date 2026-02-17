@@ -1,6 +1,6 @@
-﻿using Ezenity.Core.Entities.Accounts;
-using Ezenity.DTOs.Models;
-using Ezenity.DTOs.Models.Accounts;
+﻿using Ezenity.Contracts;
+using Ezenity.Contracts.Models.Accounts;
+using Ezenity.Domain.Entities.Accounts;
 
 namespace Ezenity.Application.Features.Accounts;
 

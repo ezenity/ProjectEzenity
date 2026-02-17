@@ -1,5 +1,5 @@
-﻿using Ezenity.DTOs;
-using Ezenity.DTOs.Models;
+﻿using Ezenity.Contracts;
+using Ezenity.Contracts.Models;
 using Ezenity.Infrastructure.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;

@@ -1,8 +1,4 @@
-﻿using Ezenity.Core.Entities.EmailTemplates;
-using Ezenity.Domain.Entities.EmailTemplates; // adjust namespace to your EmailTemplate entity
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Ezenity.Domain.Entities.EmailTemplates;
 
 namespace Ezenity.Application.Abstractions.Persistence;
 

@@ -1,5 +1,4 @@
-﻿using Ezenity.Core.Entities.Emails;
-using System.Threading.Tasks;
+﻿using Ezenity.Domain.Entities.Emails;
 
 namespace Ezenity.Application.Abstractions.Emails;
 

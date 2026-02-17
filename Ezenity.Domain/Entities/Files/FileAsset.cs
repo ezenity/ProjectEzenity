@@ -1,4 +1,3 @@
-using System;
 using Ezenity.Domain.Entities.Accounts;
 
 namespace Ezenity.Domain.Entities.Files;

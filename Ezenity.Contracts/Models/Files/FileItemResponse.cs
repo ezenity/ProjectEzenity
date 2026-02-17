@@ -1,5 +1,3 @@
-using System;
-
 namespace Ezenity.Contracts.Models.Files;
 
 /// <summary>

@@ -1,6 +1,6 @@
-﻿using Ezenity.Core.Entities.Sections;
-using Ezenity.DTOs.Models;
-using Ezenity.DTOs.Models.Sections;
+﻿using Ezenity.Contracts;
+using Ezenity.Contracts.Models.Sections;
+using static System.Collections.Specialized.BitVector32;
 
 namespace Ezenity.Application.Features.Sections;
 

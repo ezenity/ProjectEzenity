@@ -1,11 +1,10 @@
 ﻿using AutoMapper;
-using Ezenity.Core.Entities.Accounts;
-using Ezenity.Core.Entities.EmailTemplates;
-using Ezenity.Core.Entities.Sections;
-using Ezenity.DTOs.Models.Accounts;
-using Ezenity.DTOs.Models.EmailTemplates;
-using Ezenity.DTOs.Models.Sections;
-using System;
+using Ezenity.Contracts.Models.Accounts;
+using Ezenity.Contracts.Models.EmailTemplates;
+using Ezenity.Contracts.Models.Sections;
+using Ezenity.Domain.Entities.Accounts;
+using Ezenity.Domain.Entities.EmailTemplates;
+using static System.Collections.Specialized.BitVector32;
 
 namespace Ezenity.Infrastructure.Helpers
 {

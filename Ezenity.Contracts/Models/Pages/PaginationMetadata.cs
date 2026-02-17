@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Ezenity.Contracts.Models.Pages;
+﻿namespace Ezenity.Contracts.Models.Pages;
 
 public class PaginationMetadata
 {

@@ -2,25 +2,23 @@
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Microsoft.Extensions.Options;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 using System.Threading;
 using Ezenity.Infrastructure.Helpers;
-using Ezenity.Core.Services.Common;
-using Ezenity.Core.Services.Emails;
-using Ezenity.Infrastructure.Services.Accounts;
-using Ezenity.DTOs.Models.Accounts;
-using Ezenity.Core.Entities.Accounts;
-using Ezenity.Core.Entities.Emails;
-using Ezenity.Core.Interfaces;
-using System.Linq;
 using System.Collections.Generic;
 using Moq.EntityFrameworkCore;
 using Ezenity.Tests.Mocks;
 using Microsoft.EntityFrameworkCore.Storage;
+using Ezenity.Application.Abstractions.Configuration;
+using Ezenity.Application.Abstractions.Emails;
+using Ezenity.Application.Features.Accounts;
+using Ezenity.Application.Abstractions.Security;
+using Ezenity.Application.Features.Auth;
+using Ezenity.Domain.Entities.Accounts;
+using Ezenity.Contracts.Models.Accounts;
+using Ezenity.Domain.Entities.Emails;
 
 namespace Ezenity.Tests.AccountTests
 {

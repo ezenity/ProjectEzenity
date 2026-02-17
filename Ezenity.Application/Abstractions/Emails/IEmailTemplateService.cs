@@ -1,6 +1,6 @@
-﻿using Ezenity.Core.Entities.EmailTemplates;
-using Ezenity.DTOs.Models;
-using Ezenity.DTOs.Models.EmailTemplates;
+﻿using Ezenity.Contracts;
+using Ezenity.Contracts.Models.EmailTemplates;
+using Ezenity.Domain.Entities.EmailTemplates;
 
 namespace Ezenity.Application.Abstractions.Emails;
 

@@ -1,12 +1,5 @@
 ﻿using AutoMapper;
-using Ezenity.Core.Entities.Accounts;
-using Ezenity.Core.Interfaces;
-using Ezenity.DTOs.Models.Accounts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Ezenity.Domain.Entities.Accounts;
 
 namespace Ezenity.Infrastructure.Helpers
 {

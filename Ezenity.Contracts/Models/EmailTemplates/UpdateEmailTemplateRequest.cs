@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Ezenity.Contracts.Models.EmailTemplates;
+﻿namespace Ezenity.Contracts.Models.EmailTemplates;
 
 /// <summary>
 /// Represents the request payload for updating an existing email template.

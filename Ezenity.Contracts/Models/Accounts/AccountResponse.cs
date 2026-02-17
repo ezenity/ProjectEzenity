@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Ezenity.Contracts.Models.Accounts;
+﻿namespace Ezenity.Contracts.Models.Accounts;
 
 /// <summary>
 /// Represents the response payload for account-related actions, providing details about the account.

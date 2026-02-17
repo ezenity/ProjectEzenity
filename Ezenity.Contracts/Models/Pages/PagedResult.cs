@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Ezenity.Contracts.Models.Pages;
+﻿namespace Ezenity.Contracts.Models.Pages;
 
 public class PagedResult<T>
 {

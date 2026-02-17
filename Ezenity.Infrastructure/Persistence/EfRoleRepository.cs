@@ -1,5 +1,5 @@
 ﻿using Ezenity.Application.Abstractions.Persistence;
-using Ezenity.Core.Entities.Accounts;
+using Ezenity.Domain.Entities.Accounts;
 using Ezenity.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 

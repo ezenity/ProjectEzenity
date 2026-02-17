@@ -1,7 +1,4 @@
-﻿using Ezenity.Core.Helpers.Exceptions;
-using Ezenity.Core.Interfaces;
-using Ezenity.DTOs;
-using Ezenity.DTOs.Models;
+﻿using Ezenity.Application.Abstractions.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

@@ -1,18 +1,14 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using Ezenity.Core.Entities.Accounts;
-using Ezenity.Core.Entities.Emails;
-using Ezenity.Core.Helpers.Exceptions;
-using Ezenity.Core.Interfaces;
-using Ezenity.Core.Services.Common;
-using Ezenity.Core.Services.Emails;
-using Ezenity.DTOs.Models;
-using Ezenity.DTOs.Models.Accounts;
-using Ezenity.DTOs.Models.Pages;
+﻿using Ezenity.Domain.Entities.Accounts;
+using Ezenity.Domain.Entities.Emails;
+using Ezenity.Contracts.Models.Accounts;
+using Ezenity.Contracts.Models.Pages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Net;
-using BC = BCrypt.Net.BCrypt;
+using Ezenity.Application.Abstractions.Configuration;
+using Ezenity.Application.Abstractions.Emails;
+using Ezenity.Application.Abstractions.Security;
+using Ezenity.Application.Features.Auth;
 
 namespace Ezenity.Application.Features.Accounts;
 

@@ -1,5 +1,5 @@
 ﻿using Ezenity.Application.Abstractions.Security;
-using Ezenity.Core.Entities.Accounts;
+using Ezenity.Domain.Entities.Accounts;
 using Microsoft.AspNetCore.Http;
 
 namespace Ezenity.API.Security;

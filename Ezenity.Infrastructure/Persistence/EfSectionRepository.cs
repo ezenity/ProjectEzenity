@@ -1,10 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Ezenity.Application.Abstractions.Persistence;
-using Ezenity.Domain.Entities.Sections; // adjust
-using Ezenity.Infrastructure.Data;       // your DbContext namespace
+﻿using Ezenity.Application.Abstractions.Persistence;
+using Ezenity.Domain.Entities.Sections;
+using Ezenity.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ezenity.Infrastructure.Persistence;

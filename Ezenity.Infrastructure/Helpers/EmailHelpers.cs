@@ -1,9 +1,4 @@
-﻿using Ezenity.Core.Entities.EmailTemplates;
-using Ezenity.Core.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace Ezenity.Infrastructure.Helpers
 {

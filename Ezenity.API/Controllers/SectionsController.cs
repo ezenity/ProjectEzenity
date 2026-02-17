@@ -5,11 +5,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using static System.Collections.Specialized.BitVector32;
-using Ezenity.DTOs.Models.Sections;
-using Ezenity.DTOs.Models;
-using Ezenity.DTOs;
-using Ezenity.Core.Services.Common;
-using Ezenity.Core.Helpers.Exceptions;
+using Ezenity.Contracts.Models.Sections;
+using Ezenity.Contracts;
 using Ezenity.Infrastructure.Attributes;
 using Asp.Versioning;
 

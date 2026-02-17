@@ -1,5 +1,5 @@
-﻿using Ezenity.Application.Helpers.Exceptions;
-using Ezenity.Application.Abstractions.Configuration;
+﻿using Ezenity.Application.Abstractions.Configuration;
+using Ezenity.Application.Common.Exceptions;
 using Ezenity.Infrastructure.Helpers;
 using Microsoft.Extensions.Configuration;
 

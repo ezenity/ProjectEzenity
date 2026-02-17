@@ -2,7 +2,6 @@
 
 using Ezenity.Infrastructure.Helpers;
 using Microsoft.Extensions.Configuration;
-using System;
 
 namespace Ezenity.Infrastructure.Factories
 {

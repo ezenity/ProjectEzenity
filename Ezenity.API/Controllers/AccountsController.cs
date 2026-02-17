@@ -1,12 +1,8 @@
 ﻿using Asp.Versioning;
-using Ezenity.API.Controllers;
 using Ezenity.API.Filters;
-using Ezenity.Core.Entities.Accounts;
-using Ezenity.Core.Helpers.Exceptions;
-using Ezenity.Core.Services.Common;
-using Ezenity.DTOs;
-using Ezenity.DTOs.Models;
-using Ezenity.DTOs.Models.Accounts;
+using Ezenity.Domain.Entities.Accounts;
+using Ezenity.Contracts;
+using Ezenity.Contracts.Models.Accounts;
 using Ezenity.Infrastructure.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Ezenity.Application.Features.Accounts;
 
 namespace Ezenity.API.Controllers
 {

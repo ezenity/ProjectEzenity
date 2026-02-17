@@ -1,8 +1,8 @@
 ﻿using Asp.Versioning;
-using Ezenity.API.Options;
-using Ezenity.Core.Services.Files;
-using Ezenity.DTOs.Models;
-using Ezenity.DTOs.Models.Files;
+using Ezenity.Application.Abstractions.Files;
+using Ezenity.Contracts;
+using Ezenity.Contracts.Models.Files;
+using Ezenity.Domain.Options;
 using Ezenity.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

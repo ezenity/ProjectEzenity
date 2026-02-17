@@ -1,4 +1,4 @@
-﻿using Ezenity.Core.Entities.Accounts;
+﻿using Ezenity.Domain.Entities.Accounts;
 
 namespace Ezenity.Application.Abstractions.Persistence;
 

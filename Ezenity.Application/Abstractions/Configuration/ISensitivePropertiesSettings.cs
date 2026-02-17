@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ezenity.Application.Abstractions.Configuration;
+﻿namespace Ezenity.Application.Abstractions.Configuration;
 
 /// <summary>
 /// Defines the configuration for properties that should be considered sensitive.

@@ -1,6 +1,4 @@
 ﻿using Ezenity.Contracts.Models.Pages;
-using System;
-using System.Collections.Generic;
 
 namespace Ezenity.Contracts.Models;
 

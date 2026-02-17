@@ -1,6 +1,5 @@
 using Ezenity.Domain.Entities.Files;
 using Ezenity.Domain.Entities.Accounts;
-using System;
 
 namespace Ezenity.Domain.Entities.Vault;
 

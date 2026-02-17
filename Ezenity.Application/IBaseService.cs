@@ -1,4 +1,4 @@
-﻿using Ezenity.DTOs.Models.Pages;
+﻿using Ezenity.Contracts.Models.Pages;
 
 namespace Ezenity.Application;
 

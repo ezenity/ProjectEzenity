@@ -1,7 +1,6 @@
-﻿using Ezenity.Core.Interfaces;
-using Ezenity.Core.Services.Emails;
+﻿using Ezenity.Application.Abstractions.Configuration;
+using Ezenity.Application.Abstractions.Emails;
 using Microsoft.Extensions.Hosting;
-using System;
 
 namespace Ezenity.Infrastructure.Helpers
 {

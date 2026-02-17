@@ -1,21 +1,15 @@
-﻿using Ezenity.Domain.Entities.Emails;
-using Ezenity.Domain.Helpers.Exceptions;
-using Ezenity.Domain.Interfaces;
-using Ezenity.Domain.Services.Common;
-using Ezenity.Domain.Services.Emails;
+﻿using Ezenity.Application.Abstractions.Configuration;
+using Ezenity.Application.Abstractions.Emails;
+using Ezenity.Application.Common.Exceptions;
+using Ezenity.Domain.Entities.Emails;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MimeKit;
-using MimeKit.Text;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Ezenity.Infrastructure.Services.Emails;
 

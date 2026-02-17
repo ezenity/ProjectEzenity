@@ -1,15 +1,15 @@
 using Asp.Versioning;
-using Ezenity.Core.Entities.Vault;
-using Ezenity.DTOs.Models;
-using Ezenity.DTOs.Models.Vault;
+using Ezenity.Domain.Entities.Vault;
+using Ezenity.Contracts.Models;
+using Ezenity.Contracts.Models.Vault;
 using Ezenity.Infrastructure.Attributes;
 using Ezenity.Infrastructure.Data;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Ezenity.Contracts;
 
 namespace Ezenity.API.Controllers;
 
@@ -28,7 +28,7 @@ public class VaultController : ControllerBase
     [HttpGet("missions")]
     public async Task<ActionResult<ApiResponse<IEnumerable<VaultMissionResponse>>>> GetMissions()
     {
-        var accountId = ((Ezenity.Core.Entities.Accounts.Account)HttpContext.Items["Account"]).Id;
+        var accountId = ((Ezenity.Domain.Entities.Accounts.Account)HttpContext.Items["Account"]).Id;
 
         var missions = await _db.VaultMissions
             .Include(m => m.Emblem)
