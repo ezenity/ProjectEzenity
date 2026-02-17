@@ -1,16 +1,15 @@
-﻿using Ezenity.Core.Entities.Accounts;
-using Ezenity.Core.Helpers.Exceptions;
+﻿using Ezenity.Domain.Entities.Accounts;
+using Ezenity.Application.Common.Exceptions;
+using Ezenity.Application.Abstractions.Security;
+using Ezenity.Application.Abstractions.Configuration;
+
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System;
+
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using Ezenity.Core.Interfaces;
 
 namespace Ezenity.Infrastructure.Helpers
 {

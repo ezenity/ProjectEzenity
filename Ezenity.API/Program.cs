@@ -227,13 +227,10 @@ public static class Program
         services.AddScoped<IPasswordService, PasswordService>();
 
 
-        // Filters
+        // Filters / Helpers
         services.AddScoped<LoadAccountFilter>();
-
-        // AutoMapper resolvers
         services.AddScoped<RoleResolver>();
 
-        // Singletons
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddSingleton<IEmailTemplateResolver, EmailTemplateResolver>();
         services.AddSingleton<IRazorViewRenderer, RazorViewRenderer>();
@@ -287,10 +284,10 @@ public static class Program
         });
 
         // AutoMapper
-        var mapperConfig = new MapperConfiguration(mc =>
+        var mapperConfig = new AutoMapper.MapperConfiguration(cfg =>
         {
-            mc.Internal().MethodMappingEnabled = true;
-            mc.AddProfile<AutoMapperProfile>();
+            //cfg.Internal().MethodMappingEnabled = true;
+            cfg.AddProfile<AutoMapperProfile>();
         });
 
 #if DEVELOPMENT
