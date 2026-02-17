@@ -7,10 +7,11 @@ WORKDIR /src
 # Copy sln + csproj first for restore caching
 COPY ProjectEzenity.sln ./
 COPY Ezenity.API/Ezenity.API.csproj Ezenity.API/
-COPY Ezenity.Core/Ezenity.Core.csproj Ezenity.Core/
+COPY Ezenity.Domain/Ezenity.Domain.csproj Ezenity.Domain/
 COPY Ezenity.Infrastructure/Ezenity.Infrastructure.csproj Ezenity.Infrastructure/
-COPY Ezenity.DTOs/Ezenity.DTOs.csproj Ezenity.DTOs/
-COPY Ezenity.RazorViews/Ezenity.RazorViews.csproj Ezenity.RazorViews/
+COPY Ezenity.Contracts/Ezenity.Contracts.csproj Ezenity.Contracts/
+COPY Ezenity.EmailTemplates/Ezenity.EmailTemplates.csproj Ezenity.EmailTemplates/
+COPY Ezenity.Application/Ezenity.Application.csproj Ezenity.Application/
 
 # Copy test project csproj(s) ONLY for restore caching (no source yet)
 # (This does NOT include tests in runtime, it's only so restore can resolve references)
