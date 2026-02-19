@@ -12,23 +12,25 @@ public class CreateSectionRequest
     /// </summary>
     [Required(ErrorMessage = "The section's title is required.")]
     [MaxLength(100)]
-    public string Title { get; set; }
+    public required string Title { get; init; }
 
     /// <summary>
     /// Gets or sets the type of content in the section.
     /// </summary>
     [Required]
-    public string ContentType { get; set; }
+    [MaxLength(50)]
+    public required string ContentType { get; init; }
 
     /// <summary>
     /// Gets or sets the content of the section.
     /// </summary>
     [Required]
-    public string Content { get; set; }
+    public required string Content { get; init; }
 
     /// <summary>
     /// Gets or sets the layout of the section.
     /// </summary>
     [Required]
-    public string Layout { get; set; }
+    [MaxLength(50)]
+    public required string Layout { get; init; }
 }

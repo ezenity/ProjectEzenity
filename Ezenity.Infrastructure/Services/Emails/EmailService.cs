@@ -44,7 +44,7 @@ public class EmailService : IEmailService
         ILogger<EmailService> logger)
     {
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
-        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _accounts = context ?? throw new ArgumentNullException(nameof(context));
         _env = env ?? throw new ArgumentNullException(nameof(env));
         _emailTemplateService = emailTemplateService ?? throw new ArgumentNullException(nameof(emailTemplateService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

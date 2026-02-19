@@ -5,18 +5,19 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="16.0.0" />
+	</ItemGroup>
 
     <ItemGroup>
-	    <ProjectReference Include="..\Ezenity.Core\Ezenity.Domain.csproj" />
 	    <ProjectReference Include="..\Ezenity.Domain\Ezenity.Domain.csproj" />
 	    <ProjectReference Include="..\Ezenity.Contracts\Ezenity.Contracts.csproj" />
-	    <ProjectReference Include="..\Ezenity.DTOs\Ezenity.Contracts.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
+	<ItemGroup>
       <Folder Include="Common\Results\" />
       <Folder Include="Features\Vault\" />
-      <Folder Include="Mapping\" />
     </ItemGroup>
 
 </Project>

@@ -8,6 +8,7 @@ public interface ISectionRepository
     Task<Section?> GetByTitleAsync(string title, CancellationToken ct = default);
 
     Task<bool> ExistsByTitleAsync(string title, CancellationToken ct = default);
+    IQueryable<Section> Query(); // for paging/search (still EF-backed in Infrastructure)
 
     Task AddAsync(Section section, CancellationToken ct = default);
     void Update(Section section);

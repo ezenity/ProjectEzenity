@@ -11,44 +11,44 @@ public class CreateAccountRequest
     /// Gets or sets the title for the account holder.
     /// </summary>
     [Required]
-    public string Title { get; set; }
+    public required string Title { get; init; }
 
     /// <summary>
     /// Gets or sets the first name of the account holder.
     /// </summary>
     [Required]
-    public string FirstName { get; set; }
+    public required string FirstName { get; init; }
 
     /// <summary>
     /// Gets or sets the last name of the account holder.
     /// </summary>
     [Required]
-    public string LastName { get; set; }
+    public required string LastName { get; init; }
 
     /// <summary>
     /// Gets or sets the email of the account holder.
     /// </summary>
     [Required]
     [EmailAddress]
-    public string Email { get; set; }
+    public required string Email { get; init; }
 
     /// <summary>
     /// Gets or sets the role of the account holder.
     /// </summary>
     [Required]
-    public string Role { get; set; }
+    public required string Role { get; init; }
 
     /// <summary>
     /// Gets or sets the password for the new account.
     /// </summary>
     [Required]
     [MinLength(6)]
-    public string Password { get; set; }
+    public required string Password { get; init; }
 
     /// <summary>
     /// Gets or sets the confirmation password for the new account. Should match Password.
     /// </summary>
     [Required]
     [Compare("Password")]
-    public string ConfirmPassword { get; set; }
+    public required string ConfirmPassword { get; init; }
 }

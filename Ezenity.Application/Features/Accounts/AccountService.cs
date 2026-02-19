@@ -1,14 +1,18 @@
-﻿using Ezenity.Domain.Entities.Accounts;
-using Ezenity.Domain.Entities.Emails;
+﻿using AutoMapper;
+using Ezenity.Application.Abstractions.Configuration;
+using Ezenity.Application.Abstractions.Emails;
+using Ezenity.Application.Abstractions.Persistence;
+using Ezenity.Application.Abstractions.Security;
+using Ezenity.Application.Common.Exceptions;
+using Ezenity.Application.Features.Auth;
+using Ezenity.Contracts;
 using Ezenity.Contracts.Models.Accounts;
 using Ezenity.Contracts.Models.Pages;
+using Ezenity.Domain.Entities.Accounts;
+using Ezenity.Domain.Entities.Emails;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Net;
-using Ezenity.Application.Abstractions.Configuration;
-using Ezenity.Application.Abstractions.Emails;
-using Ezenity.Application.Abstractions.Security;
-using Ezenity.Application.Features.Auth;
 
 namespace Ezenity.Application.Features.Accounts;
 
@@ -17,7 +21,10 @@ namespace Ezenity.Application.Features.Accounts;
 /// </summary>
 public class AccountService : IAccountService
 {
-    private readonly IDataContext _context;
+    private readonly IUnitOfWork _uow;
+    private readonly IAccountRepository _accounts;
+    private readonly IRoleRepository _roles;
+
     private readonly IMapper _mapper;
     private readonly IAppSettings _appSettings;
     private readonly IEmailService _emailService;
@@ -36,9 +43,12 @@ public class AccountService : IAccountService
     /// <param name="logger">The logger for logging information.</param>
     /// <param name="tokenHelper">The helper for generating tokens.</param>
     /// <param name="authService">The service for authentication-related tasks.</param>
-    public AccountService(IDataContext context, IMapper mapper, IAppSettings appSettings, IEmailService emailService, ILogger<AccountService> logger, ITokenService tokenHelper, IAuthService authService, IPasswordService passwordService)
+    public AccountService(IUnitOfWork uow, IAccountRepository accounts, IRoleRepository roles, IMapper mapper, IAppSettings appSettings, IEmailService emailService, ILogger<AccountService> logger, ITokenService tokenHelper, IAuthService authService, IPasswordService passwordService)
     {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _uow = uow ?? throw new ArgumentNullException(nameof(uow));
+        _accounts = accounts ?? throw new ArgumentNullException(nameof(accounts));
+        _roles = roles ?? throw new ArgumentNullException(nameof(roles));
+
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
@@ -53,20 +63,14 @@ public class AccountService : IAccountService
     /// </summary>
     /// <param name="accountId">The ID of the account.</param>
     /// <returns>The JWT token as a string.</returns>
-    private string GenerateJwtToken(int accountId)
-    {
-        return _tokenHelper.GenerateJwtToken(accountId);
-    }
+    private string GenerateJwtToken(int accountId) => _tokenHelper.GenerateJwtToken(accountId);
 
     /// <summary>
     /// Generates a new refresh token based on the given IP address.
     /// </summary>
     /// <param name="ipAddress">The IP address of the request origin.</param>
     /// <returns>A RefreshToken object.</returns>
-    private RefreshToken GenerateNewRefreshToken(string ipAddress)
-    {
-        return _tokenHelper.GenerateNewRefreshToken(ipAddress);
-    }
+    private RefreshToken GenerateNewRefreshToken(string ipAddress) => _tokenHelper.GenerateNewRefreshToken(ipAddress);
 
     /// <summary>
     /// Updates the given account with the provided refresh token.
@@ -77,7 +81,7 @@ public class AccountService : IAccountService
     {
         account.RefreshTokens.Add(refreshToken);
         _tokenHelper.RemoveOldRefreshTokens(account);
-        _context.Update(account);
+        _accounts.Update(account);
     }
 
     /// <summary>
@@ -105,7 +109,7 @@ public class AccountService : IAccountService
     /// <exception cref="AppException">Thrown when the password is incorrect.</exception>
     public async Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model, string ipAddress)
     {
-        using var transaction = await _context.BeginTransactionAsync();
+        await using var tx = await _uow.BeginTransactionAsync();
 
         try
         {
@@ -121,16 +125,17 @@ public class AccountService : IAccountService
             var refreshToken = GenerateNewRefreshToken(ipAddress);
 
             UpdateAccountWithRefreshToken(account, refreshToken);
-            await _context.SaveChangesAsync();
+            await _uow.SaveChangesAsync();
 
-            transaction.Commit();
+            await tx.CommitAsync();
+
             _logger.LogInformation("Successfully authenticated user with email: {Email}", WebUtility.HtmlEncode(model.Email));
 
             return GenerateAuthenticateResponse(account, jwtToken, refreshToken.Token);
         }
         catch (Exception ex)
         {
-            transaction.Rollback();
+            await tx.RollbackAsync();
             _logger.LogError(ex, "an error occurred while authenticating the user with email: {Email}", WebUtility.HtmlEncode(model.Email));
             throw;
         }
@@ -145,7 +150,7 @@ public class AccountService : IAccountService
     /// <exception cref="Exception">Thrown when the token refresh fails.</exception>
     public async Task<AuthenticateResponse> RefreshTokenAsync(string token, string ipAddress)
     {
-        using var transaction = await _context.BeginTransactionAsync();
+        await using var tx = await _uow.BeginTransactionAsync();
 
         try
         {
@@ -155,8 +160,8 @@ public class AccountService : IAccountService
             _tokenHelper.UpdateRefreshToken(refrehToken, newRefreshToken, ipAddress);
             _tokenHelper.RemoveOldRefreshTokens(account);
 
-            _context.Update(account);
-            await _context.SaveChangesAsync();
+            _accounts.Update(account);
+            await _uow.SaveChangesAsync();
 
             var jwtToken = _tokenHelper.GenerateJwtToken(account.Id);
 
@@ -164,7 +169,7 @@ public class AccountService : IAccountService
             response.JwtToken = jwtToken;
             response.RefreshToken = newRefreshToken.Token;
 
-            await transaction.CommitAsync();
+            await tx.CommitAsync();
 
             _logger.LogInformation("Refresh token successfully updated.");
 
@@ -172,7 +177,7 @@ public class AccountService : IAccountService
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await tx.RollbackAsync();
 
             _logger.LogError(ex, "Failed to refresh token: {Message}", ex.Message);
             throw;
@@ -188,7 +193,7 @@ public class AccountService : IAccountService
     /// <exception cref="Exception">Thrown when the token revocation fails.</exception>
     public async Task RevokeTokenAsync(string token, string ipAddress)
     {
-        using var transaction = await _context.BeginTransactionAsync();
+        await using var tx = await _uow.BeginTransactionAsync();
 
         try
         {
@@ -197,13 +202,13 @@ public class AccountService : IAccountService
             // Revoke token and save
             refreshToken.Revoked = DateTime.UtcNow;
             refreshToken.RevokedByIp = ipAddress;
-            _context.Update(account);
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            _accounts.Update(account);
+            await _uow.SaveChangesAsync();
+            await tx.CommitAsync();
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await tx.RollbackAsync();
 
             _logger.LogError(ex, "Failed to refvoke refresh token: {Message}", ex.Message);
             throw;
@@ -220,12 +225,12 @@ public class AccountService : IAccountService
     /// <exception cref="ResourceNotFoundException">Thrown when the origin header is missing.</exception>
     public async Task RegisterAsync(RegisterRequest model, string origin)
     {
-        using var transaction = await _context.BeginTransactionAsync();
+        await using var tx = await _uow.BeginTransactionAsync();
 
         try
         {
             // Check is account exists
-            if (await _context.Accounts.AnyAsync(x => x.Email == model.Email))
+            if (await _accounts.EmailExistsAsync(model.Email))
             {
                 EmailMessage alreadyRegisteredEmail = new EmailMessage
                 {
@@ -249,49 +254,27 @@ public class AccountService : IAccountService
             // Map model to new account object
             var account = _mapper.Map<Account>(model);
 
-            //account.Role = _context.Accounts.Count() == 0 ? new Role { Name = "Admin" } : new Role { Name = "User" };
+            // First account = Admin else User
+            var accountCount = await _accounts.CountAsync();
+            var roleName = accountCount == 0 ? "Admin" : "User";
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            Role role;
-            if (_context.Accounts.Count() == 0)
+            var role = await _roles.GetByNameAsync(roleName);
+            if (role == null)
             {
-                // If it's the first account, set the role to Admin
-                role = _context.Roles.FirstOrDefault(r => r.Name == "Admin");
-                if (role == null)
-                {
-                    role = new Role { Name = "Admin" };
-                    _context.Roles.Add(role);
-                }
-            }
-            else
-            {
-                // Otherwise, set the role to User
-                role = _context.Roles.FirstOrDefault(r => r.Name == "User");
-                if (role == null)
-                {
-                    role = new Role { Name = "User" };
-                    _context.Roles.Add(role);
-                }
+                role = new Role { Name = roleName };
+                _roles.Add(role);
             }
 
             account.Role = role;
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
             account.Created = DateTime.UtcNow;
             account.VerificationToken = _tokenHelper.RandomTokenString();
-
-            // Hash password
             account.PasswordHash = _passwordService.HashPassword(model.Password);
 
-            // Save account
-            _context.Accounts.Add(account);
-            await _context.SaveChangesAsync();
+            _accounts.Add(account);
+            await _uow.SaveChangesAsync();
 
             // Send email
-            EmailMessage verifyEmail = new EmailMessage
+            var verifyEmail = new EmailMessage
             {
                 From = _appSettings.EmailFrom,
                 To = model.Email,
@@ -307,13 +290,11 @@ public class AccountService : IAccountService
             };
 
             await _emailService.SendEmailAsync(verifyEmail);
-            await transaction.CommitAsync();
+            await tx.CommitAsync();
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
-
-            // _logger.LogError("Error during registration: {0}", ex.Message);
+            await tx.RollbackAsync();
             _logger.LogError(ex, "Error during registration: {Message}", ex.Message);
             throw;
         }
@@ -326,15 +307,16 @@ public class AccountService : IAccountService
     /// <exception cref="InvalidVerificationTokenException">Thrown when the verification token is invalid or expired.</exception>
     public async Task VerifyEmailAsync(string token)
     {
-        var account = await _context.Accounts.SingleOrDefaultAsync(x => x.VerificationToken == token);
+        var account = await _accounts.GetByVerificationTokenAsync(token);
 
-        if (account == null) throw new InvalidVerificationTokenException("The verification token is invalid or expired.");
+        if (account == null)
+            throw new InvalidVerificationTokenException("The verification token is invalid or expired.");
 
         account.Verified = DateTime.UtcNow;
         account.VerificationToken = null;
 
-        _context.Accounts.Update(account);
-        await _context.SaveChangesAsync();
+        _accounts.Update(account);
+        await _uow.SaveChangesAsync();
     }
 
     /// <summary>
@@ -344,17 +326,18 @@ public class AccountService : IAccountService
     /// <param name="origin">The origin header from the client request.</param>
     public async Task ForgotPasswordAsync(ForgotPasswordRequest model, string origin)
     {
-        var account = await _context.Accounts.SingleOrDefaultAsync(x => x.Email == model.Email);
+        var account = await _accounts.GetByEmailAsync(model.Email);
 
         // Always return ok response to prevent email enumeration
+        // prevent email enumeration
         if (account == null) return;
 
         // Create reset token that expires after 1 day
         account.ResetToken = _tokenHelper.RandomTokenString();
         account.ResetTokenExpires = DateTime.UtcNow.AddDays(1);
 
-        _context.Accounts.Update(account);
-        await _context.SaveChangesAsync();
+        _accounts.Update(account);
+        await _uow.SaveChangesAsync();
 
         // URL-encode the token
         var encodedToken = System.Net.WebUtility.UrlEncode(account.ResetToken);
@@ -363,7 +346,7 @@ public class AccountService : IAccountService
         var resetUrl = $"{origin}/account/reset-password?token={encodedToken}";
 
         // Send email
-        EmailMessage resetEmail = new EmailMessage
+        var resetEmail = new EmailMessage
         {
             To = model?.Email,
             TemplateName = "passwordReset",
@@ -385,11 +368,7 @@ public class AccountService : IAccountService
     /// <exception cref="AppException">Thrown when the reset token is invalid.</exception>
     public async Task ValidateResetTokenAsync(ValidateResetTokenRequest model)
     {
-        var account = await _context.Accounts.SingleOrDefaultAsync(x =>
-            x.ResetToken == model.Token &&
-            x.ResetTokenExpires > DateTime.UtcNow
-        );
-
+        var account = await _accounts.GetValidResetTokenAccountAsync(model.Token);
         if (account == null)
             throw new AppException("Invalid token.");
     }
@@ -401,22 +380,17 @@ public class AccountService : IAccountService
     /// <exception cref="AppException">Thrown when the reset token is invalid.</exception>
     public async Task ResetPasswordAsync(ResetPasswordRequest model)
     {
-        var account = await _context.Accounts.SingleOrDefaultAsync(x =>
-            x.ResetToken == model.Token &&
-            x.ResetTokenExpires > DateTime.UtcNow
-        );
-
+        var account = await _accounts.GetValidResetTokenAccountAsync(model.Token);
         if (account == null)
             throw new AppException("Invalid token.");
 
-        // Update password and remove reset token
         account.PasswordHash = _passwordService.HashPassword(model.Password);
         account.PasswordReset = DateTime.UtcNow;
         account.ResetToken = null;
         account.ResetTokenExpires = null;
 
-        _context.Accounts.Update(account);
-        await _context.SaveChangesAsync();
+        _accounts.Update(account);
+        await _uow.SaveChangesAsync();
     }
 
     /// <summary>
@@ -425,9 +399,13 @@ public class AccountService : IAccountService
     /// <returns>A list of all accounts.</returns>
     public async Task<IEnumerable<AccountResponse>> GetAllAsync()
     {
-        return await _context.Accounts
-                                .ProjectTo<AccountResponse>(_mapper.ConfigurationProvider)
-                                .ToListAsync();
+        // NOTE: This still relies on EF + AutoMapper ProjectTo because Query() returns IQueryable.
+        // It compiles and works
+        // HOWEVER: TODO:
+        //      Move this query into the repository.
+        return await _accounts.Query()
+            .ProjectTo<AccountResponse>(_mapper.ConfigurationProvider)
+            .ToListAsync();
     }
 
     /// <summary>
@@ -460,8 +438,7 @@ public class AccountService : IAccountService
             throw new AppException("PagedResult number and page size mut be greater than zero.");
         }
 
-        //var collection = _context.Accounts as IQueryable<AccountResponse>;
-        var collection = _context.Accounts.Include(a => a.Role).AsQueryable();
+        var collection = _accounts.Query().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(name))
         {
@@ -473,7 +450,10 @@ public class AccountService : IAccountService
         if (!string.IsNullOrWhiteSpace(searchQuery))
         {
             searchQuery = searchQuery.Trim();
-            collection = collection.Where(a => a.FirstName.Contains(searchQuery) || a.LastName.Contains(searchQuery) || (a.Email != null && a.Email.Contains(searchQuery)) );
+            collection = collection.Where(a =>
+                a.FirstName.Contains(searchQuery) ||
+                a.LastName.Contains(searchQuery) ||
+                (a.Email != null && a.Email.Contains(searchQuery)));
         }
 
         try
@@ -498,15 +478,11 @@ public class AccountService : IAccountService
                 .ToListAsync();
 
             // Create and populate the pagination metadata
-            var paginationMetadata = new PaginationMetadata(totalItemCount, pageSize, pageNumber);
-
-            var result = new PagedResult<AccountResponse>
+            return new PagedResult<AccountResponse>
             {
                 Data = data,
-                Pagination = paginationMetadata
+                Pagination = new PaginationMetadata(totalItemCount, pageSize, pageNumber)
             };
-
-            return result;
         }
         catch (Exception ex)
         {
@@ -522,7 +498,7 @@ public class AccountService : IAccountService
     /// <returns>The account if found; otherwise null.</returns>
     public async Task<AccountResponse> GetByIdAsync(int id)
     {
-        var account = await _context.Accounts
+        var account = await _accounts.Query()
                                 .Where(x => x.Id == id)
                                 .ProjectTo<AccountResponse>(_mapper.ConfigurationProvider)
                                 .SingleOrDefaultAsync();
@@ -545,12 +521,12 @@ public class AccountService : IAccountService
     /// <exception cref="ResourceAlreadyExistsException">Thrown when an account with the provided email already exists.</exception>
     public async Task<AccountResponse> CreateAsync(CreateAccountRequest model)
     {
-        using var transaction = await _context.BeginTransactionAsync();
+        await using var tx = await _uow.BeginTransactionAsync();
 
         try
         {
             // Validate if the email is already registered
-            if (await _context.Accounts.AnyAsync(x => x.Email == model.Email))
+            if (await _accounts.EmailExistsAsync(model.Email))
                 throw new ResourceAlreadyExistsException($"Email '{model.Email}' is already registered");
 
             // Check if the Role is provided
@@ -560,7 +536,7 @@ public class AccountService : IAccountService
             }
 
             // Validate the role
-            Role role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == model.Role);
+            Role role = await _accounts.Roles.FirstOrDefaultAsync(r => r.Name == model.Role);
             if (role == null || role.Name.ToLower() != model.Role.ToLower())
                 throw new NotFoundException($"There is no Role named {model.Role} available.");
 
@@ -572,15 +548,16 @@ public class AccountService : IAccountService
             account.PasswordHash = _passwordService.HashPassword(model.Password);
 
             // Save the account
-            _context.Accounts.Add(account);
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            _accounts.Add(account);
+            await _uow.SaveChangesAsync();
+
+            await tx.CommitAsync();
 
             return _mapper.Map<AccountResponse>(account);
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await tx.RollbackAsync();
 
             _logger.LogError(ex, "Error during account creation: {Message}", ex.Message);
             throw;
@@ -610,7 +587,7 @@ public class AccountService : IAccountService
             throw new AuthorizationException("Current user is not authorized.");
 
         // Validate
-        if (account.Email != model.Email && await _context.Accounts.AnyAsync(x => x.Email == model.Email))
+        if (account.Email != model.Email && await _accounts.EmailExistsAsync(model.Email))
             throw new ResourceAlreadyExistsException($"Email, '{model.Email}', is already taken");
 
         // Hash password if it was entered
@@ -623,8 +600,8 @@ public class AccountService : IAccountService
 
         try
         {
-            _context.Accounts.Update(account);
-            await _context.SaveChangesAsync();
+            _accounts.Update(account);
+            await _uow.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -647,7 +624,7 @@ public class AccountService : IAccountService
             throw new AuthorizationException("Current user is not authorized.");
 
         // Validate
-        if (account.Email != model.Email && await _context.Accounts.AnyAsync(x => x.Email == model.Email))
+        if (account.Email != model.Email && await _accounts.Accounts.AnyAsync(x => x.Email == model.Email))
             throw new ResourceAlreadyExistsException($"Email, '{model.Email}', is already taken");
 
         // Hash password if it was entered
@@ -662,7 +639,7 @@ public class AccountService : IAccountService
 
             var accountResponse = _mapper.Map(updateAccountPatch, account);
 
-            await _context.SaveChangesAsync();
+            await _accounts.SaveChangesAsync();
 
             return accountResponse;
         }
@@ -682,7 +659,7 @@ public class AccountService : IAccountService
     /// <exception cref="DeletionFailedException">Thrown when an error occurs during the deletion process.</exception>
     public async Task<DeleteResponse> DeleteAsync(int id)
     {
-        using var transaction = await _context.BeginTransactionAsync();
+        await using var tx = await _uow.BeginTransactionAsync();
 
         try
         {
@@ -708,10 +685,10 @@ public class AccountService : IAccountService
             deleteResponse.DeletedBy = _mapper.Map<AccountResponse>(deletingAccount);
 
             // Perform the deletion
-            _context.Accounts.Remove(accountToDelete);
-            await _context.SaveChangesAsync();
+            _accounts.Remove(accountToDelete);
+            await _uow.SaveChangesAsync();
 
-            await transaction.CommitAsync();
+            await tx.CommitAsync();
 
             // set additional details
             deleteResponse.DeletedAt = DateTime.UtcNow;
@@ -721,7 +698,7 @@ public class AccountService : IAccountService
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await tx.RollbackAsync();
 
             _logger.LogError(ex, "Error during account deletion: {Message}", ex.Message);
             throw new DeletionFailedException($"Failed to delete account with ID {id}", ex);
@@ -740,7 +717,7 @@ public class AccountService : IAccountService
     /// <exception cref="ResourceNotFoundException">Thrown when no account is found for the given ID.</exception>
     private async Task<Account> GetAccountAsync(int id)
     {
-        var account = await _context.Accounts.FindAsync(id);
+        var account = await _accounts.GetByIdAsync(id);
         if (account == null) throw new ResourceNotFoundException($"Account ID, {id}, not found.");
         return account;
     }
@@ -753,7 +730,7 @@ public class AccountService : IAccountService
     /// <exception cref="ResourceNotFoundException">Thrown when the account does not exist or is not verified.</exception>
     private async Task<Account> FindAndValidateAccountAsync(string email)
     {
-        var account = await _context.Accounts.SingleOrDefaultAsync(x => x.Email == email);
+        var account = await _accounts.GetByEmailAsync(email);
 
         if (account == null || !account.IsVerified)
             throw new ResourceNotFoundException($"The Email, {email}, was not found or not verified.");

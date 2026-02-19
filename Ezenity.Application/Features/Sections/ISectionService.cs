@@ -1,6 +1,6 @@
 ﻿using Ezenity.Contracts;
 using Ezenity.Contracts.Models.Sections;
-using static System.Collections.Specialized.BitVector32;
+using Ezenity.Domain.Entities.Sections;
 
 namespace Ezenity.Application.Features.Sections;
 
@@ -9,5 +9,5 @@ namespace Ezenity.Application.Features.Sections;
 /// </summary>
 public interface ISectionService : IBaseService<Section, SectionResponse, CreateSectionRequest, UpdateSectionRequest, DeleteResponse>
 {
-    Task<CreateSectionWithAdditonalRequest> CreateWithAdditionalAsync(CreateSectionWithAdditonalRequest model);
+    Task<SectionResponse> CreateWithAdditionalAsync(CreateSectionWithAdditonalRequest model, CancellationToken ct = default);
 }

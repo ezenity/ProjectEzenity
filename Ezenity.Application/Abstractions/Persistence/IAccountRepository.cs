@@ -7,8 +7,17 @@ public interface IAccountRepository
     Task<bool> EmailExistsAsync(string email, CancellationToken ct = default);
     Task<Account?> GetByEmailAsync(string email, CancellationToken ct = default);
     Task<Account?> GetByIdAsync(int id, CancellationToken ct = default);
+    Task<int> CountAsync(CancellationToken ct = default);
+    Task<Account?> GetByVerificationTokenAsync(string token, CancellationToken ct = default);
+    /**
+     * Reset token validity check belongs here
+     */
+    Task<Account?> GetValidResetTokenAccountAsync(string token, CancellationToken ct = default);
 
-    IQueryable<Account> Query(); // for paging/search (still EF-backed in Infrastructure)
+    /**
+     * For paging/search (still EF-backed in Infrastructure)
+     */
+    IQueryable<Account> Query();
 
     void Add(Account account);
     void Update(Account account);

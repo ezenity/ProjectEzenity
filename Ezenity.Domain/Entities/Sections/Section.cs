@@ -14,31 +14,31 @@ public class Section
     /// Gets or sets the title of the section.
     /// Required. Maximum length is 100 characters.
     /// </summary>
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the type of content that the section holds.
     /// This could be text, HTML, markdown, etc.
     /// Required.
     /// </summary>
-    public string ContentType { get; set; }
+    public string ContentType { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the actual content of the section.
     /// Required.
     /// </summary>
-    public string Content { get; set; }
+    public string Content { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the layout type or template that the section uses.
     /// This is optional and could be used for custom rendering.
     /// </summary>
-    public string Layout { get; set; }
+    public string Layout { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the date and time when the section was created.
     /// </summary>
-    public DateTime? Created { get; set; }
+    public DateTime Created { get; set; }
 
     /// <summary>
     /// Gets or sets the date and time when the section was last updated.
@@ -48,12 +48,12 @@ public class Section
     /// <summary>
     /// Gets or sets the visibility control
     /// </summary>
-    public bool IsActive { get; set; }
+    public bool IsActive { get; set; } = true;
 
     /// <summary>
     /// Gets or sets who can see the section
     /// </summary>
-    public string AccessLevel { get; set; }
+    public string? AccessLevel { get; set; }
 
     /// <summary>
     /// Get or set the ID for nested sections
@@ -63,6 +63,6 @@ public class Section
     /// <summary>
     /// Get or set the SEO meta tags that could be applied to the section
     /// </summary>
-    public string MetaTags { get; set; }
+    public string? MetaTags { get; set; }
 
 }

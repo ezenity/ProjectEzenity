@@ -73,9 +73,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Ezenity.Contracts\Ezenity.Contracts.csproj" />
     <ProjectReference Include="..\Ezenity.Application\Ezenity.Application.csproj" />
-    <ProjectReference Include="..\Ezenity.DTOs\Ezenity.Contracts.csproj" />
+    <ProjectReference Include="..\Ezenity.EmailTemplates\Ezenity.EmailTemplates.csproj" />
     <ProjectReference Include="..\Ezenity.Infrastructure\Ezenity.Infrastructure.csproj" />
-    <ProjectReference Include="..\Ezenity.RazorViews\Ezenity.EmailTemplates.csproj" />
   </ItemGroup>
 
   <ItemGroup>

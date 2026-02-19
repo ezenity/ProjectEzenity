@@ -23,6 +23,18 @@ public sealed class EfAccountRepository : IAccountRepository
     public Task<bool> EmailExistsAsync(string email, CancellationToken ct = default)
         => _db.Accounts.AnyAsync(a => a.Email == email, ct);
 
+    public Task<int> CountAsync(CancellationToken ct = default)
+        => _db.Accounts.CountAsync(ct);
+
+    public Task<Account?> GetByVerificationTokenAsync(string token, CancellationToken ct = default)
+        => _db.Accounts.FirstOrDefaultAsync(a => a.VerificationToken == token, ct);
+
+    public Task<Account?> GetValidResetTokenAccountAsync(string token, CancellationToken ct = default)
+        => _db.Accounts.FirstOrDefaultAsync(a =>
+            a.ResetToken == token &&
+            a.ResetTokenExpires != null &&
+            a.ResetTokenExpires > DateTime.UtcNow, ct);
+
     public void Add(Account account) => _db.Accounts.Add(account);
     public void Update(Account account) => _db.Accounts.Update(account);
     public void Remove(Account account) => _db.Accounts.Remove(account);

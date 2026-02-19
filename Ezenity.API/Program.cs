@@ -7,7 +7,6 @@ using Ezenity.API.Middleware;
 using Ezenity.API.Options;
 using Ezenity.API.Security;
 
-using Ezenity.Application.Abstractions.Configuration;
 using Ezenity.Application.Abstractions.Emails;
 using Ezenity.Application.Abstractions.Files;
 using Ezenity.Application.Abstractions.Persistence;
@@ -15,19 +14,15 @@ using Ezenity.Application.Abstractions.Security;
 using Ezenity.Application.Features.Accounts;
 using Ezenity.Application.Features.Auth;
 using Ezenity.Application.Features.Sections;
+using Ezenity.Application.Mapping; 
 
-using Ezenity.Domain.Entities.Accounts;
-using Ezenity.Domain.Entities.Emails;
-using Ezenity.Domain.Entities.Files;
 using Ezenity.Domain.Options;
 
-using Ezenity.Infrastructure;
 using Ezenity.Infrastructure.Data;
 using Ezenity.Infrastructure.Factories;
 using Ezenity.Infrastructure.Helpers;
 using Ezenity.Infrastructure.Persistence;
 using Ezenity.Infrastructure.Security;
-using Ezenity.Infrastructure.Services;
 using Ezenity.Infrastructure.Services.Accounts;
 using Ezenity.Infrastructure.Services.Emails;
 using Ezenity.Infrastructure.Services.EmailTemplates;
@@ -43,7 +38,6 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -116,8 +110,13 @@ public static class Program
             builder.Configuration.AddConfiguration(configuration);
 
             // Serilog
-            builder.Host.UseSerilog((_, loggerConfiguration) =>
-                loggerConfiguration.ReadFrom.Configuration(builder.Configuration));
+            builder.Logging.ClearProviders(); // Remove default providers
+            builder.Host.UseSerilog((ctx, loggerConfiguration) =>
+                loggerConfiguration.ReadFrom.Configuration(ctx.Configuration)
+                                    .Enrich.FromLogContext()
+                                    .Enrich.WithMachineName()
+                                    .Enrich.WithThreadId()
+            );
 
             ConfigureServices(builder.Services, builder.Configuration);
 
@@ -205,27 +204,24 @@ public static class Program
             options.FileProviders.Add(fileProvider);
         });
 
-        // --- Dependency injection (your current registrations) ---
+        // --- Dependency injection (current registrations) ---
+        //    Application services (Scoped)
         services.AddScoped<IPasswordService, PasswordService>();
-        //services.AddScoped<IDataContext, DataContext>();
         services.AddScoped<ITokenService, TokenHelper>();
-
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ISectionService, SectionService>();
-
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         // Application abstractions implemented by Infrastructure
+        // Unit of Work + Repositories (Scoped)
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
         services.AddScoped<IAccountRepository, EfAccountRepository>();
         services.AddScoped<IRoleRepository, EfRoleRepository>();
         services.AddScoped<ISectionRepository, EfSectionRepository>();
         services.AddScoped<IEmailTemplateRepository, EfEmailTemplateRepository>();
-        services.AddScoped<IFileStorageService, LocalFileStorageService>();
-        services.AddScoped<IPasswordService, PasswordService>();
-
 
         // Filters / Helpers
         services.AddScoped<LoadAccountFilter>();
@@ -283,18 +279,43 @@ public static class Program
             }
         });
 
-        // AutoMapper
-        var mapperConfig = new AutoMapper.MapperConfiguration(cfg =>
+        //var mapperConfig = services.AddAutoMapper(cfg =>
+        //{
+        //    cfg.AddProfile<AutoMapperProfile>();
+
+        //});
+
+        //var mapperConfig = new AutoMapper.MapperConfiguration(cfg =>
+        //{
+        //    cfg.AddProfile<AutoMapperProfile>();
+        //});
+
+        //services.AddSingleton(mapperConfig.CreateMapper());
+
+        //services.AddAutoMapper(cfg =>
+        //{
+        //    cfg.AddProfile<AutoMapperProfile>();
+        //}, typeof(AutoMapperProfile).Assembly);
+
+        // AutoMapper (no deprecated DI package required)
+        services.AddSingleton<IMapper>(sp =>
         {
-            //cfg.Internal().MethodMappingEnabled = true;
-            cfg.AddProfile<AutoMapperProfile>();
-        });
+            var loggerFactory = sp.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>();
+
+            var config = new AutoMapper.MapperConfiguration(cfg =>
+            {
+                cfg.AddMaps(typeof(AutoMapperProfile).Assembly); // scans Application assembly
+                // or: cfg.AddProfile<AutoMapperProfile>();
+            }, loggerFactory);
 
 #if DEVELOPMENT
-        mapperConfig.AssertConfigurationIsValid();
+            config.AssertConfigurationIsValid();
 #endif
 
-        services.AddSingleton(mapperConfig.CreateMapper());
+            return config.CreateMapper();
+        });
+
+
 
         // API Versioning
         services.AddApiVersioning(options =>
@@ -359,7 +380,7 @@ public static class Program
     private static void ConfigurePipeline(WebApplication app)
     {
         var env = app.Environment;
-        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+        Microsoft.Extensions.Logging.ILogger logger = app.Logger;
 
         app.UseMiddleware<ErrorHandlerMiddleware>();
 
@@ -416,7 +437,7 @@ public static class Program
         });
     }
 
-    private static void TryApplyMigrations(WebApplication app, ILogger logger)
+    private static void TryApplyMigrations(WebApplication app, Microsoft.Extensions.Logging.ILogger logger)
     {
         var apply = Environment.GetEnvironmentVariable("EZENITY_APPLY_MIGRATIONS");
         if (!string.Equals(apply, "true", StringComparison.OrdinalIgnoreCase))
@@ -427,6 +448,7 @@ public static class Program
 
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+
 
         logger.LogInformation("Applying DB migrations...");
         db.Database.Migrate();
