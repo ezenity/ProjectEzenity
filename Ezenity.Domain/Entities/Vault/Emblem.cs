@@ -3,7 +3,7 @@ using Ezenity.Domain.Entities.Accounts;
 
 namespace Ezenity.Domain.Entities.Vault;
 
-public class VaultEmblem
+public class Emblem
 {
     public int Id { get; set; }
     /// <summary>
@@ -16,7 +16,7 @@ public class VaultEmblem
     /// Optional grouping tag like "S1", "S2", "Halloween-2026", etc.
     /// </summary>
     public string? SeasonTag { get; set; }
-    public VaultEmblemRarity Rarity { get; set; } = VaultEmblemRarity.Common;
+    public EmblemRarity Rarity { get; set; } = EmblemRarity.Common;
     public bool IsActive { get; set; } = true;
     public int SortOrder { get; set; } = 0;
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
@@ -26,6 +26,6 @@ public class VaultEmblem
     public Guid? IconFileAssetId { get; set; }
     public FileAsset? IconFileAsset { get; set; }
     // Navigation
-    public ICollection<VaultMissionEmblemReward> MissionRewards { get; set; } = new List<VaultMissionEmblemReward>();
+    public ICollection<MissionEmblemReward> MissionRewards { get; set; } = new List<MissionEmblemReward>();
     public ICollection<AccountEmblem> EarnedBy { get; set; } = new List<AccountEmblem>();
 }

@@ -1,4 +1,6 @@
-﻿namespace Ezenity.Contracts.Models.EmailTemplates;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Ezenity.Contracts.Models.EmailTemplates;
 
 /// <summary>
 /// Represents the request payload for creating a new email template.
@@ -8,36 +10,43 @@ public class CreateEmailTemplateRequest
     /// <summary>
     /// Gets or sets the name of the email template.
     /// </summary>
-    public string TemplateName { get; set; }
+    [Required]
+    public required string TemplateName { get; set; }
 
     /// <summary>
     /// Gets or sets the subject line of the email.
     /// </summary>
-    public string Subject { get; set; }
+    [Required]
+    public required string Subject { get; set; }
 
     /// <summary>
     /// Gets or sets the path to a Razor view.
     /// </summary>
-    public string ContentViewPath { get; set; }
+    [Required]
+    public required string ContentViewPath { get; set; }
 
     /// <summary>
     /// Indicates if this template is the default template.
     /// </summary>
-    public bool IsDefault { get; set; }
+    [Required]
+    public required bool IsDefault { get; set; }
 
     /// <summary>
     /// Indicates if the content of the email is dynamic.
     /// </summary>
-    public bool IsDynamic { get; set; }
+    [Required]
+    public required bool IsDynamic { get; set; }
 
     /// <summary>
     /// Gets or sets the start date for using this template.
     /// </summary>
+    [Required]
     public DateTime? StartDate { get; set; }
 
     /// <summary>
     /// Gets or sets the end date for using this template.
     /// </summary>
+    [Required]
     public DateTime? EndDate { get; set; }
 
     /// <summary>

@@ -2,13 +2,13 @@ using Ezenity.Domain.Entities.Accounts;
 
 namespace Ezenity.Domain.Entities.Vault;
 
-public class VaultMissionSubmission
+public class MissionSubmission
 {
     public int Id { get; set; }
     public string? Platform { get; set; }
     // Optional notes (creator notes or admin notes depending on how you use it)
     public string? Notes { get; set; }
-    public VaultMission Mission { get; set; } = null!;
+    public Mission Mission { get; set; } = null!;
     public int VaultMissionId { get; set; }
     // The submitting user (Account PK)
     public int? SubmittedByAccountId { get; set; } // The Account PK
@@ -18,7 +18,7 @@ public class VaultMissionSubmission
     public string? ExternalUrl { get; set; }
     public DateTime SubmittedUtc { get; set; } = DateTime.UtcNow;
     // Single source of truth for status
-    public VaultMissionSubmissionStatus Status { get; set; } = VaultMissionSubmissionStatus.Pending;
+    public MissionSubmissionStatus Status { get; set; } = MissionSubmissionStatus.Pending;
     // Admin review info
     public int? ReviewedByAccountId { get; set; }
     public Account? ReviewedByAccount { get; set; }
@@ -26,5 +26,5 @@ public class VaultMissionSubmission
     public string? ReviewNote { get; set; }
     // Attachments for proof uploaded directly to site
     // Uploaded proof media (files)
-    public ICollection<VaultMissionSubmissionMedia> Media { get; set; } = new List<VaultMissionSubmissionMedia>();
+    public ICollection<MissionSubmissionMedia> Media { get; set; } = new List<MissionSubmissionMedia>();
 }

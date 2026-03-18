@@ -3,13 +3,13 @@
 /// <summary>
 /// Join entity: which emblems are rewarded by which mission.
 /// </summary>
-public class VaultMissionEmblemReward
+public class MissionEmblemReward
 {
     public int Id { get; set; }
-    public int VaultMissionId { get; set; }
-    public VaultMission Mission { get; set; } = null!;
-    public int VaultEmblemId { get; set; }
-    public VaultEmblem Emblem { get; set; } = null!;
+    public int MissionId { get; set; }
+    public Mission Mission { get; set; } = null!;
+    public int EmblemId { get; set; }
+    public Emblem Emblem { get; set; } = null!;
     /// <summary>
     /// Usually 1. Keeping it allows future stacking logic if we ever want it.
     /// </summary>

@@ -1,6 +1,6 @@
 ﻿namespace Ezenity.Domain.Entities.Vault;
 
-public enum VaultEmblemRarity
+public enum EmblemRarity
 {
     Common = 0,
     Uncommon = 1,

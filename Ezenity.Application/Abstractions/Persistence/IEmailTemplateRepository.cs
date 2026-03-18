@@ -4,6 +4,10 @@ namespace Ezenity.Application.Abstractions.Persistence;
 
 public interface IEmailTemplateRepository
 {
+    /**
+     * For paging/search (still EF-backed in Infrastructure)
+     */
+    IQueryable<EmailTemplate> Query();
     Task<EmailTemplate?> GetByIdAsync(int id, CancellationToken ct = default);
     Task<EmailTemplate?> GetByNameAsync(string templateName, CancellationToken ct = default);
 

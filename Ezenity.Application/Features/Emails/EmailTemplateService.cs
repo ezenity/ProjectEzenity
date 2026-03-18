@@ -1,5 +1,8 @@
-﻿using Ezenity.Application.Abstractions.Configuration;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Ezenity.Application.Abstractions.Configuration;
 using Ezenity.Application.Abstractions.Emails;
+using Ezenity.Application.Abstractions.Persistence;
 using Ezenity.Application.Abstractions.Security;
 using Ezenity.Application.Common.Exceptions;
 using Ezenity.Application.Features.Auth;
@@ -20,7 +23,8 @@ public class EmailTemplateService : IEmailTemplateService
     /// <summary>
     /// Provides data access to the application's data store.
     /// </summary>
-    private readonly IDataContext _context;
+    private readonly IUnitOfWork _uow;
+    private readonly IEmailTemplateRepository _emailTemplates;
 
     /// <summary>
     /// Provides object-object mapping functionality.
@@ -69,9 +73,10 @@ public class EmailTemplateService : IEmailTemplateService
     /// <param name="authService">Provides user authentication services.</param>
     /// <param name="razorRenderer">Provides rendering for Razor views.</param>
     /// <param name="emailTemplateResolver">Provides the resolved template paths.</param>
-    public EmailTemplateService(IDataContext context, IMapper mapper, IAppSettings appSettings, ILogger<EmailTemplateService> logger, ITokenService tokenHelper, IAuthService authService, IRazorViewRenderer razorRenderer, IEmailTemplateResolver emailTemplateResolver)
+    public EmailTemplateService(IUnitOfWork uow, IEmailTemplateRepository emailTemplates, IMapper mapper, IAppSettings appSettings, ILogger<EmailTemplateService> logger, ITokenService tokenHelper, IAuthService authService, IRazorViewRenderer razorRenderer, IEmailTemplateResolver emailTemplateResolver)
     {
-        _context = context ?? throw new ArgumentException(nameof(context));
+        _uow = uow ?? throw new ArgumentException(nameof(uow));
+        _emailTemplates = emailTemplates ?? throw new ArgumentException(nameof(emailTemplates));
         _mapper = mapper ?? throw new ArgumentException(nameof(mapper));
         _appSettings = appSettings ?? throw new ArgumentException(nameof(appSettings));
         _logger = logger ?? throw new ArgumentException(nameof(logger));
@@ -89,12 +94,20 @@ public class EmailTemplateService : IEmailTemplateService
     public async Task<EmailTemplateResponse> GetByIdAsync(int id)
     {
         //var emailTemplate = await GetEmailTemplate(id);
-        var emailTemplate = await _context.EmailTemplates
-                                .Where(x => x.Id == id)
-                                .ProjectTo<EmailTemplateResponse>(_mapper.ConfigurationProvider)
-                                .SingleOrDefaultAsync();
+        //var emailTemplate = await _context.EmailTemplates
+        //                        .Where(x => x.Id == id)
+        //                        .ProjectTo<EmailTemplateResponse>(_mapper.ConfigurationProvider)
+        //                        .SingleOrDefaultAsync();
 
-        if (emailTemplate == null)
+        var emailTemplate = await _emailTemplates.Query()
+                                    .AsNoTracking()
+                                    .Where(x => x.Id == id)
+                                    .ProjectTo<EmailTemplateResponse>
+                                        (_mapper.ConfigurationProvider)
+                                    .SingleOrDefaultAsync();
+
+
+        if (emailTemplate is null)
             throw new ResourceNotFoundException($"Email Template ID, {id}, was not found.");
 
         //return _mapper.Map<EmailTemplateResponse>(emailTemplate);
@@ -109,12 +122,19 @@ public class EmailTemplateService : IEmailTemplateService
     /// <exception cref="ResourceNotFoundException"></exception>
     public async Task<EmailTemplateResponse> GetByNameAsync(string templateName)
     {
-        var emailTemplate = await _context.EmailTemplates
-                                .Where(n => n.TemplateName == templateName)
-                                .ProjectTo<EmailTemplateResponse>(_mapper.ConfigurationProvider)
-                                .SingleOrDefaultAsync();
+        if (string.IsNullOrWhiteSpace(templateName))
+            throw new AppException("Template name is required.");
 
-        if (emailTemplate == null)
+        templateName = templateName.Trim();
+
+        var emailTemplate = await _emailTemplates.Query()
+                                    .AsNoTracking()
+                                    .Where(n => n.TemplateName == templateName)
+                                    .ProjectTo<EmailTemplateResponse>
+                                        (_mapper.ConfigurationProvider)
+                                    .SingleOrDefaultAsync();
+
+        if (emailTemplate is null)
             throw new ResourceNotFoundException($"Email Template Name, {templateName}, was not found.");
 
         return _mapper.Map<EmailTemplateResponse>(emailTemplate);
@@ -127,20 +147,35 @@ public class EmailTemplateService : IEmailTemplateService
     /// <returns>A task that represents the asynchronous operation. The task result contains the EmailTemplateResponse for the newly created template.</returns>
     public async Task<EmailTemplateResponse> CreateAsync(CreateEmailTemplateRequest model)
     {
-        // Validate
-        if (await _context.EmailTemplates.AnyAsync(x => x.TemplateName == model.TemplateName))
-            throw new ResourceAlreadyExistsException($"The Email Template name, '{model.TemplateName}', already exist. Please try a different Template Name.");
+        await using var tx = await _uow.BeginTransactionAsync();
 
-        // Map model to new email template object
-        var emailTemplate = _mapper.Map<EmailTemplate>(model);
+        try {
+            // Validate if the email template already created
+            if (await _emailTemplates.ExistsByNameAsync(model.TemplateName))
+                throw new ResourceAlreadyExistsException($"The Email Template name, '{model.TemplateName}', already exists. Please try a different Template Name.");
 
-        emailTemplate.CreatedAt = DateTime.UtcNow;
+            // validate entire model is provided
+            if (model is null) throw new ArgumentNullException(nameof(model));
 
-        // save to database
-        _context.EmailTemplates.Add(emailTemplate);
-        await _context.SaveChangesAsync();
+            // Map model to new Email Template object and set properties
+            var entity = _mapper.Map<EmailTemplate>(model);
+            entity.CreatedAt = DateTime.UtcNow;
 
-        return _mapper.Map<EmailTemplateResponse>(emailTemplate);
+            // Save Email Template
+            await _emailTemplates.AddAsync(entity);
+            await _uow.SaveChangesAsync();
+
+            await tx.CommitAsync();
+
+            return _mapper.Map<EmailTemplateResponse>(entity);
+        }
+        catch (Exception ex)
+        {
+            await tx.RollbackAsync();
+
+            _logger.LogError(ex, "Error during Email Template creation: {Message}", ex.Message);
+            throw;
+        }
     }
 
     /// <summary>
@@ -150,20 +185,45 @@ public class EmailTemplateService : IEmailTemplateService
     /// <returns>A task that represents the asynchronous operation. The task result contains the DeleteResponse.</returns>
     public async Task<DeleteResponse> DeleteAsync(int id)
     {
-        var emailTemplate = await GetEmailTemplate(id);
+        await using var tx = await _uow.BeginTransactionAsync();
 
-        // TODO: Implement deleted data information
-        /*deleteResponse.Message = "Email Template delet succesfully";
-        deleteResponse.StatusCode = 200;
-        deleteResponse.DeletedBy = account;
-        deleteResponse.DeletedAt = DateTime.UtcNow;
-        deleteResponse.ResourceId = DeleteEmailTemplateId.ToString();
-        deleteResponse.IsSuccess = true;*/
+        try
+        {
+            var emailTemplate = await GetEmailTemplate(id);
 
-        _context.EmailTemplates.Remove(emailTemplate);
-        _context.SaveChanges();
 
-        return _mapper.Map<DeleteResponse>(emailTemplate);
+            // TODO: Implement deleted data information
+            /*deleteResponse.Message = "Email Template delet succesfully";
+            deleteResponse.StatusCode = 200;
+            deleteResponse.DeletedBy = account;
+            deleteResponse.DeletedAt = DateTime.UtcNow;
+            deleteResponse.ResourceId = DeleteEmailTemplateId.ToString();
+            deleteResponse.IsSuccess = true;*/
+
+            var entity = await GetRequiredAsync(id);
+
+            _emailTemplates.Remove(entity);
+            await _uow.SaveChangesAsync();
+
+            await tx.CommitAsync();
+
+            // If you already map DeleteResponse from entity, keep that.
+            // Otherwise this is a safe explicit response:
+            return new DeleteResponse
+            {
+                IsSuccess = true,
+                Message = "Email Template deleted successfully.",
+                ResourceId = id.ToString(),
+                DeletedAt = DateTime.UtcNow
+            };
+        }
+        catch (Exception ex)
+        {
+            await tx.RollbackAsync();
+
+            _logger.LogError(ex, "Error during Email Template deletion : {Message}", ex.Message);
+            throw new DeletionFailedException($"Failed to delete Email Template with ID {id}", ex);
+        }
     }
 
     /// <summary>
@@ -172,16 +232,57 @@ public class EmailTemplateService : IEmailTemplateService
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of EmailTemplateResponses.</returns>
     public async Task<IEnumerable<EmailTemplateResponse>> GetAllAsync()
     {
-        var emailTemplate = await _context.EmailTemplates
-                                .ProjectTo<EmailTemplateResponse>(_mapper.ConfigurationProvider)
-                                .ToListAsync();
+        var list = await _emailTemplates.Query()
+                            .AsNoTracking()
+                            .OrderByDescending(x => x.CreatedAt)
+                            .ProjectTo<EmailTemplateResponse>(_mapper.ConfigurationProvider)
+                            .ToListAsync();
 
-        return _mapper.Map<IList<EmailTemplateResponse>>(emailTemplate);
+        return list;
     }
 
-    public async Task<PagedResult<EmailTemplateResponse>> GetAllAsync(string? name, string? searchQuery, int pageNumber, int pageSize)
+    public async Task<PagedResult<EmailTemplateResponse>> GetAllAsync(
+        string? name,
+        string? searchQuery,
+        int pageNumber,
+        int pageSize)
     {
-        throw new NotImplementedException();
+        if (pageNumber < 1) throw new AppException("Page number must be >= 1.");
+        if (pageSize < 1) throw new AppException("Page size must be >= 1.");
+
+        var q = _emailTemplates.Query().AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            name = name.Trim();
+            q = q.Where(x => x.TemplateName == name);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            searchQuery = searchQuery.Trim();
+            q = q.Where(x =>
+                x.TemplateName.Contains(searchQuery) ||
+                x.Subject.Contains(searchQuery) ||
+                x.ContentViewPath.Contains(searchQuery));
+        }
+
+        var total = await q.CountAsync();
+        if (total == 0)
+            throw new ResourceNotFoundException("No email templates found.");
+
+        var data = await q
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ProjectTo<EmailTemplateResponse>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+
+        return new PagedResult<EmailTemplateResponse>
+        {
+            Data = data,
+            Pagination = new PaginationMetadata(total, pageSize, pageNumber)
+        };
     }
 
     /// <summary>
@@ -192,32 +293,42 @@ public class EmailTemplateService : IEmailTemplateService
     /// <returns>A task that represents the asynchronous operation. The task result contains the updated EmailTemplateResponse.</returns>
     public async Task<EmailTemplateResponse> UpdateAsync(int id, UpdateEmailTemplateRequest model)
     {
-        var emailTemplate = await GetEmailTemplate(id);
+        if (model is null) throw new ArgumentNullException(nameof(model));
 
-        // Validate
-        if (emailTemplate.TemplateName != model.TemplateName && _context.EmailTemplates.Any(x => x.TemplateName == model.TemplateName))
-            throw new ResourceAlreadyExistsException($"The Template name, '{model.TemplateName}', already exist, please try a different template name.");
+        var entity = await GetRequiredAsync(id);
 
-        // update commin props
-        _mapper.Map(model, emailTemplate);
+        // Uniqueness check only if template name is changing
+        if (!string.IsNullOrWhiteSpace(model.TemplateName) &&
+            !string.Equals(entity.TemplateName, model.TemplateName, StringComparison.Ordinal) &&
+            await _emailTemplates.ExistsByNameAsync(model.TemplateName))
+        {
+            throw new ResourceAlreadyExistsException(
+                $"The Template name, '{model.TemplateName}', already exists, please try a different template name.");
+        }
 
-        emailTemplate.UpdatedAt = DateTime.UtcNow;
+        // Patch-style update: your mapping profile should ignore null/empty if you want that behavior.
+        _mapper.Map(model, entity);
+        entity.UpdatedAt = DateTime.UtcNow;
 
-        _context.EmailTemplates.Update(emailTemplate);
-        await _context.SaveChangesAsync();
+        _emailTemplates.Update(entity);
+        await _uow.SaveChangesAsync();
 
-        return _mapper.Map<EmailTemplateResponse>(emailTemplate);
+        return _mapper.Map<EmailTemplateResponse>(entity);
     }
 
     public async Task<string> RenderEmailTemplateAsync(string templateName, Dictionary<string, string> model)
     {
-        var emailTemplateExists = await _context.EmailTemplates.AnyAsync(t => t.TemplateName == templateName);
-        if (!emailTemplateExists)
+        if (string.IsNullOrWhiteSpace(templateName))
+            throw new AppException("Template name is required.");
+
+        templateName = templateName.Trim();
+
+        var exists = await _emailTemplates.ExistsByNameAsync(templateName);
+        if (!exists)
             throw new AppException($"Email template '{templateName}' not found.");
 
         model ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        // Optional: make sure year exists (since your template uses it)
         if (!model.ContainsKey("currentYear"))
             model["currentYear"] = DateTime.UtcNow.Year.ToString();
 
@@ -256,12 +367,10 @@ public class EmailTemplateService : IEmailTemplateService
 
     private static string ReplaceDoubleCurlyTokens(string html, IDictionary<string, string> model)
     {
-        if (string.IsNullOrEmpty(html) || model == null) return html;
+        if (string.IsNullOrEmpty(html) || model is null) return html;
 
         foreach (var kv in model)
-        {
             html = html.Replace("{{" + kv.Key + "}}", kv.Value ?? string.Empty);
-        }
 
         return html;
     }
@@ -277,10 +386,20 @@ public class EmailTemplateService : IEmailTemplateService
     /// <returns>A task that represents the asynchronous operation. The task result contains the EmailTemplate.</returns>
     private async Task<EmailTemplate> GetEmailTemplate(int id)
     {
-        var emailTemplate = await _context.EmailTemplates.FindAsync(id);
+        //var emailTemplate = await _context.EmailTemplates.FindAsync(id);
+
+        var emailTemplate = await _emailTemplates.GetByIdAsync(id);
 
         if (emailTemplate == null) throw new ResourceNotFoundException($"Email Template ID, {id}, not found");
 
         return emailTemplate;
+    }
+
+    private async Task<EmailTemplate> GetRequiredAsync(int id)
+    {
+        var entity = await _emailTemplates.GetByIdAsync(id);
+        if (entity is null)
+            throw new ResourceNotFoundException($"Email Template ID, {id}, not found.");
+        return entity;
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Ezenity.Domain.Entities.Vault;
 
-public enum VaultMissionSubmissionStatus
+public enum MissionSubmissionStatus
 {
     Pending = 0,
     Approved = 1,

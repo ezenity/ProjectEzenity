@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Ezenity.Application.Abstractions.Configuration;
 using Ezenity.Application.Abstractions.Emails;
 using Ezenity.Application.Abstractions.Persistence;
@@ -536,13 +537,13 @@ public class AccountService : IAccountService
             }
 
             // Validate the role
-            Role role = await _accounts.Roles.FirstOrDefaultAsync(r => r.Name == model.Role);
-            if (role == null || role.Name.ToLower() != model.Role.ToLower())
-                throw new NotFoundException($"There is no Role named {model.Role} available.");
+            //Role role = await _accounts.Roles.FirstOrDefaultAsync(r => r.Name == model.Role);
+            //if (role == null || role.Name.ToLower() != model.Role.ToLower())
+            //    throw new NotFoundException($"There is no Role named {model.Role} available.");
 
             // Map model to new account object and set properties
             var account = _mapper.Map<Account>(model);
-            account.Role = role;
+            //account.Role = role;
             account.Created = DateTime.UtcNow;
             account.Verified = DateTime.UtcNow;
             account.PasswordHash = _passwordService.HashPassword(model.Password);

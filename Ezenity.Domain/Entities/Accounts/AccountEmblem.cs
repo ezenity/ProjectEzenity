@@ -11,13 +11,13 @@ public class AccountEmblem
     public Account Account { get; set; } = null!;
 
     public int VaultEmblemId { get; set; }
-    public VaultEmblem Emblem { get; set; } = null!;
+    public Emblem Emblem { get; set; } = null!;
 
     /// <summary>
     /// Optional: record which mission granted it (if applicable).
     /// </summary>
     public int? ObtainedFromVaultMissionId { get; set; }
-    public VaultMission? ObtainedFromVaultMission { get; set; }
+    public Mission? ObtainedFromVaultMission { get; set; }
 
     public DateTime ObtainedUtc { get; set; } = DateTime.UtcNow;
 

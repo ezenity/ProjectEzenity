@@ -2,11 +2,11 @@ using Ezenity.Domain.Entities.Accounts;
 
 namespace Ezenity.Domain.Entities.Vault;
 
-public class VaultMissionCompletion
+public class MissionCompletion
 {
     public Guid Id { get; set; }
     public int VaultMissionId { get; set; }
-    public VaultMission VaultMission { get; set; } = null!;
+    public Mission VaultMission { get; set; } = null!;
     public int AccountId { get; set; }
     public Account Account { get; set; } = null!;
     public string Status { get; set; } = "Pending";
@@ -16,5 +16,5 @@ public class VaultMissionCompletion
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
     // Optional: link to the approved submission used as proof
     public int? VaultSubmissionId { get; set; }
-    public VaultMissionSubmission? Submission { get; set; }
+    public MissionSubmission? Submission { get; set; }
 }

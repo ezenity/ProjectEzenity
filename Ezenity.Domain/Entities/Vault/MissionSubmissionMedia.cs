@@ -2,11 +2,11 @@ using Ezenity.Domain.Entities.Files;
 
 namespace Ezenity.Domain.Entities.Vault;
 
-public class VaultMissionSubmissionMedia
+public class MissionSubmissionMedia
 {
     public int Id { get; set; }
     public int VaultSubmissionId { get; set; }
-    public VaultMissionSubmission Submission { get; set; } = null!;
+    public MissionSubmission Submission { get; set; } = null!;
     // Link to stored file metadata (your FileAsset entity)
     public Guid FileAssetId { get; set; }
     public FileAsset FileAsset { get; set; } = null!;

@@ -64,7 +64,8 @@ public class SectionService : ISectionService
     public async Task<SectionResponse> GetByIdAsync(int id)
     {
         var section = await GetSectionRequiredAsync(id, CancellationToken.None);
-        return _mapper.Map<SectionResponse>(await GetSection(id));
+        var ct = CancellationToken.None;
+        return _mapper.Map<SectionResponse>(await GetSectionRequiredAsync(id, ct));
     }
 
     /// <summary>

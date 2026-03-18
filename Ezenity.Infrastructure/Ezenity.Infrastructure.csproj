@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Ezenity.Application\Ezenity.Application.csproj" />
-    <ProjectReference Include="..\Ezenity.Core\Ezenity.Domain.csproj" />
+    <ProjectReference Include="..\Ezenity.Domain\Ezenity.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

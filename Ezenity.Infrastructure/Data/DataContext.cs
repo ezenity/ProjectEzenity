@@ -54,13 +54,13 @@ public class DataContext : DbContext
     /// Vault
     /// </summary>
     public DbSet<AccountEmblem> AccountEmblems { get; set; }
-    public DbSet<VaultEmblem> VaultEmblems { get; set; }
-    public DbSet<VaultMission> VaultMissions { get; set; }
-    public DbSet<VaultMissionReward> VaultMissionRewards { get; set; } = null!;
-    public DbSet<VaultMissionEmblemReward> VaultMissionEmblemRewards { get; set; }
-    public DbSet<VaultMissionSubmission> VaultMissionSubmissions { get; set; }
-    public DbSet<VaultMissionCompletion> VaultMissionCompletions { get; set; }
-    public DbSet<VaultMissionComment> VaultMissionComments { get; set; }
+    public DbSet<Emblem> VaultEmblems { get; set; }
+    public DbSet<Mission> VaultMissions { get; set; }
+    public DbSet<MissionReward> VaultMissionRewards { get; set; } = null!;
+    public DbSet<MissionEmblemReward> VaultMissionEmblemRewards { get; set; }
+    public DbSet<MissionSubmission> VaultMissionSubmissions { get; set; }
+    public DbSet<MissionCompletion> VaultMissionCompletions { get; set; }
+    public DbSet<MissionComment> VaultMissionComments { get; set; }
 
     /// <summary>
     /// Overrides the OnModelCreating method to configure the entity relationships and table schema in the database.
@@ -368,7 +368,7 @@ public class DataContext : DbContext
     private void ConfigureVault(ModelBuilder modelBuilder)
     {
         /* Vault Emblems & Vault Emblem Rarity */
-        modelBuilder.Entity<VaultEmblem>(entity =>
+        modelBuilder.Entity<Emblem>(entity =>
         {
             entity.ToTable("VaultEmblems");
             entity.HasKey(x => x.Id);
@@ -395,7 +395,7 @@ public class DataContext : DbContext
             // Long-term stable: store enum as int
             entity.Property(x => x.Rarity)
                   .HasConversion<int>()
-                  //.HasDefaultValue(VaultEmblemRarity.Common)
+                  //.HasDefaultValue(EmblemRarity.Common)
                   .IsRequired();
 
             entity.Property(x => x.IsActive)
@@ -418,7 +418,7 @@ public class DataContext : DbContext
         });
 
         /* Vault Mission */
-        modelBuilder.Entity<VaultMission>(entity =>
+        modelBuilder.Entity<Mission>(entity =>
         {
             entity.ToTable("VaultMissions");
             entity.HasKey(x => x.Id);
@@ -436,7 +436,7 @@ public class DataContext : DbContext
         });
 
         /* Vault Mission Comment */
-        modelBuilder.Entity<VaultMissionComment>(entity =>
+        modelBuilder.Entity<MissionComment>(entity =>
         {
             entity.ToTable("VaultMissionComments");
             entity.HasKey(x => x.Id);
@@ -456,7 +456,7 @@ public class DataContext : DbContext
         });
 
         /* Vault Mission Completion */
-        modelBuilder.Entity<VaultMissionCompletion>(entity =>
+        modelBuilder.Entity<MissionCompletion>(entity =>
         {
             entity.ToTable("VaultMissionCompletions");
             entity.HasKey(x => x.Id);
@@ -476,7 +476,7 @@ public class DataContext : DbContext
         });
 
         /* Vault Mission Emblem Reward */
-        modelBuilder.Entity<VaultMissionEmblemReward>(entity =>
+        modelBuilder.Entity<MissionEmblemReward>(entity =>
         {
             entity.ToTable("VaultMissionEmblemRewards");
             entity.HasKey(x => new { x.VaultMissionId, x.VaultEmblemId });
@@ -496,7 +496,7 @@ public class DataContext : DbContext
         });
 
         /* Vault Mission Reward */
-        modelBuilder.Entity<VaultMissionReward>(entity =>
+        modelBuilder.Entity<MissionReward>(entity =>
         {
             entity.ToTable("VaultMissionRewards");
             entity.HasKey(x => x.Id);
@@ -514,23 +514,24 @@ public class DataContext : DbContext
         });
 
         /* Vault Mission Submission */
-        modelBuilder.Entity<VaultMissionSubmission>(entity =>
+        modelBuilder.Entity<MissionSubmission>(entity =>
         {
             entity.ToTable("VaultMissionSubmissions");
             entity.HasKey(x => x.Id);
 
-            entity.Property(x => x.Platform).HasMaxLength(30).IsRequired() // YouTube/Instagram/TikTok/Facebook/Upload
-            entity.Property(x => x.Url).HasMaxLength(2000);
+            entity.Property(x => x.Platform).HasMaxLength(30).IsRequired(); // YouTube/Instagram/TikTok/Facebook/Upload
+            //entity.Property(x => x.Url).HasMaxLength(2000);
             entity.Property(x => x.Notes).HasMaxLength(2000);
-            entity.Property(x => x.CreatedUtc).IsRequired();
+            //entity.Property(x => x.CreatedUtc).IsRequired();
+            entity.Property(x => x.SubmittedUtc).IsRequired();
 
             entity.HasOne(x => x.Mission)
                   .WithMany()
-                  .HasForeignKey(x => x.MissionId);
+                  .HasForeignKey(x => x.VaultMissionId);
 
-            entity.HasOne(x => x.Account)
+            entity.HasOne(x => x.SubmittedByAccount)
                   .WithMany()
-                  .HasForeignKey(x => x.AccountId);
+                  .HasForeignKey(x => x.SubmittedByAccountId);
 
             entity.HasOne(x => x.File)
                   .WithMany()
